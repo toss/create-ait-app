@@ -1,0 +1,33 @@
+{
+  "name": "create-ait-app",
+  "version": "1.0.0",
+  "description": "Create AIT App scaffolding tool",
+  "license": "MIT",
+  "keywords": [
+    "cli",
+    "scaffold",
+    "scaffolding",
+    "vite",
+    "react",
+    "typescript",
+    "create-app",
+    "apps-in-toss",
+    "ait"
+  ],
+  "bin": {
+    "create-ait-app": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "node -c ./bin/index.js && node -c ./src/main.js",
+    "prepublishOnly": "npm run test"
+  },
+  "files": [
+    "bin",
+    "src",
+    "template"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "^7.10.1"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
