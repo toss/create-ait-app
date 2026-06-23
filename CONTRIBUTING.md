@@ -14,8 +14,8 @@ create-ait-app/
 │   ├── react-ts/
 │   ├── react/
 │   ├── react-ts-tds/
-│   ├── vanilla/
-│   └── vanilla-ts/
+│   ├── js/
+│   └── ts/
 └── package.json
 ```
 
@@ -25,9 +25,10 @@ create-ait-app/
 | --- | --- |
 | `react-ts` | React + TypeScript (기본) |
 | `react` | React + JavaScript |
-| `react-ts-tds` | React + TypeScript + TDS |
-| `vanilla` | Vanilla JavaScript |
-| `vanilla-ts` | Vanilla TypeScript |
+| `js` | Vanilla JavaScript |
+| `ts` | Vanilla TypeScript |
+
+`react-ts` + `--tds` 선택 시 내부적으로 `templates/react-ts-tds/` 폴더를 사용해요.
 
 각 템플릿은 완전히 격리된 폴더로 관리돼요.
 
@@ -55,15 +56,22 @@ templates/react-ts/
 - `samples/`는 생성된 프로젝트에 그대로 포함되지 않아요. `src/main.js`에서 선택한 샘플만 복사해요.
 - 앱 진입 파일(`App.tsx`, `App.jsx`, `app.js` 등)에는 `{{SAMPLE_IMPORTS}}`, `{{SAMPLE_BUTTONS}}` 같은 플레이스홀더가 있어요. CLI가 예제 선택에 맞게 치환해요.
 
-### 템플릿 선택 로직
+### 템플릿 선택
 
-| 조건 | 템플릿 |
+`--template <name>`으로 지정해요. 미지정 시 기본값은 `react-ts`예요. TDS는 `--tds` 옵션으로 켜요 (`react-ts`에서만 적용).
+
+| 템플릿 | 설명 |
 | --- | --- |
-| React + TypeScript (기본) | `react-ts` |
-| React + TypeScript + `--tds` | `react-ts-tds` |
-| React + JavaScript (`--javascript`) | `react` |
-| `--vanilla` | `vanilla` |
-| `--vanilla --typescript` | `vanilla-ts` |
+| `react-ts` | React + TypeScript (기본) |
+| `react` | React + JavaScript |
+| `js` | Vanilla JavaScript |
+| `ts` | Vanilla TypeScript |
+
+```bash
+create-ait-app test-react-ts --inline --template react-ts --tds --pm npm
+create-ait-app test-react --inline --template react --pm npm --sample iap
+create-ait-app test-js --inline --template js --pm npm
+```
 
 ## 로컬에서 CLI 테스트
 
@@ -78,8 +86,8 @@ npm unlink -g create-ait-app
 
 ```bash
 create-ait-app test-react-ts --inline --pm npm
-create-ait-app test-react --inline --javascript --pm npm --sample iap
-create-ait-app test-vanilla --inline --vanilla --pm npm --sample iap
+create-ait-app test-react --inline --template react --pm npm --sample iap
+create-ait-app test-js --inline --template js --pm npm --sample iap
 ```
 
 ## 템플릿 수정 시

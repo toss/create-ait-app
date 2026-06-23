@@ -8,13 +8,7 @@ const zlib = require("zlib");
 
 const TEMPLATES_DIR = path.resolve(__dirname, "..", "templates");
 
-const TEMPLATE_IDS = [
-  "react-ts",
-  "react",
-  "react-ts-tds",
-  "vanilla",
-  "vanilla-ts",
-];
+const TEMPLATE_IDS = ["react-ts", "react", "js", "ts"];
 
 /**
  * React + TypeScript 샘플 주입 메타데이터 (react-ts)
@@ -84,9 +78,9 @@ const REACT_TDS_SAMPLE_CONFIG = {
 };
 
 /**
- * Vanilla JavaScript 샘플 주입 메타데이터 (vanilla)
+ * Vanilla JavaScript 샘플 주입 메타데이터 (js)
  */
-const VANILLA_SAMPLE_CONFIG = {
+const JS_SAMPLE_CONFIG = {
   iap: {
     displayName: "인앱결제",
     import:
@@ -117,9 +111,9 @@ const VANILLA_SAMPLE_CONFIG = {
 };
 
 /**
- * Vanilla TypeScript 샘플 주입 메타데이터 (vanilla-ts)
+ * Vanilla TypeScript 샘플 주입 메타데이터 (ts)
  */
-const VANILLA_TS_SAMPLE_CONFIG = {
+const TS_SAMPLE_CONFIG = {
   iap: {
     displayName: "인앱결제",
     import:
@@ -171,19 +165,19 @@ const TEMPLATE_REGISTRY = {
     useTds: true,
     sampleConfig: REACT_TDS_SAMPLE_CONFIG,
   },
-  vanilla: {
+  js: {
     appFile: "src/app.js",
     isVanilla: true,
     isTypeScript: false,
     useTds: false,
-    sampleConfig: VANILLA_SAMPLE_CONFIG,
+    sampleConfig: JS_SAMPLE_CONFIG,
   },
-  "vanilla-ts": {
+  ts: {
     appFile: "src/app.ts",
     isVanilla: true,
     isTypeScript: true,
     useTds: false,
-    sampleConfig: VANILLA_TS_SAMPLE_CONFIG,
+    sampleConfig: TS_SAMPLE_CONFIG,
   },
 };
 
@@ -244,16 +238,16 @@ function copyDir(src, dest, { exclude = [] } = {}) {
   }
 }
 
-function resolveTemplateId({
-  useVanilla,
-  useTypeScript,
-  useTds,
-  useJavascript,
-}) {
-  if (useVanilla) return useTypeScript ? "vanilla-ts" : "vanilla";
-  if (useTds) return "react-ts-tds";
-  if (useJavascript) return "react";
-  return "react-ts";
+const TEMPLATE_CHOICES = [
+  { name: "react-ts — React + TypeScript (기본)", value: "react-ts" },
+  { name: "react — React + JavaScript", value: "react" },
+  { name: "js — Vanilla JavaScript", value: "js" },
+  { name: "ts — Vanilla TypeScript", value: "ts" },
+];
+
+function resolveTemplateFolder(baseTemplateId, useTds) {
+  if (baseTemplateId === "react-ts" && useTds) return "react-ts-tds";
+  return baseTemplateId;
 }
 
 function injectReactSamples(
@@ -375,6 +369,8 @@ function parseArgs(argv) {
       !argv[i + 1].startsWith("--")
     ) {
       args.sample.push(...argv[++i].split(","));
+    } else if (argv[i] === "--template" && argv[i + 1]) {
+      args.template = argv[++i];
     } else if (argv[i].startsWith("--")) {
       args[argv[i].slice(2)] = true;
     } else {
@@ -389,23 +385,20 @@ function printHelp() {
 사용법: create-ait-app [project-name] [options]
 
 options:
-  --inline         질문을 생략하고 옵션만으로 설정합니다 (옵션 미지정 시 모두 n)
-  --pm <name>      패키지 매니저를 지정합니다 (npm, yarn, pnpm)
-  --vanilla        Vanilla 템플릿을 사용합니다 (기본값: React + TypeScript)
-  --javascript     React + JavaScript 템플릿을 사용합니다 (react)
-  --typescript     Vanilla 템플릿에서 TypeScript를 사용합니다 (vanilla-ts)
-  --tds            React + TypeScript + TDS 템플릿을 사용합니다 (react-ts-tds)
-  --skills         AI를 위한 skills 파일을 추가합니다
-  --ai <name>      AI 도구를 지정합니다 (cursor, claude, codex)
-  --sample <name>  예제 코드를 추가합니다 (iap, iaa / 복수선택: iap,iaa)
-  --help           이 도움말을 출력합니다
+  --inline           질문을 생략하고 옵션만으로 설정합니다 (옵션 미지정 시 모두 n)
+  --pm <name>        패키지 매니저를 지정합니다 (npm, yarn, pnpm)
+  --template <name>  템플릿을 지정합니다 (기본값: react-ts)
+  --tds              react-ts 템플릿에서 TDS를 사용합니다 (다른 템플릿에서는 무시)
+  --skills           AI를 위한 skills 파일을 추가합니다
+  --ai <name>        AI 도구를 지정합니다 (cursor, claude, codex)
+  --sample <name>    예제 코드를 추가합니다 (iap, iaa / 복수선택: iap,iaa)
+  --help             이 도움말을 출력합니다
 
-templates (templates/):
-  react-ts         React + TypeScript
-  react            React + JavaScript
-  react-ts-tds     React + TypeScript + TDS
-  vanilla          Vanilla JavaScript
-  vanilla-ts       Vanilla TypeScript
+templates:
+  react-ts           React + TypeScript (기본)
+  react              React + JavaScript
+  js                 Vanilla JavaScript
+  ts                 Vanilla TypeScript
 
 links:
   앱인토스 콘솔             https://apps-in-toss.toss.im/
@@ -424,12 +417,7 @@ async function main() {
 
   const isInline = cliArgs.inline;
   const hasAnyOptionFlag =
-    cliArgs.tds ||
-    cliArgs.vanilla ||
-    cliArgs.javascript ||
-    cliArgs.typescript ||
-    cliArgs.skills ||
-    cliArgs.sample.length > 0;
+    cliArgs.template || cliArgs.tds || cliArgs.skills || cliArgs.sample.length > 0;
 
   const projectName =
     cliArgs._[0] ||
@@ -471,59 +459,43 @@ async function main() {
   }
 
   // --- 템플릿 선택 ---
-  let templateId = null;
+  let baseTemplateId = null;
 
-  if (cliArgs.vanilla) {
-    if (cliArgs.javascript) {
+  if (cliArgs.template) {
+    if (cliArgs.template === "react-ts-tds") {
       console.error(
-        "\n❌ --vanilla와 --javascript는 함께 사용할 수 없습니다.",
+        "\n❌ react-ts-tds는 더 이상 템플릿 이름으로 사용할 수 없습니다. --template react-ts --tds를 사용해 주세요.",
       );
       process.exit(1);
     }
-    templateId = cliArgs.typescript ? "vanilla-ts" : "vanilla";
-  } else if (cliArgs.tds) {
-    if (cliArgs.javascript) {
+    if (!TEMPLATE_IDS.includes(cliArgs.template)) {
       console.error(
-        "\n❌ TDS는 React + TypeScript 전용입니다. --javascript와 --tds는 함께 사용할 수 없습니다.",
+        `\n❌ 지원하지 않는 템플릿입니다: ${cliArgs.template} (${TEMPLATE_IDS.join(", ")} 중 선택)`,
       );
       process.exit(1);
     }
-    templateId = "react-ts-tds";
-  } else if (cliArgs.javascript) {
-    templateId = "react";
+    baseTemplateId = cliArgs.template;
   } else if (isInline || hasAnyOptionFlag) {
-    templateId = "react-ts";
+    baseTemplateId = "react-ts";
   } else {
-    templateId = await select({
+    baseTemplateId = await select({
       message: "사용할 템플릿을 선택하세요:",
-      choices: [
-        { name: "React + TypeScript (기본)", value: "react-ts" },
-        { name: "React + JavaScript", value: "react" },
-        { name: "Vanilla JavaScript", value: "vanilla" },
-        { name: "Vanilla TypeScript", value: "vanilla-ts" },
-      ],
+      choices: TEMPLATE_CHOICES,
     });
-
-    if (templateId === "react-ts") {
-      const useTds = await confirm({
-        message:
-          "TDS(Toss Design System)를 사용할까요? (앱인토스에 필수 아님, 기본값: 사용 안 함)",
-        default: false,
-      });
-      if (useTds) templateId = "react-ts-tds";
-    }
   }
 
-  if (
-    (templateId === "vanilla" || templateId === "vanilla-ts") &&
-    cliArgs.tds
-  ) {
-    console.error(
-      "\n❌ TDS는 React 전용입니다. Vanilla 템플릿과 --tds는 함께 사용할 수 없습니다.",
-    );
-    process.exit(1);
+  let useTds = false;
+  if (cliArgs.tds) {
+    useTds = baseTemplateId === "react-ts";
+  } else if (!isInline && !hasAnyOptionFlag && baseTemplateId === "react-ts") {
+    useTds = await confirm({
+      message:
+        "TDS(Toss Design System)를 사용할까요? (앱인토스에 필수 아님, 기본값: 사용 안 함)",
+      default: false,
+    });
   }
 
+  const templateId = resolveTemplateFolder(baseTemplateId, useTds);
   const template = TEMPLATE_REGISTRY[templateId];
   const templateDir = path.join(TEMPLATES_DIR, templateId);
 
@@ -597,7 +569,9 @@ async function main() {
     });
   }
 
-  console.log(`\n🚀 프로젝트를 생성합니다... (templates/${templateId})\n`);
+  console.log(
+    `\n🚀 프로젝트를 생성합니다... (templates/${templateId}${useTds ? ", TDS" : ""})\n`,
+  );
 
   try {
     copyDir(templateDir, targetDir, { exclude: ["samples"] });
@@ -606,13 +580,6 @@ async function main() {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
     pkg.name = packageName;
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
-
-    if (packageManager === "pnpm") {
-      fs.writeFileSync(
-        path.join(targetDir, ".npmrc"),
-        "shamefully-hoist=true\n",
-      );
-    }
 
     const configPath = path.join(targetDir, "granite.config.ts");
     const configContent = fs.readFileSync(configPath, "utf-8");
@@ -765,4 +732,10 @@ async function main() {
   }
 }
 
-module.exports = { main, TEMPLATE_IDS, TEMPLATE_REGISTRY, resolveTemplateId };
+module.exports = {
+  main,
+  TEMPLATE_IDS,
+  TEMPLATE_REGISTRY,
+  TEMPLATE_CHOICES,
+  resolveTemplateFolder,
+};

@@ -18,8 +18,8 @@ npm run dev
 `npx create-ait-app`을 실행하면 아래 항목을 순서대로 선택할 수 있어요.
 
 1. **패키지 매니저** — npm, yarn, pnpm
-2. **프로젝트 템플릿** — React + TypeScript (기본) / React + JavaScript / Vanilla JavaScript / Vanilla TypeScript
-3. **TDS (Toss Design System)** — React + TypeScript를 선택했을 때만 표시돼요 (선택, 기본값: 사용 안 함)
+2. **프로젝트 템플릿** — `react-ts` / `react` / `js` / `ts`
+3. **TDS (Toss Design System)** — `react-ts` 선택 시에만 표시돼요 (선택, 기본값: 사용 안 함)
 4. **AI Skills** — Cursor / Claude Code / Codex용 SDK 문서 파일 추가 여부
 5. **예제 코드** — 인앱결제(`iap`), 인앱광고(`iaa`) 샘플 추가 (복수 선택 가능)
 
@@ -28,32 +28,17 @@ npm run dev
 프롬프트 없이 한 줄로 생성할 수도 있어요.
 
 ```bash
-# React + TypeScript (기본)
 create-ait-app my-app --inline --pm yarn --sample iap,iaa
-
-# React + JavaScript
-create-ait-app my-app --inline --javascript --pm yarn --sample iap
-
-# Vanilla JavaScript
-create-ait-app my-app --inline --vanilla --pm yarn --sample iap
-
-# Vanilla TypeScript
-create-ait-app my-app --inline --vanilla --typescript --pm yarn
-
-# React + TDS + AI Skills
-create-ait-app my-app --inline --pm yarn --tds --skills --ai cursor --sample iap,iaa
 ```
 
 | 옵션 | 설명 |
 | --- | --- |
 | `--inline` | 대화형 질문을 생략하고 옵션만으로 설정해요 (미지정 항목은 모두 `n`이에요) |
 | `--pm <name>` | 패키지 매니저를 지정해요 (`npm`, `yarn`, `pnpm`) |
-| `--vanilla` | Vanilla 템플릿을 사용해요 (기본값: React + TypeScript) |
-| `--javascript` | React + JavaScript 템플릿을 사용해요 |
-| `--typescript` | Vanilla 템플릿에서 TypeScript를 사용해요 (`--vanilla`와 함께) |
-| `--tds` | TDS 패키지를 포함한 React + TypeScript 템플릿을 사용해요 |
-| `--skills` | AI Skills 파일을 추가해요 |
-| `--ai <name>` | AI 도구를 지정해요 (`cursor`, `claude`, `codex`) |
+| `--template <name>` | 템플릿을 지정해요 (`js`, `ts`, `react`, `react-ts` / 기본값: `react-ts`) |
+| `--tds` | `react-ts` 템플릿에서 TDS를 사용해요 (다른 템플릿에서는 무시돼요) |
+| `--skills` | AI를 위한 Skills 파일을 추가해요 |
+| `--ai <name>` | 사용할 AI 도구를 지정해요 (`cursor`, `claude`, `codex`) |
 | `--sample <name>` | 예제 코드를 추가해요 (`iap`, `iaa` / 복수: `iap,iaa`) |
 | `--help` | 도움말을 출력해요 |
 
@@ -61,53 +46,12 @@ create-ait-app my-app --inline --pm yarn --tds --skills --ai cursor --sample iap
 
 TDS는 토스에서 제공하는 디자인 시스템 컴포넌트 모음이에요. React를 필수로 사용해야 해요.
 
-TDS 사용은 앱인토스 개발에 필수가 아니며, CLI 기본값은 **사용 안 함**이에요. 필요할 때만 `--tds` 옵션이나 대화형 프롬프트에서 선택하면 돼요. Vanilla 템플릿과는 함께 사용할 수 없어요.
+TDS 사용은 앱인토스 개발에 필수가 아니에요. `react-ts` 템플릿을 선택한 경우에만 `--tds` 옵션이나 대화형 프롬프트에서 TDS 사용 여부를 물어봐요.
 
 ## 생성되는 프로젝트
 
 기본 템플릿은 헤더, 개발자센터·커뮤니티 링크 등 최소 구성만 포함해요. `--sample`로 예제를 선택한 경우에만 `src/hooks/`, `src/pages/`가 추가돼요.
 
-### React + TypeScript
-
-```
-my-app/
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   ├── hooks/           # --sample 선택 시
-│   └── pages/           # --sample 선택 시
-├── granite.config.ts
-├── package.json
-└── vite.config.ts
-```
-
-### React + JavaScript
-
-```
-my-app/
-├── src/
-│   ├── App.jsx
-│   ├── main.jsx
-│   ├── hooks/           # --sample 선택 시
-│   └── pages/           # --sample 선택 시
-├── granite.config.ts
-├── package.json
-└── vite.config.js
-```
-
-### Vanilla
-
-```
-my-app/
-├── src/
-│   ├── app.js 또는 app.ts
-│   ├── main.js 또는 main.ts
-│   ├── hooks/           # --sample 선택 시
-│   └── pages/           # --sample 선택 시
-├── granite.config.ts
-├── package.json
-└── vite.config.js 또는 vite.config.ts
-```
 
 ## 관련 링크
 
