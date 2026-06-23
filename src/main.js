@@ -21,13 +21,15 @@ function toNpmPackageName(input) {
     }
   }
 
-  return raw
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9._-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^[._-]+/, "")
-    .replace(/[._-]+$/, "") || "my-app";
+  return (
+    raw
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9._-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^[._-]+/, "")
+      .replace(/[._-]+$/, "") || "my-app"
+  );
 }
 
 function copyDir(src, dest) {
@@ -160,7 +162,7 @@ function printHelp() {
 options:
   --inline         질문을 생략하고 옵션만으로 설정합니다 (옵션 미지정 시 모두 n)
   --pm <name>      패키지 매니저를 지정합니다 (npm, yarn, pnpm)
-  --tds            TDS(Toss Design System) 패키지를 설치합니다
+  --tds            TDS(Toss Design System, React 필수) 패키지를 설치합니다 (기본값: 사용 안 함)
   --skills         AI를 위한 skills 파일을 추가합니다
   --ai <name>      AI 도구를 지정합니다 (cursor, claude, codex)
   --sample <name>  예제 코드를 추가합니다 (iap, iaa / 복수선택: iap,iaa)
@@ -234,7 +236,8 @@ async function main() {
     useTds = false;
   } else {
     useTds = await confirm({
-      message: "TDS(Toss Design System)를 사용할까요?",
+      message:
+        "TDS(Toss Design System)를 사용할까요? (앱인토스에 필수 아님, 기본값: 사용 안 함)",
       default: false,
     });
   }
