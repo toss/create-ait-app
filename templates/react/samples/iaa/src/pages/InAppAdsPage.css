@@ -1,0 +1,72 @@
+.iaa-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.iaa-section {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.iaa-section-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.iaa-section-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.iaa-section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333d4b;
+}
+
+.iaa-section-desc {
+  margin: 0;
+  font-size: 15px;
+  color: #8b95a1;
+}
+
+.iaa-section-button {
+  flex-shrink: 0;
+  height: fit-content;
+  padding: 10px 16px;
+  color: #1368cc;
+  background-color: #ecf3ff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.iaa-section-button:hover:not(:disabled) {
+  background-color: #d4e5ff;
+}
+
+.iaa-section-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.iaa-reward-message {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #3182f6;
+}
+
+/* 인앱결제 페이지 "← 홈으로"와 동일 스타일 */
+.iaa-back-btn {
+  margin: 16px 0;
+}

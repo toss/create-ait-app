@@ -6,11 +6,208 @@ const https = require("https");
 const http = require("http");
 const zlib = require("zlib");
 
+const TEMPLATES_DIR = path.resolve(__dirname, "..", "templates");
+
+const TEMPLATE_IDS = [
+  "react-ts",
+  "react",
+  "react-ts-tds",
+  "vanilla",
+  "vanilla-ts",
+];
+
+/**
+ * React + TypeScript 샘플 주입 메타데이터 (react-ts)
+ */
+const REACT_SAMPLE_CONFIG = {
+  iap: {
+    displayName: "인앱결제",
+    import: 'import { InAppPurchasePage } from "./pages/InAppPurchasePage";',
+    route:
+      '  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;',
+    getButton: () =>
+      '<button type="button" className="app-button app-button-ghost" onClick={() => setPage("iap")}>인앱결제 테스트하기</button>',
+  },
+  iaa: {
+    displayName: "인앱광고",
+    import: 'import { InAppAdsPage } from "./pages/InAppAdsPage";',
+    route:
+      '  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;',
+    getButton: () =>
+      '<button type="button" className="app-button app-button-ghost" onClick={() => setPage("iaa")}>인앱광고 테스트하기</button>',
+  },
+};
+
+/**
+ * React + JavaScript 샘플 주입 메타데이터 (react)
+ */
+const REACT_JS_SAMPLE_CONFIG = {
+  iap: {
+    displayName: "인앱결제",
+    import:
+      'import { InAppPurchasePage } from "./pages/InAppPurchasePage.jsx";',
+    route:
+      '  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;',
+    getButton: () =>
+      '<button type="button" className="app-button app-button-ghost" onClick={() => setPage("iap")}>인앱결제 테스트하기</button>',
+  },
+  iaa: {
+    displayName: "인앱광고",
+    import: 'import { InAppAdsPage } from "./pages/InAppAdsPage.jsx";',
+    route:
+      '  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;',
+    getButton: () =>
+      '<button type="button" className="app-button app-button-ghost" onClick={() => setPage("iaa")}>인앱광고 테스트하기</button>',
+  },
+};
+
+/**
+ * React + TypeScript + TDS 샘플 주입 메타데이터 (react-ts-tds)
+ */
+const REACT_TDS_SAMPLE_CONFIG = {
+  iap: {
+    displayName: "인앱결제",
+    import: 'import { InAppPurchasePage } from "./pages/InAppPurchasePage";',
+    route:
+      '  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;',
+    getButton: () =>
+      '<Button color="dark" variant="weak" onClick={() => setPage("iap")}>인앱결제 테스트하기</Button>',
+  },
+  iaa: {
+    displayName: "인앱광고",
+    import: 'import { InAppAdsPage } from "./pages/InAppAdsPage";',
+    route:
+      '  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;',
+    getButton: () =>
+      '<Button color="dark" variant="weak" onClick={() => setPage("iaa")}>인앱광고 테스트하기</Button>',
+  },
+};
+
+/**
+ * Vanilla JavaScript 샘플 주입 메타데이터 (vanilla)
+ */
+const VANILLA_SAMPLE_CONFIG = {
+  iap: {
+    displayName: "인앱결제",
+    import:
+      'import { mountInAppPurchasePage } from "./pages/InAppPurchasePage.js";',
+    route: `  if (currentPage === "iap") {
+    mountInAppPurchasePage(() => {
+      currentPage = null;
+      render();
+    });
+    return;
+  }`,
+    getButton: () =>
+      '<button type="button" class="app-button app-button-ghost" data-page="iap">인앱결제 테스트하기</button>',
+  },
+  iaa: {
+    displayName: "인앱광고",
+    import: 'import { mountInAppAdsPage } from "./pages/InAppAdsPage.js";',
+    route: `  if (currentPage === "iaa") {
+    mountInAppAdsPage(() => {
+      currentPage = null;
+      render();
+    });
+    return;
+  }`,
+    getButton: () =>
+      '<button type="button" class="app-button app-button-ghost" data-page="iaa">인앱광고 테스트하기</button>',
+  },
+};
+
+/**
+ * Vanilla TypeScript 샘플 주입 메타데이터 (vanilla-ts)
+ */
+const VANILLA_TS_SAMPLE_CONFIG = {
+  iap: {
+    displayName: "인앱결제",
+    import:
+      'import { mountInAppPurchasePage } from "./pages/InAppPurchasePage.ts";',
+    route: `  if (currentPage === "iap") {
+    mountInAppPurchasePage(() => {
+      currentPage = null;
+      render();
+    });
+    return;
+  }`,
+    getButton: () =>
+      '<button type="button" class="app-button app-button-ghost" data-page="iap">인앱결제 테스트하기</button>',
+  },
+  iaa: {
+    displayName: "인앱광고",
+    import: 'import { mountInAppAdsPage } from "./pages/InAppAdsPage.ts";',
+    route: `  if (currentPage === "iaa") {
+    mountInAppAdsPage(() => {
+      currentPage = null;
+      render();
+    });
+    return;
+  }`,
+    getButton: () =>
+      '<button type="button" class="app-button app-button-ghost" data-page="iaa">인앱광고 테스트하기</button>',
+  },
+};
+
+const TEMPLATE_REGISTRY = {
+  "react-ts": {
+    appFile: "src/App.tsx",
+    isVanilla: false,
+    isTypeScript: true,
+    useTds: false,
+    sampleConfig: REACT_SAMPLE_CONFIG,
+  },
+  react: {
+    appFile: "src/App.jsx",
+    isVanilla: false,
+    isTypeScript: false,
+    useTds: false,
+    sampleConfig: REACT_JS_SAMPLE_CONFIG,
+  },
+  "react-ts-tds": {
+    appFile: "src/App.tsx",
+    isVanilla: false,
+    isTypeScript: true,
+    useTds: true,
+    sampleConfig: REACT_TDS_SAMPLE_CONFIG,
+  },
+  vanilla: {
+    appFile: "src/app.js",
+    isVanilla: true,
+    isTypeScript: false,
+    useTds: false,
+    sampleConfig: VANILLA_SAMPLE_CONFIG,
+  },
+  "vanilla-ts": {
+    appFile: "src/app.ts",
+    isVanilla: true,
+    isTypeScript: true,
+    useTds: false,
+    sampleConfig: VANILLA_TS_SAMPLE_CONFIG,
+  },
+};
+
+const SAMPLE_PRIMARY_COLOR = [
+  "#FF8A65",
+  "#FD9B3C",
+  "#E0B20C",
+  "#3FD599",
+  "#81C784",
+  "#4DB6AC",
+  "#4DD0E1",
+  "#64B5F6",
+  "#655DFF",
+  "#9575CD",
+  "#BA68C8",
+  "#FF91D5",
+  "#F06292",
+  "#D7B59E",
+];
+
 function toNpmPackageName(input) {
   const raw = String(input || "").trim();
   if (!raw) return "my-app";
 
-  // Allow scoped packages: @scope/name
   if (raw.startsWith("@")) {
     const slash = raw.indexOf("/");
     if (slash > 1) {
@@ -32,64 +229,96 @@ function toNpmPackageName(input) {
   );
 }
 
-function copyDir(src, dest) {
+function copyDir(src, dest, { exclude = [] } = {}) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    if (entry.name.startsWith("__")) continue;
+    if (exclude.includes(entry.name)) continue;
 
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
     if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
+      copyDir(srcPath, destPath, { exclude });
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
   }
 }
 
-/**
- * 샘플별 App.tsx 주입용 메타데이터.
- * 새 샘플 추가 시: 1) template/../__samples/<id>/ 폴더 추가, 2) 여기에 항목 추가
- */
-const SAMPLE_CONFIG = {
-  iap: {
-    displayName: "인앱결제",
-    import: 'import { InAppPurchasePage } from "./pages/InAppPurchasePage";',
-    route:
-      '  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;',
-    getButton: (useTds) =>
-      useTds
-        ? '<Button color="dark" variant="weak" onClick={() => setPage("iap")}>인앱결제 테스트하기</Button>'
-        : '<button type="button" className="app-button app-button-ghost" onClick={() => setPage("iap")}>인앱결제 테스트하기</button>',
-  },
-  iaa: {
-    displayName: "인앱광고",
-    import: 'import { InAppAdsPage } from "./pages/InAppAdsPage";',
-    route:
-      '  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;',
-    getButton: (useTds) =>
-      useTds
-        ? '<Button color="dark" variant="weak" onClick={() => setPage("iaa")}>인앱광고 테스트하기</Button>'
-        : '<button type="button" className="app-button app-button-ghost" onClick={() => setPage("iaa")}>인앱광고 테스트하기</button>',
-  },
-};
+function resolveTemplateId({
+  useVanilla,
+  useTypeScript,
+  useTds,
+  useJavascript,
+}) {
+  if (useVanilla) return useTypeScript ? "vanilla-ts" : "vanilla";
+  if (useTds) return "react-ts-tds";
+  if (useJavascript) return "react";
+  return "react-ts";
+}
 
-const SAMPLE_PRIMARY_COLOR = [
-  "#FF8A65",
-  "#FD9B3C",
-  "#E0B20C",
-  "#3FD599",
-  "#81C784",
-  "#4DB6AC",
-  "#4DD0E1",
-  "#64B5F6",
-  "#655DFF",
-  "#9575CD",
-  "#BA68C8",
-  "#FF91D5",
-  "#F06292",
-  "#D7B59E",
-];
+function injectReactSamples(
+  appContent,
+  sampleChoices,
+  sampleConfig,
+  isTypeScript,
+) {
+  const hasSamples = sampleChoices.length > 0;
+  const sampleImports = hasSamples
+    ? sampleChoices
+        .map((id) => sampleConfig[id]?.import)
+        .filter(Boolean)
+        .join("\n") + '\nimport { useState } from "react";'
+    : "";
+  const pageState = isTypeScript
+    ? "useState<string | null>(null)"
+    : "useState(null)";
+  const pageStateAndRoutes = hasSamples
+    ? `  const [page, setPage] = ${pageState};\n\n` +
+      sampleChoices
+        .map((id) => sampleConfig[id]?.route)
+        .filter(Boolean)
+        .join("\n") +
+      "\n\n"
+    : "";
+  const sampleButtons = hasSamples
+    ? sampleChoices
+        .map((id) => sampleConfig[id]?.getButton())
+        .filter(Boolean)
+        .join("\n\n        ")
+    : "";
+
+  return appContent
+    .replace("{{SAMPLE_IMPORTS}}", sampleImports)
+    .replace("{{PAGE_STATE_AND_ROUTES}}", pageStateAndRoutes)
+    .replace("{{SAMPLE_BUTTONS}}", sampleButtons);
+}
+
+function injectVanillaSamples(appContent, sampleChoices, sampleConfig) {
+  const hasSamples = sampleChoices.length > 0;
+  const sampleImports = hasSamples
+    ? sampleChoices
+        .map((id) => sampleConfig[id]?.import)
+        .filter(Boolean)
+        .join("\n")
+    : "";
+  const sampleRoutes = hasSamples
+    ? sampleChoices
+        .map((id) => sampleConfig[id]?.route)
+        .filter(Boolean)
+        .join("\n")
+    : "";
+  const sampleButtons = hasSamples
+    ? sampleChoices
+        .map((id) => sampleConfig[id]?.getButton())
+        .filter(Boolean)
+        .join("\n\n        ")
+    : "";
+
+  return appContent
+    .replace("{{SAMPLE_IMPORTS}}", sampleImports)
+    .replace("{{SAMPLE_ROUTES}}", sampleRoutes)
+    .replace("{{SAMPLE_BUTTONS}}", sampleButtons);
+}
 
 function fetchText(url) {
   return new Promise((resolve, reject) => {
@@ -162,11 +391,21 @@ function printHelp() {
 options:
   --inline         질문을 생략하고 옵션만으로 설정합니다 (옵션 미지정 시 모두 n)
   --pm <name>      패키지 매니저를 지정합니다 (npm, yarn, pnpm)
-  --tds            TDS(Toss Design System, React 필수) 패키지를 설치합니다 (기본값: 사용 안 함)
+  --vanilla        Vanilla 템플릿을 사용합니다 (기본값: React + TypeScript)
+  --javascript     React + JavaScript 템플릿을 사용합니다 (react)
+  --typescript     Vanilla 템플릿에서 TypeScript를 사용합니다 (vanilla-ts)
+  --tds            React + TypeScript + TDS 템플릿을 사용합니다 (react-ts-tds)
   --skills         AI를 위한 skills 파일을 추가합니다
   --ai <name>      AI 도구를 지정합니다 (cursor, claude, codex)
   --sample <name>  예제 코드를 추가합니다 (iap, iaa / 복수선택: iap,iaa)
   --help           이 도움말을 출력합니다
+
+templates (templates/):
+  react-ts         React + TypeScript
+  react            React + JavaScript
+  react-ts-tds     React + TypeScript + TDS
+  vanilla          Vanilla JavaScript
+  vanilla-ts       Vanilla TypeScript
 
 links:
   앱인토스 콘솔             https://apps-in-toss.toss.im/
@@ -185,7 +424,12 @@ async function main() {
 
   const isInline = cliArgs.inline;
   const hasAnyOptionFlag =
-    cliArgs.tds || cliArgs.skills || cliArgs.sample.length > 0;
+    cliArgs.tds ||
+    cliArgs.vanilla ||
+    cliArgs.javascript ||
+    cliArgs.typescript ||
+    cliArgs.skills ||
+    cliArgs.sample.length > 0;
 
   const projectName =
     cliArgs._[0] ||
@@ -226,23 +470,71 @@ async function main() {
     });
   }
 
-  // --- 3. TDS ---
-  let useTds;
-  if (cliArgs.tds) {
-    useTds = true;
-  } else if (isInline) {
-    useTds = false;
-  } else if (hasAnyOptionFlag) {
-    useTds = false;
+  // --- 템플릿 선택 ---
+  let templateId = null;
+
+  if (cliArgs.vanilla) {
+    if (cliArgs.javascript) {
+      console.error(
+        "\n❌ --vanilla와 --javascript는 함께 사용할 수 없습니다.",
+      );
+      process.exit(1);
+    }
+    templateId = cliArgs.typescript ? "vanilla-ts" : "vanilla";
+  } else if (cliArgs.tds) {
+    if (cliArgs.javascript) {
+      console.error(
+        "\n❌ TDS는 React + TypeScript 전용입니다. --javascript와 --tds는 함께 사용할 수 없습니다.",
+      );
+      process.exit(1);
+    }
+    templateId = "react-ts-tds";
+  } else if (cliArgs.javascript) {
+    templateId = "react";
+  } else if (isInline || hasAnyOptionFlag) {
+    templateId = "react-ts";
   } else {
-    useTds = await confirm({
-      message:
-        "TDS(Toss Design System)를 사용할까요? (앱인토스에 필수 아님, 기본값: 사용 안 함)",
-      default: false,
+    templateId = await select({
+      message: "사용할 템플릿을 선택하세요:",
+      choices: [
+        { name: "React + TypeScript (기본)", value: "react-ts" },
+        { name: "React + JavaScript", value: "react" },
+        { name: "Vanilla JavaScript", value: "vanilla" },
+        { name: "Vanilla TypeScript", value: "vanilla-ts" },
+      ],
     });
+
+    if (templateId === "react-ts") {
+      const useTds = await confirm({
+        message:
+          "TDS(Toss Design System)를 사용할까요? (앱인토스에 필수 아님, 기본값: 사용 안 함)",
+        default: false,
+      });
+      if (useTds) templateId = "react-ts-tds";
+    }
   }
 
-  // --- 4. AI skills ---
+  if (
+    (templateId === "vanilla" || templateId === "vanilla-ts") &&
+    cliArgs.tds
+  ) {
+    console.error(
+      "\n❌ TDS는 React 전용입니다. Vanilla 템플릿과 --tds는 함께 사용할 수 없습니다.",
+    );
+    process.exit(1);
+  }
+
+  const template = TEMPLATE_REGISTRY[templateId];
+  const templateDir = path.join(TEMPLATES_DIR, templateId);
+
+  if (!fs.existsSync(templateDir)) {
+    console.error(`\n❌ 템플릿을 찾을 수 없습니다: templates/${templateId}`);
+    process.exit(1);
+  }
+
+  const sampleConfig = template.sampleConfig;
+
+  // --- AI skills ---
   let useSkills;
   let aiTool;
   if (cliArgs.skills) {
@@ -280,8 +572,8 @@ async function main() {
     useSkills = aiTool !== "none";
   }
 
-  // --- 5. 예제 코드 (복수 선택 가능) ---
-  const validSamples = Object.keys(SAMPLE_CONFIG);
+  // --- 예제 코드 ---
+  const validSamples = Object.keys(sampleConfig);
   let sampleChoices = [];
   if (cliArgs.sample.length > 0) {
     const invalid = cliArgs.sample.filter((s) => !validSamples.includes(s));
@@ -292,13 +584,11 @@ async function main() {
       process.exit(1);
     }
     sampleChoices = [...new Set(cliArgs.sample)];
-  } else if (isInline) {
-    sampleChoices = [];
-  } else if (hasAnyOptionFlag) {
+  } else if (isInline || hasAnyOptionFlag) {
     sampleChoices = [];
   } else {
     const sampleChoiceList = validSamples.map((id) => ({
-      name: SAMPLE_CONFIG[id].displayName,
+      name: sampleConfig[id].displayName,
       value: id,
     }));
     sampleChoices = await checkbox({
@@ -307,34 +597,16 @@ async function main() {
     });
   }
 
-  console.log(`\n🚀 프로젝트를 생성합니다...\n`);
-
-  const templateDir = path.resolve(__dirname, "..", "template");
+  console.log(`\n🚀 프로젝트를 생성합니다... (templates/${templateId})\n`);
 
   try {
-    copyDir(templateDir, targetDir);
+    copyDir(templateDir, targetDir, { exclude: ["samples"] });
 
-    if (useTds) {
-      copyDir(path.resolve(templateDir, "__tds"), targetDir);
-    } else {
-      copyDir(path.resolve(templateDir, "__default"), targetDir);
-    }
-
-    // package.json name 치환 (TDS 선택 시 React 18 사용 — TDS peer dependency)
     const pkgPath = path.join(targetDir, "package.json");
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
     pkg.name = packageName;
-    if (useTds) {
-      pkg.dependencies.react = "^18.0.0";
-      pkg.dependencies["react-dom"] = "^18.0.0";
-      if (pkg.devDependencies["@types/react"])
-        pkg.devDependencies["@types/react"] = "^18.0.0";
-      if (pkg.devDependencies["@types/react-dom"])
-        pkg.devDependencies["@types/react-dom"] = "^18.0.0";
-    }
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
-    // pnpm: shamefully-hoist 설정 (granite가 Vite 플러그인을 찾을 수 있도록)
     if (packageManager === "pnpm") {
       fs.writeFileSync(
         path.join(targetDir, ".npmrc"),
@@ -342,7 +614,6 @@ async function main() {
       );
     }
 
-    // granite.config.ts appName 치환
     const configPath = path.join(targetDir, "granite.config.ts");
     const configContent = fs.readFileSync(configPath, "utf-8");
     fs.writeFileSync(
@@ -357,7 +628,6 @@ async function main() {
         ),
     );
 
-    // README.md 프로젝트명 + 선택한 패키지 매니저 명령어 치환
     const readmePath = path.join(targetDir, "README.md");
     const pmDev =
       packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;
@@ -374,55 +644,28 @@ async function main() {
       .replace(/\{\{PM_DEPLOY\}\}/g, pmDeploy);
     fs.writeFileSync(readmePath, readmeContent);
 
-    // 예제 코드: 선택한 샘플만 template/../__samples/<id> 에서 src 로 복사 후 App.tsx 플레이스홀더 치환
-    const samplesDir = path.join(
-      path.resolve(templateDir, useTds ? "__tds" : "__default"),
-      "__samples",
-    );
-
+    const samplesDir = path.join(templateDir, "samples");
     for (const id of sampleChoices) {
       const sampleRoot = path.join(samplesDir, id);
-
-      copyDir(sampleRoot, targetDir);
+      if (fs.existsSync(sampleRoot)) {
+        copyDir(sampleRoot, targetDir);
+      }
     }
 
-    const srcDir = path.join(targetDir, "src");
-    const appPath = path.join(srcDir, "App.tsx");
-    let appContent = fs.existsSync(appPath)
-      ? fs.readFileSync(appPath, "utf-8")
-      : null;
-
-    if (appContent) {
-      const hasSamples = sampleChoices.length > 0;
-      const sampleImports = hasSamples
-        ? sampleChoices
-            .map((id) => SAMPLE_CONFIG[id]?.import)
-            .filter(Boolean)
-            .join("\n") + '\nimport { useState } from "react";'
-        : "";
-      const pageStateAndRoutes = hasSamples
-        ? "  const [page, setPage] = useState<string | null>(null);\n\n" +
-          sampleChoices
-            .map((id) => SAMPLE_CONFIG[id]?.route)
-            .filter(Boolean)
-            .join("\n") +
-          "\n\n"
-        : "";
-      const sampleButtons = hasSamples
-        ? sampleChoices
-            .map((id) => SAMPLE_CONFIG[id]?.getButton(useTds))
-            .filter(Boolean)
-            .join("\n\n        ")
-        : "";
-
-      appContent = appContent
-        .replace("{{SAMPLE_IMPORTS}}", sampleImports)
-        .replace("{{PAGE_STATE_AND_ROUTES}}", pageStateAndRoutes)
-        .replace("{{SAMPLE_BUTTONS}}", sampleButtons);
+    const appPath = path.join(targetDir, template.appFile);
+    if (fs.existsSync(appPath)) {
+      let appContent = fs.readFileSync(appPath, "utf-8");
+      appContent = template.isVanilla
+        ? injectVanillaSamples(appContent, sampleChoices, sampleConfig)
+        : injectReactSamples(
+            appContent,
+            sampleChoices,
+            sampleConfig,
+            template.isTypeScript,
+          );
       fs.writeFileSync(appPath, appContent);
     }
 
-    // 의존성 설치
     console.log(`📦 의존성을 설치합니다...\n`);
 
     const installCommands = {
@@ -443,18 +686,6 @@ async function main() {
       cwd: targetDir,
     });
 
-    // TDS 설치
-    if (useTds) {
-      console.log(`\n📦 TDS 패키지를 설치합니다...\n`);
-      const tdsPackages =
-        "@toss/tds-mobile @toss/tds-mobile-ait @toss/tds-colors @emotion/react@^11 react@^18 react-dom@^18";
-      execSync(`${addCmd[packageManager]} ${tdsPackages}`, {
-        stdio: "inherit",
-        cwd: targetDir,
-      });
-    }
-
-    // AI skills
     if (useSkills) {
       console.log(`\n📄 AI skills 파일을 추가합니다... (${aiTool})\n`);
 
@@ -462,7 +693,7 @@ async function main() {
         "https://developers-apps-in-toss.toss.im/llms.txt",
       );
       let tdsDocs;
-      if (useTds) {
+      if (template.useTds) {
         tdsDocs = await fetchText(
           "https://tossmini-docs.toss.im/tds-mobile/llms-full.txt",
         );
@@ -516,7 +747,6 @@ async function main() {
       }
     }
 
-    // 코드 포맷팅
     console.log(`\n📐 코드 포맷팅을 실행합니다...\n`);
     const formatCmd =
       packageManager === "npm" ? "npm run format" : `${packageManager} format`;
@@ -525,6 +755,7 @@ async function main() {
     console.log(`
 ✅ 프로젝트가 성공적으로 생성되었습니다!
 
+  템플릿: templates/${templateId}
   cd ${projectName}
   ${packageManager === "npm" ? "npm run dev" : `${packageManager} dev`}
 `);
@@ -534,4 +765,4 @@ async function main() {
   }
 }
 
-module.exports = { main };
+module.exports = { main, TEMPLATE_IDS, TEMPLATE_REGISTRY, resolveTemplateId };

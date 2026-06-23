@@ -24,7 +24,7 @@
   "files": [
     "bin",
     "src",
-    "template"
+    "templates"
   ],
   "dependencies": {
     "@inquirer/prompts": "^7.10.1"
