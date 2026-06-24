@@ -9,7 +9,14 @@ create-ait-app/
 ├── bin/
 │   └── index.js          # CLI 진입점
 ├── src/
-│   └── main.js           # 프롬프트, 템플릿 복사, 샘플 주입, 의존성 설치
+│   ├── main.js           # CLI 진입, 프롬프트 오케스트레이션
+│   ├── cli.js            # 인자 파싱, 도움말
+│   ├── templates.js      # 템플릿 레지스트리
+│   ├── sample-configs.js # 샘플 주입 메타데이터
+│   ├── sample-inject.js  # 앱 파일 플레이스홀더 치환
+│   ├── scaffold.js       # 템플릿 복사, 의존성 설치, 포맷팅
+│   ├── skills.js         # AI skills 파일 생성
+│   └── utils/            # copy-dir, fetch-text, package-name
 ├── templates/            # 생성되는 프로젝트 템플릿 (각각 독립)
 │   ├── react-ts/
 │   ├── react/
@@ -53,7 +60,7 @@ templates/react-ts/
         └── src/
 ```
 
-- `samples/`는 생성된 프로젝트에 그대로 포함되지 않아요. `src/main.js`에서 선택한 샘플만 복사해요.
+- `samples/`는 생성된 프로젝트에 그대로 포함되지 않아요. `src/scaffold.js`에서 선택한 샘플만 복사해요.
 - 앱 진입 파일(`App.tsx`, `App.jsx`, `app.js` 등)에는 `{{SAMPLE_IMPORTS}}`, `{{SAMPLE_BUTTONS}}` 같은 플레이스홀더가 있어요. CLI가 예제 선택에 맞게 치환해요.
 
 ### 템플릿 선택
@@ -100,17 +107,16 @@ create-ait-app test-js --inline --template js --pm npm --sample iap
 ## 예제 코드 추가
 
 1. 각 템플릿의 `samples/<id>/src/` 아래에 파일을 추가해요. React 템플릿은 SDK 연동 로직을 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`에 둬요.
-2. `src/main.js`의 해당 템플릿용 `*_SAMPLE_CONFIG`에 import, route, button 메타데이터를 등록해요.
+2. `src/sample-configs.js`의 해당 템플릿용 `*_SAMPLE_CONFIG`에 import, route, button 메타데이터를 등록해요.
 3. 앱 진입 파일의 플레이스홀더와 맞는지 확인해요.
 
-## `src/main.js` 주요 흐름
+## `src/` 주요 흐름
 
-1. CLI 인자·대화형 프롬프트로 옵션 수집
-2. `templates/` 하위 템플릿 결정
-3. 템플릿 복사 (`samples/` 제외)
-4. `package.json` name, `granite.config.ts`, `README.md` 플레이스홀더 치환
-5. 선택한 `samples/<id>/` 복사 및 앱 파일 플레이스홀더 주입
-6. 의존성 설치, `@apps-in-toss/web-framework` 추가, (선택) AI skills, 포맷팅
+1. `main.js` — CLI 인자·대화형 프롬프트로 옵션 수집
+2. `templates.js` — `templates/` 하위 템플릿 결정
+3. `scaffold.js` — 템플릿 복사 (`samples/` 제외), 플레이스홀더 치환, 샘플 복사·주입
+4. `scaffold.js` — 의존성 설치, `@apps-in-toss/web-framework` 추가, 포맷팅
+5. `skills.js` — (선택) AI skills 파일 생성
 
 ## npm publish
 

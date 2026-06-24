@@ -18,7 +18,7 @@
     "create-ait-app": "./bin/index.js"
   },
   "scripts": {
-    "test": "node -c ./bin/index.js && node -c ./src/main.js",
+    "test": "node -c ./bin/index.js && node -e \"require('fs').readdirSync('./src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('child_process').execSync('node -c ./src/'+f,{stdio:'inherit'}))\"",
     "prepublishOnly": "npm run test"
   },
   "files": [
