@@ -99,7 +99,7 @@ create-ait-app test-js --inline --template js --pm npm --sample iap
 
 ## 예제 코드 추가
 
-1. 각 템플릿의 `samples/<id>/src/` 아래에 파일을 추가해요.
+1. 각 템플릿의 `samples/<id>/src/` 아래에 파일을 추가해요. React 템플릿은 SDK 연동 로직을 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`에 둬요.
 2. `src/main.js`의 해당 템플릿용 `*_SAMPLE_CONFIG`에 import, route, button 메타데이터를 등록해요.
 3. 앱 진입 파일의 플레이스홀더와 맞는지 확인해요.
 

@@ -1,4 +1,4 @@
-import { createInAppAds } from "../hooks/inAppAds.js";
+import { createInAppAds } from "../lib/inAppAds.js";
 import "./InAppAdsPage.css";
 
 // TODO: 서비스를 출시하기 전에 앱인토스 콘솔에서 발급한 광고그룹ID로 변경해주세요.

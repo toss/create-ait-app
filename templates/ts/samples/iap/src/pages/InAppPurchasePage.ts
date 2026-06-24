@@ -1,4 +1,4 @@
-import { createInAppPurchase } from "../hooks/inAppPurchase.ts";
+import { createInAppPurchase } from "../lib/inAppPurchase.ts";
 import "./InAppPurchasePage.css";
 
 function escapeHtml(value: unknown) {
