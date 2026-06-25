@@ -1,0 +1,98 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version changed
+        id: version
+        run: |
+          if git diff HEAD~1 HEAD -- package.json | grep -qE '^[+-].*"version"'; then
+            VERSION=$(node -p "require('./package.json').version")
+            echo "Version changed to ${VERSION}."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "value=${VERSION}" >> "$GITHUB_OUTPUT"
+          else
+            echo "package.json version unchanged. Skipping publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate version
+        if: steps.version.outputs.publish == 'true'
+        run: node .github/scripts/validate-version.mjs
+
+      - name: Check if version is already published
+        if: steps.version.outputs.publish == 'true'
+        id: should_publish
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          if npm view "create-ait-app@${VERSION}" version >/dev/null 2>&1; then
+            echo "create-ait-app@${VERSION} is already on npm. Skipping publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "create-ait-app@${VERSION} is not published yet."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.should_publish.outputs.publish == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Validate CLI syntax
+        if: steps.should_publish.outputs.publish == 'true'
+        run: |
+          node -c ./bin/index.js
+          node -e "require('fs').readdirSync('./src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('child_process').execSync('node -c ./src/'+f,{stdio:'inherit'}))"
+
+      - name: Collect release notes
+        if: steps.should_publish.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node .github/scripts/collect-release-notes.mjs "${{ steps.version.outputs.value }}" > release-notes.md
+          echo "Release notes:"
+          cat release-notes.md
+
+      - name: Publish to npm
+        if: steps.should_publish.outputs.publish == 'true'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: steps.should_publish.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          TAG="v${VERSION}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists. Skipping."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release-notes.md
