@@ -1,128 +1,86 @@
 # 기여하기
 
-create-ait-app CLI와 프로젝트 템플릿에 기여하는 방법을 정리한 문서예요.
+create-ait-app에 기여해 주셔서 감사해요. 버그 수정, 기능 개선, 문서 보완, 템플릿·예제 코드 개선 모두 환영해요.
 
-## 저장소 구조
+## 시작하기
 
-```
-create-ait-app/
-├── bin/
-│   └── index.js          # CLI 진입점
-├── src/
-│   ├── main.js           # CLI 진입, 프롬프트 오케스트레이션
-│   ├── cli.js            # 인자 파싱, 도움말
-│   ├── templates.js      # 템플릿 레지스트리
-│   ├── sample-configs.js # 샘플 주입 메타데이터
-│   ├── sample-inject.js  # 앱 파일 플레이스홀더 치환
-│   ├── scaffold.js       # 템플릿 복사, 의존성 설치, 포맷팅
-│   ├── skills.js         # AI skills 파일 생성
-│   └── utils/            # copy-dir, fetch-text, package-name
-├── templates/            # 생성되는 프로젝트 템플릿 (각각 독립)
-│   ├── react-ts/
-│   ├── react/
-│   ├── react-ts-tds/
-│   ├── js/
-│   └── ts/
-└── package.json
-```
-
-## 템플릿 (`templates/`)
-
-| 템플릿 | 설명 |
-| --- | --- |
-| `react-ts` | React + TypeScript (기본) |
-| `react` | React + JavaScript |
-| `js` | Vanilla JavaScript |
-| `ts` | Vanilla TypeScript |
-
-`react-ts` + `--tds` 선택 시 내부적으로 `templates/react-ts-tds/` 폴더를 사용해요.
-
-각 템플릿은 완전히 격리된 폴더로 관리돼요.
-
-### 템플릿 패키지 내부
-
-```
-templates/react-ts/
-├── package.json
-├── vite.config.ts
-├── granite.config.ts
-├── eslint.config.js
-├── index.html
-├── README.md             # 생성된 프로젝트용 ({{APP_NAME}} 등 플레이스홀더)
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── ...
-└── samples/              # --sample 옵션으로 선택 시에만 복사
-    ├── iap/
-    │   └── src/
-    └── iaa/
-        └── src/
-```
-
-- `samples/`는 생성된 프로젝트에 그대로 포함되지 않아요. `src/scaffold.js`에서 선택한 샘플만 복사해요.
-- 앱 진입 파일(`App.tsx`, `App.jsx`, `app.js` 등)에는 `{{SAMPLE_IMPORTS}}`, `{{SAMPLE_BUTTONS}}` 같은 플레이스홀더가 있어요. CLI가 예제 선택에 맞게 치환해요.
-
-### 템플릿 선택
-
-`--template <name>`으로 지정해요. 미지정 시 기본값은 `react-ts`예요. TDS는 `--tds` 옵션으로 켜요 (`react-ts`에서만 적용).
-
-| 템플릿 | 설명 |
-| --- | --- |
-| `react-ts` | React + TypeScript (기본) |
-| `react` | React + JavaScript |
-| `js` | Vanilla JavaScript |
-| `ts` | Vanilla TypeScript |
-
-```bash
-create-ait-app test-react-ts --inline --template react-ts --tds --pm npm
-create-ait-app test-react --inline --template react --pm npm --sample iap
-create-ait-app test-js --inline --template js --pm npm
-```
-
-## 로컬에서 CLI 테스트
+1. 저장소를 포크하고 로컬에 클론해요.
+2. 의존성을 설치해요.
 
 ```bash
 npm install
+```
+
+3. CLI를 전역에 연결해 로컬 변경 사항을 테스트해요.
+
+```bash
 npm link
 create-ait-app test-project
+```
+
+4. 작업이 끝나면 연결을 해제해요.
+
+```bash
 npm unlink -g create-ait-app
 ```
 
-생성 결과를 빠르게 확인하려면 `--inline` 옵션을 함께 쓰면 돼요.
+프롬프트 없이 빠르게 확인하려면 `--inline` 옵션을 함께 쓰면 돼요.
 
 ```bash
-create-ait-app test-react-ts --inline --pm npm
-create-ait-app test-react --inline --template react --pm npm --sample iap
-create-ait-app test-js --inline --template js --pm npm --sample iap
+create-ait-app test-project --inline --template react-ts --pm npm --sample iap,iaa
 ```
 
-## 템플릿 수정 시
+## 이슈 제보
 
-1. 해당 `templates/<템플릿>/` 폴더만 수정해요.
-2. 다른 템플릿과 공유 코드를 맞추고 싶다면 각 폴더에 동일하게 반영해요. (의도적으로 중복을 허용하는 구조예요.)
-3. `npm test`로 CLI 문법 검사를 실행해요.
-4. `npm link` 후 실제 프로젝트를 생성해 동작을 확인해요.
+버그나 개선 제안은 GitHub Issue로 등록해 주세요. 아래 정보를 포함하면 해결에 도움이 돼요.
 
-## 예제 코드 추가
+- 어떤 문제인지 (기대한 동작 vs 실제 동작)
+- 재현 방법 (사용한 CLI 옵션, 템플릿, 패키지 매니저 등)
+- 환경 (OS, Node.js 버전)
+- 가능하다면 에러 메시지나 스크린샷
 
-1. 각 템플릿의 `samples/<id>/src/` 아래에 파일을 추가해요. React 템플릿은 SDK 연동 로직을 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`에 둬요.
-2. `src/sample-configs.js`의 해당 템플릿용 `*_SAMPLE_CONFIG`에 import, route, button 메타데이터를 등록해요.
-3. 앱 진입 파일의 플레이스홀더와 맞는지 확인해요.
+## Pull Request
 
-## `src/` 주요 흐름
+1. `main` 브랜치에서 작업 브랜치를 만들어요.
+2. 템플릿이나 CLI 동작을 바꿨다면 `npm link` 후 실제 프로젝트 생성까지 확인해요.
+3. PR 설명에 **무엇을**, **왜** 바꿨는지 적어 주세요.
+4. 관련 이슈가 있으면 PR에 연결해 주세요.
 
-1. `main.js` — CLI 인자·대화형 프롬프트로 옵션 수집
-2. `templates.js` — `templates/` 하위 템플릿 결정
-3. `scaffold.js` — 템플릿 복사 (`samples/` 제외), 플레이스홀더 치환, 샘플 복사·주입
-4. `scaffold.js` — 의존성 설치, `@apps-in-toss/web-framework` 추가, 포맷팅
-5. `skills.js` — (선택) AI skills 파일 생성
+### PR 체크리스트
 
-## npm publish
+- [ ] 변경 범위에 맞게 로컬에서 프로젝트 생성·실행 확인
+- [ ] 불필요한 파일(생성된 테스트 프로젝트, `.env` 등)이 포함되지 않음
+- [ ] README 등 관련 문서를 함께 수정함 (필요한 경우)
 
-`package.json`의 `files` 필드에 `bin`, `src`, `templates`가 포함돼 있어요. 템플릿을 추가·변경했다면 publish 전에 생성 테스트를 꼭 해 주세요.
+### 커밋 메시지
 
-```bash
-npm test
-npm publish
+[Conventional Commits](https://www.conventionalcommits.org/) 형식을 권장해요.
+
 ```
+feat: 인앱결제 샘플에 빈 상태 아이콘 추가
+fix: vanilla 템플릿 샘플 public 자산 누락 수정
+docs: CONTRIBUTING 가이드 정리
+refactor: scaffold 로직 분리
+```
+
+## 개발 가이드라인
+
+### 변경 범위
+
+- **CLI 로직**: `bin/`, `src/` 아래 파일을 수정해요.
+- **생성되는 프로젝트**: `templates/<템플릿>/` 아래 해당 템플릿만 수정해요.
+- 템플릿은 서로 독립적으로 관리돼요. 여러 템플릿에 같은 변경이 필요하면 각 폴더에 맞게 반영해 주세요.
+
+### 템플릿·예제 코드 수정 시
+
+- 템플릿을 바꿨다면 영향 받는 템플릿마다 프로젝트 생성을 확인해 주세요.
+- 예제 코드(`--sample`)를 추가·수정할 때는 각 템플릿의 `samples/`와 `src/sample-configs.js`를 함께 맞춰 주세요.
+- React 템플릿의 SDK 연동 로직은 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`에 두는 기존 규칙을 따라 주세요.
+
+### 문서
+
+CLI 옵션이나 동작이 바뀌면 [README.md](./README.md)도 함께 업데이트해 주세요.
+
+## 질문
+
+Issue에 질문을 남겨 주시면 확인해 볼게요.
