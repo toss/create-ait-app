@@ -17,6 +17,9 @@
   "bin": {
     "create-ait-app": "./bin/index.js"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "files": [
     "bin",
     "src",
