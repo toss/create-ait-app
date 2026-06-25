@@ -1,0 +1,104 @@
+#root {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24px;
+}
+
+@media (min-width: 481px) {
+  #root {
+    background-color: #ffffff;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 0;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333d4b;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 18px;
+  color: #4e5968;
+}
+
+.app-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.app-button {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.app-button:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
+}
+
+.app-button-primary {
+  background-color: #ebf2ff;
+  color: #2272eb;
+}
+
+.app-button-primary:hover {
+  background-color: #c9e2ff;
+}
+
+.app-button-ghost {
+  background-color: #f2f4f6;
+  color: #4b5563;
+}
+
+.app-button-ghost:hover {
+  background-color: #e5e8eb;
+}
+
+.text-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #3182f6;
+}
+
+.app-logo-wrap {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.logo {
+  width: 160px;
+  height: auto;
+}

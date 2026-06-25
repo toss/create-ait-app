@@ -1,6 +1,6 @@
 {
   "name": "create-ait-app",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "description": "Create AIT App scaffolding tool",
   "license": "MIT",
   "keywords": [
@@ -17,14 +17,10 @@
   "bin": {
     "create-ait-app": "./bin/index.js"
   },
-  "scripts": {
-    "test": "node -c ./bin/index.js && node -c ./src/main.js",
-    "prepublishOnly": "npm run test"
-  },
   "files": [
     "bin",
     "src",
-    "template"
+    "templates"
   ],
   "dependencies": {
     "@inquirer/prompts": "^7.10.1"

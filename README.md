@@ -1,75 +1,57 @@
 # create-ait-app
 
 앱인토스(Apps in Toss) 프로젝트를 빠르게 시작할 수 있는 CLI 도구예요.
-Vite 기반 React + TypeScript 프로젝트를 생성하고, TDS/인앱결제/인앱광고 등을 선택적으로 구성할 수 있어요.
+Vite 기반 **React** 또는 **Vanilla** 프로젝트를 생성하고, TDS·인앱결제·인앱광고 예제 등을 선택적으로 추가할 수 있어요.
 
-## 사용법
+## 빠르게 시작하기
 
 ```bash
 npx create-ait-app my-app
+cd my-app
+npm run dev
 ```
 
-실행하면 대화형 프롬프트로 아래 항목을 선택할 수 있어요.
+패키지 매니저는 생성 시 선택한 값에 맞게 `yarn dev`, `pnpm dev` 등으로 실행하면 돼요.
 
-1. **패키지 매니저** — npm, yarn, pnpm 중 선택
-2. **TDS (Toss Design System)** — TDS 패키지 설치 여부
-3. **AI Skills** — AI 도구를 위한 SDK 문서 파일 추가 여부 (Cursor / Claude Code / Codex / 선택안함)
-4. **예제 코드** — 인앱결제, 인앱광고 샘플 코드 추가 (복수 선택 가능)
+## 대화형 설정
+
+`npx create-ait-app`을 실행하면 아래 항목을 순서대로 선택할 수 있어요.
+
+1. **패키지 매니저** — npm, yarn, pnpm
+2. **프로젝트 템플릿** — `react-ts` / `react` / `js` / `ts`
+3. **TDS (Toss Design System)** — `react-ts` 선택 시에만 표시돼요 (선택, 기본값: 사용 안 함)
+4. **AI Skills** — Cursor / Claude Code / Codex용 SDK 문서 파일 추가 여부
+5. **예제 코드** — 인앱결제(`iap`), 인앱광고(`iaa`) 샘플 추가 (복수 선택 가능)
 
 ## CLI 옵션
 
-프롬프트 없이 한 줄로 설정할 수도 있어요.
+프롬프트 없이 한 줄로 생성할 수도 있어요.
 
 ```bash
-create-ait-app my-app --inline --pm yarn --tds --skills --ai cursor --sample iap,iaa
+create-ait-app my-app --inline --pm yarn --sample iap,iaa
 ```
 
-| 옵션              | 설명                                                            |
-| ----------------- | --------------------------------------------------------------- |
-| `--inline`        | 대화형 질문을 생략하고 옵션만으로 설정 (미지정 항목은 모두 `n`) |
-| `--pm <name>`     | 패키지 매니저 지정 (`npm`, `yarn`, `pnpm`)                      |
-| `--tds`           | TDS 패키지 설치                                                 |
-| `--skills`        | AI Skills 파일 추가                                             |
-| `--ai <name>`     | AI 도구 지정 (`cursor`, `claude`, `codex`)                      |
-| `--sample <name>` | 예제 코드 추가 (`iap`, `iaa` / 복수: `iap,iaa`)                 |
-| `--help`          | 도움말 출력                                                     |
+| 옵션 | 설명 |
+| --- | --- |
+| `--inline` | 대화형 질문을 생략하고 옵션만으로 설정해요 (미지정 항목은 모두 `n`이에요) |
+| `--pm <name>` | 패키지 매니저를 지정해요 (`npm`, `yarn`, `pnpm`) |
+| `--template <name>` | 템플릿을 지정해요 (`js`, `ts`, `react`, `react-ts` / 기본값: `react-ts`) |
+| `--tds` | `react-ts` 템플릿에서 TDS를 사용해요 (다른 템플릿에서는 무시돼요) |
+| `--skills` | AI를 위한 Skills 파일을 추가해요 |
+| `--ai <name>` | 사용할 AI 도구를 지정해요 (`cursor`, `claude`, `codex`) |
+| `--sample <name>` | 예제 코드를 추가해요 (`iap`, `iaa` / 복수: `iap,iaa`) |
+| `--help` | 도움말을 출력해요 |
 
-## 생성되는 프로젝트 구조
+### TDS (Toss Design System)
 
-- 기본 템플릿은 최소 구성(헤더, 개발자센터/커뮤니티 링크 등)만 포함합니다.
-- **예제 코드**를 선택한 경우에만 `src/hooks/`, `src/pages/` 및 해당 파일들이 추가됩니다.
+TDS는 토스에서 제공하는 디자인 시스템 컴포넌트 모음이에요. React를 필수로 사용해야 해요.
 
-```
-my-app/
-├── src/
-│   ├── App.tsx
-│   ├── App.css
-│   ├── main.tsx
-│   ├── index.css
-│   ├── vite-env.d.ts
-│   ├── hooks/           # --sample iap/iaa 선택 시에만 추가
-│   └── pages/           # --sample iap/iaa 선택 시에만 추가
-├── public/
-├── granite.config.ts
-├── package.json
-├── vite.config.ts
-├── tsconfig.json
-└── README.md
-```
+TDS 사용은 앱인토스 개발에 필수가 아니에요. `react-ts` 템플릿을 선택한 경우에만 `--tds` 옵션이나 대화형 프롬프트에서 TDS 사용 여부를 물어봐요.
 
-## 개발 (이 CLI 도구 자체)
+## 생성되는 프로젝트
 
-```bash
-# 의존성 설치
-npm install
+기본 템플릿은 헤더, 개발자센터·커뮤니티 링크 등 최소 구성만 포함해요. `--sample`로 예제를 선택한 경우 `src/pages/`가 추가되고, React 템플릿은 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`가 추가돼요.
 
-# 로컬에서 CLI 테스트
-npm link
-create-ait-app test-project
-
-# 링크 해제
-npm unlink -g create-ait-app
-```
 
 ## 관련 링크
 
@@ -77,3 +59,7 @@ npm unlink -g create-ait-app
 - [앱인토스 개발자센터](https://developers-apps-in-toss.toss.im/)
 - [앱인토스 개발자 커뮤니티](https://techchat-apps-in-toss.toss.im/)
 - [AI를 위한 LLMs 문서](https://developers-apps-in-toss.toss.im/development/llms.html)
+
+---
+
+이 CLI 도구에 기여하고 싶다면 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고해 주세요.
