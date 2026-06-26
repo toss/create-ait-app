@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { execSync } = require("child_process");
+import { execSync } from "node:child_process";
 
 const version = process.argv[2];
 if (!version) {
