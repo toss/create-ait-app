@@ -1,10 +1,12 @@
 function parseArgs(argv) {
-  const args = { _: [], sample: [] };
+  const args = { _: [], sample: [], cwd: null };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--pm" && argv[i + 1]) {
       args.pm = argv[++i];
     } else if (argv[i] === "--ai" && argv[i + 1]) {
       args.ai = argv[++i];
+    } else if (argv[i] === "--cwd" && argv[i + 1]) {
+      args.cwd = argv[++i];
     } else if (
       argv[i] === "--sample" &&
       argv[i + 1] &&
@@ -22,9 +24,36 @@ function parseArgs(argv) {
   return args;
 }
 
-function printHelp() {
+function printHelp(command) {
+  if (command === "add-sample") {
+    console.log(`
+사용법: create-ait-app add-sample [sample] [directory]
+
+기존 프로젝트에 예제 코드를 추가합니다.
+
+arguments:
+  sample             추가할 예제 코드 (iap, iaa / 복수: iap,iaa)
+  directory          대상 프로젝트 경로 (기본값: 현재 디렉토리)
+
+options:
+  --cwd <path>       대상 프로젝트 경로 (--cwd는 directory와 동일)
+  --sample <name>    예제 코드 지정 (--sample은 생략 가능)
+  --help             이 도움말을 출력합니다
+
+examples:
+  create-ait-app add-sample iap
+  create-ait-app add-sample iap,iaa
+  create-ait-app add-sample ./my-app iap
+`);
+    return;
+  }
+
   console.log(`
 사용법: create-ait-app [project-name] [options]
+       create-ait-app add-sample [directory] [options]
+
+commands:
+  add-sample         기존 프로젝트에 예제 코드를 추가합니다
 
 options:
   --inline           질문을 생략하고 옵션만으로 설정합니다 (옵션 미지정 시 모두 n)

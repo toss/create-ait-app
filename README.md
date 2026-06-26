@@ -15,7 +15,7 @@ npm run dev
 
 ## 대화형 설정
 
-`npx create-ait-app`을 실행하면 아래 항목을 순서대로 선택할 수 있어요.
+`npx create-ait-app my-app`으로 실행하면 대화형으로 설정할 수 있어요. `yarn create ait-app`, `npm create ait-app`, `pnpm create ait-app`으로 실행해도 템플릿은 선택할 수 있어요. (호출한 패키지 매니저는 자동으로 사용해요.)
 
 1. **패키지 매니저** — npm, yarn, pnpm
 2. **프로젝트 템플릿** — `react-ts` / `react` / `js` / `ts`
@@ -41,6 +41,18 @@ create-ait-app my-app --inline --pm yarn --sample iap,iaa
 | `--ai <name>` | 사용할 AI 도구를 지정해요 (`cursor`, `claude`, `codex`) |
 | `--sample <name>` | 예제 코드를 추가해요 (`iap`, `iaa` / 복수: `iap,iaa`) |
 | `--help` | 도움말을 출력해요 |
+
+### 기존 프로젝트에 예제 추가
+
+프로젝트 생성 시 예제를 넣지 않았다면, 나중에 아래 명령으로 추가할 수 있어요.
+
+```bash
+create-ait-app add-sample iap
+create-ait-app add-sample iap,iaa
+create-ait-app add-sample ./my-app iap
+```
+
+프로젝트 디렉토리에서 실행하면 경로 생략이 가능해요.
 
 ### TDS (Toss Design System)
 
