@@ -3,6 +3,10 @@
   "version": "0.0.3",
   "description": "Create AIT App scaffolding tool",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toss/create-ait-app.git"
+  },
   "keywords": [
     "cli",
     "scaffold",
@@ -16,6 +20,9 @@
   ],
   "bin": {
     "create-ait-app": "./bin/index.js"
+  },
+  "engines": {
+    "node": ">=24"
   },
   "files": [
     "bin",
