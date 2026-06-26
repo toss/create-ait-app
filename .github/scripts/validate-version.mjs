@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { execSync } = require("child_process");
-const { readFileSync } = require("fs");
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const SEMVER_RE =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
