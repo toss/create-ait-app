@@ -44,15 +44,21 @@ create-ait-app test-project --inline --template react-ts --pm npm --sample iap,i
 ## Pull Request
 
 1. `main` 브랜치에서 작업 브랜치를 만들어요.
-2. 템플릿이나 CLI 동작을 바꿨다면 `npm link` 후 실제 프로젝트 생성까지 확인해요.
-3. PR 설명에 **무엇을**, **왜** 바꿨는지 적어 주세요.
-4. 관련 이슈가 있으면 PR에 연결해 주세요.
+2. 변경 사항을 반영하고 로컬에서 동작을 확인해요.
+3. PR을 열어요. [PR 템플릿](.github/PULL_REQUEST_TEMPLATE.md)에 맞춰 작성해 주세요.
+4. 리뷰 피드백이 있으면 반영해 주세요.
 
-### PR 체크리스트
+`package.json`의 `version`은 올리지 않아도 돼요. 배포는 메인테이너가 진행해요.
 
-- [ ] 변경 범위에 맞게 로컬에서 프로젝트 생성·실행 확인
-- [ ] 불필요한 파일(생성된 테스트 프로젝트, `.env` 등)이 포함되지 않음
-- [ ] README 등 관련 문서를 함께 수정함 (필요한 경우)
+### PR에 포함할 내용
+
+| 섹션 | 설명 |
+| --- | --- |
+| Summary | 무엇을, 왜 바꿨는지 |
+| Checklist | 확인 항목 체크 |
+| Release Notes | 사용자에게 보이는 변경 사항 (없으면 비워 두세요) |
+| Test Results | 로컬에서 확인한 내용 |
+| Linked Issues | 연결된 이슈 (없으면 비워 두세요) |
 
 ### 커밋 메시지
 
