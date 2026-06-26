@@ -11,23 +11,40 @@ const {
 } = require("./templates");
 const { toNpmPackageName } = require("./utils/package-name");
 const {
+  VALID_PACKAGE_MANAGERS,
+  detectInvokedPackageManager,
+} = require("./detect-invoker");
+const {
   scaffoldProject,
   installDependencies,
   formatProject,
 } = require("./scaffold");
 const { writeAiSkills } = require("./skills");
 
+const { runAddSample } = require("./add-sample");
+
 async function main() {
-  const cliArgs = parseArgs(process.argv.slice(2));
+  const rawArgv = process.argv.slice(2);
+  const cliArgs = parseArgs(rawArgv);
+
+  if (process.env.DEBUG_AIT) {
+    console.error("[debug] argv:", rawArgv);
+    console.error("[debug] parsed:", cliArgs);
+    console.error("[debug] npm_config_argv:", process.env.npm_config_argv);
+    console.error("[debug] isTTY:", process.stdin.isTTY, process.stdout.isTTY);
+  }
 
   if (cliArgs.help) {
-    printHelp();
+    printHelp(cliArgs._[0]);
+    return;
+  }
+
+  if (cliArgs._[0] === "add-sample") {
+    await runAddSample(cliArgs);
     return;
   }
 
   const isInline = cliArgs.inline;
-  const hasAnyOptionFlag =
-    cliArgs.template || cliArgs.tds || cliArgs.skills || cliArgs.sample.length > 0;
 
   const projectName =
     cliArgs._[0] ||
@@ -46,7 +63,9 @@ async function main() {
     process.exit(1);
   }
 
-  const validPms = ["npm", "yarn", "pnpm"];
+  const validPms = VALID_PACKAGE_MANAGERS;
+  const invokedPackageManager = detectInvokedPackageManager();
+
   let packageManager;
 
   if (cliArgs.pm) {
@@ -57,6 +76,8 @@ async function main() {
       process.exit(1);
     }
     packageManager = cliArgs.pm;
+  } else if (invokedPackageManager) {
+    packageManager = invokedPackageManager;
   } else {
     packageManager = await select({
       message: "사용할 패키지 매니저를 선택하세요:",
@@ -84,9 +105,16 @@ async function main() {
       process.exit(1);
     }
     baseTemplateId = cliArgs.template;
-  } else if (isInline || hasAnyOptionFlag) {
+  } else if (isInline) {
     baseTemplateId = "react-ts";
   } else {
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      console.error(
+        "\n❌ 비대화형 환경에서는 --template 옵션으로 템플릿을 지정해 주세요.",
+      );
+      process.exit(1);
+    }
+
     baseTemplateId = await select({
       message: "사용할 템플릿을 선택하세요:",
       choices: TEMPLATE_CHOICES,
@@ -96,7 +124,7 @@ async function main() {
   let useTds = false;
   if (cliArgs.tds) {
     useTds = baseTemplateId === "react-ts";
-  } else if (!isInline && !hasAnyOptionFlag && baseTemplateId === "react-ts") {
+  } else if (!isInline && baseTemplateId === "react-ts") {
     useTds = await confirm({
       message:
         "TDS(Toss Design System)를 사용할까요? (앱인토스에 필수 아님, 기본값: 사용 안 함)",
@@ -137,7 +165,7 @@ async function main() {
         ],
       });
     }
-  } else if (isInline || hasAnyOptionFlag) {
+  } else if (isInline) {
     useSkills = false;
   } else {
     aiTool = await select({
@@ -163,7 +191,7 @@ async function main() {
       process.exit(1);
     }
     sampleChoices = [...new Set(cliArgs.sample)];
-  } else if (isInline || hasAnyOptionFlag) {
+  } else if (isInline) {
     sampleChoices = [];
   } else {
     const sampleChoiceList = validSamples.map((id) => ({
@@ -185,7 +213,6 @@ async function main() {
       templateDir,
       targetDir,
       template,
-      sampleConfig,
       sampleChoices,
       projectName,
       packageName,

@@ -2,14 +2,13 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { copyDir } = require("./utils/copy-dir");
-const { injectReactSamples, injectVanillaSamples } = require("./sample-inject");
+const { applySamples } = require("./apply-samples");
 const { SAMPLE_PRIMARY_COLOR } = require("./templates");
 
 function scaffoldProject({
   templateDir,
   targetDir,
   template,
-  sampleConfig,
   sampleChoices,
   projectName,
   packageName,
@@ -52,27 +51,13 @@ function scaffoldProject({
     .replace(/\{\{PM_DEPLOY\}\}/g, pmDeploy);
   fs.writeFileSync(readmePath, readmeContent);
 
-  const samplesDir = path.join(templateDir, "samples");
-  for (const id of sampleChoices) {
-    const sampleRoot = path.join(samplesDir, id);
-    if (fs.existsSync(sampleRoot)) {
-      copyDir(sampleRoot, targetDir);
-    }
-  }
-
-  const appPath = path.join(targetDir, template.appFile);
-  if (fs.existsSync(appPath)) {
-    let appContent = fs.readFileSync(appPath, "utf-8");
-    appContent = template.isVanilla
-      ? injectVanillaSamples(appContent, sampleChoices, sampleConfig)
-      : injectReactSamples(
-          appContent,
-          sampleChoices,
-          sampleConfig,
-          template.isTypeScript,
-        );
-    fs.writeFileSync(appPath, appContent);
-  }
+  applySamples({
+    templateDir,
+    targetDir,
+    template,
+    sampleChoices,
+    mode: "inject",
+  });
 }
 
 function installDependencies(targetDir, packageManager) {

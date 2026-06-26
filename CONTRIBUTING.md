@@ -84,6 +84,7 @@ refactor: scaffold 로직 분리
 - 템플릿을 바꿨다면 영향 받는 템플릿마다 프로젝트 생성을 확인해 주세요.
 - 예제 코드(`--sample`)를 추가·수정할 때는 각 템플릿의 `samples/`와 `src/sample-configs.js`를 함께 맞춰 주세요.
 - React 템플릿의 SDK 연동 로직은 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`에 두는 기존 규칙을 따라 주세요.
+- 이미 생성된 프로젝트에는 `create-ait-app add-sample iap`으로 예제를 추가할 수 있어요.
 
 ### 문서
 
