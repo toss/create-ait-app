@@ -68,11 +68,19 @@ function extractReleaseNotes(body) {
 function isMergedAfterTag(mergeCommitOid, previousTag) {
   if (!previousTag) return true;
 
-  const tagOid = run(`git rev-parse ${previousTag}`);
-  if (mergeCommitOid === tagOid) return false;
+  try {
+    const tagOid = run(`git rev-parse ${previousTag}`);
+    if (mergeCommitOid === tagOid) return false;
 
-  const count = Number(run(`git rev-list --count ${previousTag}..${mergeCommitOid}`));
-  return count > 0;
+    execSync(`git merge-base --is-ancestor ${previousTag} ${mergeCommitOid}`, {
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    // 태그 이후 커밋이 아니거나(이미 릴리스에 포함됨), shallow clone 등으로
+    // ancestry를 확인할 수 없는 경우 제외합니다.
+    return false;
+  }
 }
 
 function main() {
