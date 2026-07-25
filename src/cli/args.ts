@@ -126,6 +126,7 @@ export function printHelp(): void {
     일반 프로젝트에는 apps-in-toss, TDS에는 apps-in-toss와 tds-mobile을 설치해요.
     --skills를 생략하면 Agent Skills를 추가하지 않아요.
     --skip-install을 생략하면 의존성을 설치해요.
+    dev 서버는 자동으로 시작하지 않아요. 생성이 끝난 뒤 안내된 명령으로 직접 시작해요.
 
   예시:
     create-ait-app my-app --inline --pm npm --template react-ts

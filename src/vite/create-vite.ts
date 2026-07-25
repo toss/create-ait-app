@@ -63,9 +63,9 @@ export function getSupportedViteTemplates(): string[] {
 export function scaffoldWithCreateVite(targetDirectory: string, template?: string): void {
   const createViteEntry = require.resolve("create-vite");
   const resolvedTemplate = resolveViteTemplate(template);
-  const args = [createViteEntry, path.basename(targetDirectory)];
+  const args = [createViteEntry, path.basename(targetDirectory), "--no-immediate"];
   if (resolvedTemplate) {
-    args.push("--template", resolvedTemplate);
+    args.push("--template", resolvedTemplate, "--no-interactive");
   }
 
   runCommand({

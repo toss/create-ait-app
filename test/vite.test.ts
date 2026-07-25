@@ -1,10 +1,17 @@
-import { describe, expect, it } from "vitest";
+import path from "node:path";
+import { describe, expect, it, vi } from "vitest";
+import { runCommand } from "../src/system/command.js";
 import {
   getBundledViteTemplates,
   getCreateViteVersion,
   getSupportedViteTemplates,
   resolveViteTemplate,
+  scaffoldWithCreateVite,
 } from "../src/vite/create-vite.js";
+
+vi.mock("../src/system/command.js", () => ({
+  runCommand: vi.fn(),
+}));
 
 describe("pinned create-vite", () => {
   it("uses an exact version and discovers its bundled templates", () => {
@@ -22,5 +29,36 @@ describe("pinned create-vite", () => {
     expect(resolveViteTemplate("js")).toBe("vanilla");
     expect(resolveViteTemplate("ts")).toBe("vanilla-ts");
     expect(resolveViteTemplate("qwik-ts")).toBe("qwik-ts");
+  });
+
+  it("never lets create-vite install dependencies or start the dev server", () => {
+    scaffoldWithCreateVite("/tmp/my-app", "react-ts");
+
+    expect(runCommand).toHaveBeenCalledWith({
+      args: [
+        expect.stringContaining(path.join("create-vite", "index.js")),
+        "my-app",
+        "--no-immediate",
+        "--template",
+        "react-ts",
+        "--no-interactive",
+      ],
+      command: process.execPath,
+      cwd: "/tmp",
+    });
+  });
+
+  it("keeps the create-vite template picker but skips starting the dev server", () => {
+    scaffoldWithCreateVite("/tmp/my-app");
+
+    expect(runCommand).toHaveBeenCalledWith({
+      args: [
+        expect.stringContaining(path.join("create-vite", "index.js")),
+        "my-app",
+        "--no-immediate",
+      ],
+      command: process.execPath,
+      cwd: "/tmp",
+    });
   });
 });
