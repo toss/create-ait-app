@@ -4,12 +4,14 @@ import {
   configureNpmInstallCompatibility,
   type PackageManager,
 } from "../package-manager/package-manager.js";
+import {
+  APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+} from "../apps-in-toss/version-policy.js";
 import { readPackageJson, writePackageJson } from "../project/package-json.js";
 import { getCreateViteVersion } from "../vite/create-vite.js";
 import type { BaseProject } from "./create-base-project.js";
 import { pickPrimaryColor } from "./primary-color.js";
-
-export const APPS_IN_TOSS_WEB_FRAMEWORK_VERSION = "beta";
 
 function writeAppsInTossConfig({
   appName,
@@ -92,7 +94,7 @@ export function initializeAitProject({
   packageJson.name = packageName;
   packageJson.dependencies = {
     ...packageJson.dependencies,
-    "@apps-in-toss/web-framework": APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+    [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   };
   packageJson.scripts = {
     ...packageJson.scripts,

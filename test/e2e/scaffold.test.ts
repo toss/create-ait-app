@@ -3,6 +3,11 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import {
+  APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER,
+  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+} from "../../src/apps-in-toss/version-policy.js";
 import { getSupportedViteTemplates } from "../../src/vite/create-vite.js";
 
 const enabled = process.env.AIT_RUN_E2E === "1";
@@ -14,6 +19,30 @@ const templates =
     : requested.split(",").filter(Boolean);
 const running = new Set<ChildProcess>();
 const temporaryDirectories = new Set<string>();
+
+function resolvePublishedWebFrameworkVersion(): string {
+  const result = spawnSync(
+    "npm",
+    ["view", APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER, "version", "--json"],
+    {
+      encoding: "utf8",
+      env: generatedProjectEnvironment(),
+    },
+  );
+  if (result.status !== 0) {
+    throw new Error(
+      [result.stdout, result.stderr, `${APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER} 조회에 실패했어요.`]
+        .filter(Boolean)
+        .join("\n"),
+    );
+  }
+
+  const version: unknown = JSON.parse(result.stdout);
+  if (typeof version !== "string") {
+    throw new Error(`${APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER} 버전을 확인할 수 없어요.`);
+  }
+  return version;
+}
 
 function findAitArtifacts(projectDirectory: string): string[] {
   const artifacts: string[] = [];
@@ -140,6 +169,8 @@ afterEach(async () => {
 }, 120_000);
 
 describe.skipIf(!enabled)("scaffolding compatibility", () => {
+  const publishedWebFrameworkVersion = enabled ? resolvePublishedWebFrameworkVersion() : null;
+
   it.each(templates)(
     "%s: scaffold, build Vite and Apps in Toss, and start dev server",
     async (template) => {
@@ -188,20 +219,21 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       const packageJson = JSON.parse(
         readFileSync(path.join(projectDirectory, "package.json"), "utf8"),
       );
-      expect(packageJson.dependencies["@apps-in-toss/web-framework"]).toBe("beta");
+      expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
+        APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+      );
       const installedWebFrameworkPackageJson = JSON.parse(
         readFileSync(
           path.join(
             projectDirectory,
             "node_modules",
-            "@apps-in-toss",
-            "web-framework",
+            ...APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME.split("/"),
             "package.json",
           ),
           "utf8",
         ),
       );
-      expect(installedWebFrameworkPackageJson.version).toMatch(/^3\.0\.0-beta\./);
+      expect(installedWebFrameworkPackageJson.version).toBe(publishedWebFrameworkVersion);
       if (sampleIds.length > 0) {
         expect(packageJson.createAitApp.samples).toEqual(sampleIds);
       }

@@ -1,5 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import {
+  APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+  isPrereleaseWebFrameworkChannel,
+} from "../apps-in-toss/version-policy.js";
 import { readPackageJson } from "../project/package-json.js";
 import { runCommand } from "../system/command.js";
 
@@ -44,10 +49,12 @@ export function requiresLegacyNpmPeerDeps(targetDirectory: string): boolean {
   const viteMajor = dependencyMajor(
     packageJson.devDependencies?.vite ?? packageJson.dependencies?.vite,
   );
-  const webFrameworkVersion = packageJson.dependencies?.["@apps-in-toss/web-framework"];
+  const webFrameworkVersion = packageJson.dependencies?.[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME];
   const usesTds = packageJson.dependencies?.["@toss/tds-mobile-ait"] != null;
   const usesPrereleaseWebFramework =
-    webFrameworkVersion === "beta" || /-\w/.test(webFrameworkVersion ?? "");
+    (webFrameworkVersion === APPS_IN_TOSS_WEB_FRAMEWORK_VERSION &&
+      isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_VERSION)) ||
+    /-\w/.test(webFrameworkVersion ?? "");
 
   // create-vite 9.1.1 pairs Qwik 1.x (peer: Vite <8) with Vite 8.
   // The generated CSR app builds successfully, but npm otherwise rejects the

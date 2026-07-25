@@ -67,7 +67,8 @@ SSG+hydration은 모두 대상이에요.
 - 원래 Vite 스크립트는 생성 프로젝트의 `dev:vite`, `build:vite`로도 보존해요.
   `build`는 Vite 빌드 뒤 `ait build`를 실행하고, `deploy`는 `ait deploy`를 실행해요.
 - 생성 프로젝트의 `@apps-in-toss/web-framework` 버전은
-  `APPS_IN_TOSS_WEB_FRAMEWORK_VERSION`을 SSoT로 사용하고 현재 `beta` 태그를 설치해요.
+  `src/apps-in-toss/version-policy.ts`의 `APPS_IN_TOSS_WEB_FRAMEWORK_VERSION`만 SSoT로
+  사용해요. `beta`, `rc`, `latest` 사이에서 전환할 때는 이 값 하나만 바꿔요.
 - `templates/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
 - 선택형 예제 조각은 `assets/samples/`에 두고, 지원되는 React/Vanilla 계열에만
   적용해요.

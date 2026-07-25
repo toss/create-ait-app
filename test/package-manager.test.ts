@@ -9,6 +9,11 @@ import {
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import {
+  APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+  isPrereleaseWebFrameworkChannel,
+} from "../src/apps-in-toss/version-policy.js";
 
 describe("package manager detection", () => {
   it("reads package manager user agents", () => {
@@ -61,7 +66,20 @@ describe("npm install compatibility", () => {
         path.join(directory, "package.json"),
         JSON.stringify({
           dependencies: {
-            "@apps-in-toss/web-framework": "beta",
+            [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+            "@toss/tds-mobile-ait": "latest",
+          },
+        }),
+      );
+      expect(requiresLegacyNpmPeerDeps(directory)).toBe(
+        isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_VERSION),
+      );
+
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({
+          dependencies: {
+            "@apps-in-toss/web-framework": "3.0.0-rc.0",
             "@toss/tds-mobile-ait": "latest",
           },
         }),

@@ -5,7 +5,7 @@ Apps in Toss 웹앱을 시작할 수 있도록 Vite 프로젝트를 만들고 �
 
 Node.js 24 이상이 필요해요.
 
-생성한 프로젝트에는 `@apps-in-toss/web-framework@beta`를 설치해요.
+생성한 프로젝트에는 CLI에서 검증한 `@apps-in-toss/web-framework` 릴리즈 채널을 설치해요.
 
 ## 1. 프로젝트 만들기
 

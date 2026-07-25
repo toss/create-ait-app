@@ -2,6 +2,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import {
+  APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+  isPrereleaseWebFrameworkChannel,
+} from "../src/apps-in-toss/version-policy.js";
 import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
 import {
   createBaseProject,
@@ -9,6 +14,14 @@ import {
   type BaseProject,
 } from "../src/scaffold/create-base-project.js";
 import { finalizeProject } from "../src/scaffold/finalize-project.js";
+
+describe("Apps in Toss web framework version policy", () => {
+  it("supports beta, rc, and latest release channels", () => {
+    expect(isPrereleaseWebFrameworkChannel("beta")).toBe(true);
+    expect(isPrereleaseWebFrameworkChannel("rc")).toBe(true);
+    expect(isPrereleaseWebFrameworkChannel("latest")).toBe(false);
+  });
+});
 
 describe("toNpmPackageName", () => {
   it("normalizes names and scopes", () => {
@@ -62,7 +75,9 @@ describe("finalizeProject", () => {
       dev: "vite --host",
       "dev:vite": "vite --host",
     });
-    expect(packageJson.dependencies["@apps-in-toss/web-framework"]).toBe("beta");
+    expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
+      APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+    );
     expect(packageJson.createAitApp.createViteVersion).toMatch(/^\d+\.\d+\.\d+$/);
     expect(packageJson.createAitApp.sampleShellManaged).toBe(false);
     expect(readFileSync(path.join(directory, "apps-in-toss.config.ts"), "utf8")).toContain(
