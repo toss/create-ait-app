@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   configureNpmInstallCompatibility,
+  configurePnpmInstallCompatibility,
   type PackageManager,
 } from "../package-manager/package-manager.js";
 import {
@@ -9,7 +10,7 @@ import {
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
 } from "../apps-in-toss/version-policy.js";
 import { readPackageJson, writePackageJson } from "../project/package-json.js";
-import { getCreateViteVersion } from "../vite/create-vite.js";
+import { getCreateViteVersion, getViteSampleEntryHash } from "../vite/create-vite.js";
 import type { BaseProject } from "./create-base-project.js";
 import { pickPrimaryColor } from "./primary-color.js";
 
@@ -107,10 +108,19 @@ export function initializeAitProject({
   packageJson.createAitApp = {
     createViteVersion: baseProject.source === "create-vite" ? getCreateViteVersion() : null,
     framework: baseProject.framework,
+    isTypeScript: baseProject.inspection.isTypeScript,
     originalScripts: {
       build: baseProject.inspection.originalBuildCommand,
       dev: baseProject.inspection.originalDevCommand,
     },
+    sampleEntryHash:
+      baseProject.source === "create-vite"
+        ? getViteSampleEntryHash({
+            framework: baseProject.framework,
+            isTypeScript: baseProject.inspection.isTypeScript,
+            targetDirectory,
+          })
+        : null,
     sampleShellManaged: false,
     samples: [],
     source: baseProject.source,
@@ -124,4 +134,5 @@ export function initializeAitProject({
   });
   updateReadme(targetDirectory, packageName, packageManager);
   configureNpmInstallCompatibility(targetDirectory, packageManager);
+  configurePnpmInstallCompatibility(targetDirectory, packageManager);
 }

@@ -50,7 +50,7 @@ export function isSsrOnlyViteBuildCommand(command: string): boolean {
   const viteBuilds = [...command.matchAll(/\bvite\s+build\b([^&;|]*)/g)];
   return (
     viteBuilds.length > 0 &&
-    viteBuilds.every((match) => /(?:^|\s)--ssr(?:\s|$)/.test(match[1] ?? ""))
+    viteBuilds.every((match) => /(?:^|\s)--ssr(?:\s|=|$)/.test(match[1] ?? ""))
   );
 }
 

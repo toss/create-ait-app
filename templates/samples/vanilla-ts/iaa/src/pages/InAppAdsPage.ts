@@ -5,6 +5,15 @@ import "./InAppAdsPage.css";
 const TEST_INTERSTITIAL_ID = "ait-ad-test-interstitial-id";
 const TEST_REWARDED_ID = "ait-ad-test-rewarded-id";
 
+function escapeHtml(value: unknown) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 export function mountInAppAdsPage(onBack: () => void) {
   const root = document.getElementById("root");
   if (!root) return;
@@ -12,6 +21,12 @@ export function mountInAppAdsPage(onBack: () => void) {
 
   const interstitial = createInAppAds(TEST_INTERSTITIAL_ID);
   const rewarded = createInAppAds(TEST_REWARDED_ID);
+  let unsubscribe = () => {};
+
+  function closePage() {
+    unsubscribe();
+    onBack();
+  }
 
   function render() {
     const interstitialState = interstitial.getState();
@@ -62,7 +77,7 @@ export function mountInAppAdsPage(onBack: () => void) {
           </div>
           ${
             rewardedState.lastReward
-              ? `<p class="iaa-reward-message">보상 획득: ${rewardedState.lastReward.unitType} ${rewardedState.lastReward.unitAmount}개</p>`
+              ? `<p class="iaa-reward-message">보상 획득: ${escapeHtml(rewardedState.lastReward.unitType)} ${escapeHtml(rewardedState.lastReward.unitAmount)}개</p>`
               : ""
           }
         </div>
@@ -77,10 +92,15 @@ export function mountInAppAdsPage(onBack: () => void) {
     rootElement
       .querySelector('[data-action="show-rewarded"]')
       ?.addEventListener("click", () => rewarded.showAd());
-    rootElement.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
+    rootElement.querySelector('[data-action="back"]')?.addEventListener("click", closePage);
   }
 
-  interstitial.subscribe(render);
-  rewarded.subscribe(render);
+  const unsubscribeInterstitial = interstitial.subscribe(render);
+  const unsubscribeRewarded = rewarded.subscribe(render);
+  unsubscribe = () => {
+    unsubscribeInterstitial();
+    unsubscribeRewarded();
+  };
   render();
+  return unsubscribe;
 }

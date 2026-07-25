@@ -16,6 +16,12 @@ export function mountInAppPurchasePage(onBack: () => void) {
   const rootElement: HTMLElement = root;
 
   const iap = createInAppPurchase();
+  let unsubscribe = () => {};
+
+  function closePage() {
+    unsubscribe();
+    onBack();
+  }
 
   function render() {
     const { products, productsLoading, purchasingSku } = iap.getState();
@@ -44,7 +50,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
           <button type="button" class="iap-empty-state-back-btn" data-action="back">홈으로</button>
         </div>
       `;
-      rootElement.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
+      rootElement.querySelector('[data-action="back"]')?.addEventListener("click", closePage);
       return;
     }
 
@@ -91,7 +97,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
       </div>
     `;
 
-    rootElement.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
+    rootElement.querySelector('[data-action="back"]')?.addEventListener("click", closePage);
     rootElement.querySelectorAll<HTMLButtonElement>("[data-sku]").forEach((button) => {
       button.addEventListener("click", () => {
         const sku = button.dataset.sku;
@@ -100,7 +106,8 @@ export function mountInAppPurchasePage(onBack: () => void) {
     });
   }
 
-  iap.subscribe(render);
+  unsubscribe = iap.subscribe(render);
   iap.restorePendingOrders();
   render();
+  return unsubscribe;
 }

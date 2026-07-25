@@ -27,7 +27,7 @@ export function applyProjectSamples({
   const packageJson = readPackageJson(targetDirectory);
   if (packageJson.createAitApp) {
     packageJson.createAitApp.samples = sampleIds;
-    if (sampleIds.length > 0) {
+    if (useTds || sampleIds.length > 0) {
       packageJson.createAitApp.sampleShellManaged = true;
     }
     writePackageJson(targetDirectory, packageJson);

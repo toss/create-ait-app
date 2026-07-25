@@ -1,3 +1,5 @@
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { runCommand } from "../src/system/command.js";
@@ -60,5 +62,22 @@ describe("pinned create-vite", () => {
       command: process.execPath,
       cwd: "/tmp",
     });
+  });
+
+  it("creates missing parent directories for nested project paths", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "create-ait-vite-parent-"));
+    const targetDirectory = path.join(root, "nested", "my-app");
+
+    try {
+      scaffoldWithCreateVite(targetDirectory, "react-ts");
+      expect(existsSync(path.dirname(targetDirectory))).toBe(true);
+      expect(runCommand).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          cwd: path.dirname(targetDirectory),
+        }),
+      );
+    } finally {
+      rmSync(root, { force: true, recursive: true });
+    }
   });
 });

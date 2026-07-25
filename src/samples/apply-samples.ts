@@ -3,6 +3,13 @@ import path from "node:path";
 import type { FrameworkKind } from "../project/framework.js";
 import { copyDirectory } from "../system/copy-directory.js";
 import { templatesDirectory } from "../system/paths.js";
+import {
+  REACT_SAMPLE_BUTTON_MARKERS,
+  SAMPLE_IMPORT_MARKERS,
+  SAMPLE_ROUTE_MARKERS,
+  updateManagedSampleShell,
+  VANILLA_SAMPLE_BUTTON_MARKERS,
+} from "./managed-sample-shell.js";
 
 export const SAMPLE_IDS = ["iap", "iaa"] as const;
 export type SampleId = (typeof SAMPLE_IDS)[number];
@@ -83,6 +90,7 @@ function writeReactSampleShell(
   targetDirectory: string,
   isTypeScript: boolean,
   sampleIds: SampleId[],
+  preserveExistingShell: boolean,
 ): void {
   const definitions = reactDefinitions(isTypeScript, false);
   const appPath = path.join(targetDirectory, "src", isTypeScript ? "App.tsx" : "App.jsx");
@@ -95,36 +103,49 @@ function writeReactSampleShell(
   const buttons = sampleIds.map((id) => `        ${definitions[id].button}`).join("\n");
   const state = isTypeScript ? "useState<string | null>(null)" : "useState(null)";
 
-  writeFileSync(
-    appPath,
-    `import { useState } from "react";
+  const nextContent = `import { useState } from "react";
+${SAMPLE_IMPORT_MARKERS.start}
 ${imports}
+${SAMPLE_IMPORT_MARKERS.end}
 
 function App() {
   const [page, setPage] = ${state};
 
+  ${SAMPLE_ROUTE_MARKERS.start}
 ${routes}
+  ${SAMPLE_ROUTE_MARKERS.end}
 
   return (
     <main>
       <h1>Apps in Toss</h1>
       <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        ${REACT_SAMPLE_BUTTON_MARKERS.start}
 ${buttons}
+        ${REACT_SAMPLE_BUTTON_MARKERS.end}
       </div>
     </main>
   );
 }
 
 export default App;
-`,
-  );
+`;
+
+  const content = preserveExistingShell
+    ? updateManagedSampleShell(
+        readFileSync(appPath, "utf8"),
+        nextContent,
+        REACT_SAMPLE_BUTTON_MARKERS,
+      )
+    : nextContent;
+  writeFileSync(appPath, content);
 }
 
 function writeVanillaSampleShell(
   targetDirectory: string,
   isTypeScript: boolean,
   sampleIds: SampleId[],
+  preserveExistingShell: boolean,
 ): void {
   const definitions = vanillaDefinitions(isTypeScript);
   const mainPath = path.join(targetDirectory, "src", isTypeScript ? "main.ts" : "main.js");
@@ -136,9 +157,9 @@ function writeVanillaSampleShell(
   const routes = sampleIds.map((id) => definitions[id].route).join("\n");
   const buttons = sampleIds.map((id) => `      ${definitions[id].button}`).join("\n");
 
-  writeFileSync(
-    mainPath,
-    `${imports}
+  const nextContent = `${SAMPLE_IMPORT_MARKERS.start}
+${imports}
+${SAMPLE_IMPORT_MARKERS.end}
 import "./style.css";
 
 let currentPage = null${isTypeScript ? " as string | null" : ""};
@@ -156,7 +177,9 @@ function showHome() {
 }
 
 function render() {
+  ${SAMPLE_ROUTE_MARKERS.start}
 ${routes}
+  ${SAMPLE_ROUTE_MARKERS.end}
 
   const root = document.getElementById("root");
   if (!root) return;
@@ -165,7 +188,9 @@ ${routes}
       <h1>Apps in Toss</h1>
       <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
       <div>
+      ${VANILLA_SAMPLE_BUTTON_MARKERS.start}
 ${buttons}
+      ${VANILLA_SAMPLE_BUTTON_MARKERS.end}
       </div>
     </main>
   \`;
@@ -178,12 +203,19 @@ ${buttons}
 }
 
 render();
-`,
-  );
+`;
+
+  const content = preserveExistingShell
+    ? updateManagedSampleShell(
+        readFileSync(mainPath, "utf8"),
+        nextContent,
+        VANILLA_SAMPLE_BUTTON_MARKERS,
+      )
+    : nextContent;
+  writeFileSync(mainPath, content);
 }
 
-export function applyTdsSamples(targetDirectory: string, sampleIds: SampleId[]): void {
-  const appPath = path.join(targetDirectory, "src", "App.tsx");
+function renderTdsSampleShell(sampleIds: SampleId[]): string {
   const templateAppPath = path.join(
     templatesDirectory,
     "projects",
@@ -192,27 +224,48 @@ export function applyTdsSamples(targetDirectory: string, sampleIds: SampleId[]):
     "App.tsx",
   );
   const definitions = reactDefinitions(true, true);
+  const imports = sampleIds.map((id) => definitions[id].import).join("\n");
+  const routes = sampleIds.map((id) => definitions[id].route).join("\n");
+  const buttons = sampleIds.map((id) => `        ${definitions[id].button}`).join("\n");
   let content = readFileSync(templateAppPath, "utf8");
 
   content = content
     .replace(
       "{{SAMPLE_IMPORTS}}",
-      sampleIds.length > 0
-        ? `${sampleIds.map((id) => definitions[id].import).join("\n")}\nimport { useState } from "react";`
-        : "",
+      `${SAMPLE_IMPORT_MARKERS.start}
+${imports}${sampleIds.length > 0 ? '\nimport { useState } from "react";' : ""}
+${SAMPLE_IMPORT_MARKERS.end}`,
     )
     .replace(
       "{{PAGE_STATE_AND_ROUTES}}",
-      sampleIds.length > 0
-        ? `const [page, setPage] = useState<string | null>(null);\n\n${sampleIds
-            .map((id) => definitions[id].route.trimStart())
-            .join("\n  ")}`
-        : "",
+      `${SAMPLE_ROUTE_MARKERS.start}
+${sampleIds.length > 0 ? "  const [page, setPage] = useState<string | null>(null);\n\n" : ""}${routes}
+  ${SAMPLE_ROUTE_MARKERS.end}`,
     )
     .replace(
       "{{SAMPLE_BUTTONS}}",
-      sampleIds.map((id) => definitions[id].button).join("\n        "),
+      `${REACT_SAMPLE_BUTTON_MARKERS.start}
+${buttons}
+        ${REACT_SAMPLE_BUTTON_MARKERS.end}`,
     );
+
+  return content;
+}
+
+export function applyTdsSamples(
+  targetDirectory: string,
+  sampleIds: SampleId[],
+  options: { preserveExistingShell?: boolean } = {},
+): void {
+  const appPath = path.join(targetDirectory, "src", "App.tsx");
+  const nextContent = renderTdsSampleShell(sampleIds);
+  const content = options.preserveExistingShell
+    ? updateManagedSampleShell(
+        readFileSync(appPath, "utf8"),
+        nextContent,
+        REACT_SAMPLE_BUTTON_MARKERS,
+      )
+    : nextContent;
 
   writeFileSync(appPath, content);
   for (const sampleId of sampleIds) {
@@ -229,11 +282,13 @@ export function applyViteSamples({
   isTypeScript,
   sampleIds,
   targetDirectory,
+  preserveExistingShell = false,
 }: {
   framework: FrameworkKind;
   isTypeScript: boolean;
   sampleIds: SampleId[];
   targetDirectory: string;
+  preserveExistingShell?: boolean;
 }): void {
   if (sampleIds.length === 0) {
     return;
@@ -247,12 +302,12 @@ export function applyViteSamples({
 
   if (framework === "react") {
     const variant = isTypeScript ? "react-ts" : "react";
+    writeReactSampleShell(targetDirectory, isTypeScript, sampleIds, preserveExistingShell);
     copySampleAssets(targetDirectory, variant, sampleIds);
-    writeReactSampleShell(targetDirectory, isTypeScript, sampleIds);
     return;
   }
 
   const variant = isTypeScript ? "vanilla-ts" : "vanilla";
+  writeVanillaSampleShell(targetDirectory, isTypeScript, sampleIds, preserveExistingShell);
   copySampleAssets(targetDirectory, variant, sampleIds);
-  writeVanillaSampleShell(targetDirectory, isTypeScript, sampleIds);
 }

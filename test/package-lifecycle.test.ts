@@ -13,6 +13,10 @@ describe("package lifecycle", () => {
     };
     const tsdownConfig = readFileSync(path.join(repositoryRoot, "tsdown.config.ts"), "utf8");
     const entrySource = readFileSync(path.join(repositoryRoot, "src", "index.ts"), "utf8");
+    const publishWorkflow = readFileSync(
+      path.join(repositoryRoot, ".github", "workflows", "publish.yml"),
+      "utf8",
+    );
 
     expect(packageJson.scripts.build).toBe("tsdown");
     expect(packageJson.scripts.prepack).toBeUndefined();
@@ -26,5 +30,11 @@ describe("package lifecycle", () => {
     expect(tsdownConfig).not.toMatch(/\bindex\s*:/);
     expect(tsdownConfig).toContain("dts: false");
     expect(tsdownConfig).not.toMatch(/\bpublint\s*:/);
+    expect(publishWorkflow).toMatch(
+      /- name: Publish to npm\n\s+if: steps\.should_publish\.outputs\.publish == 'true'/,
+    );
+    expect(publishWorkflow).toMatch(
+      /- name: Create GitHub Release\n\s+if: steps\.version\.outputs\.publish == 'true'/,
+    );
   });
 });

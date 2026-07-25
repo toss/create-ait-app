@@ -18,7 +18,8 @@ export function installProjectSkills({
 
   runCommand({
     args,
-    command: process.platform === "win32" ? "npx.cmd" : "npx",
+    command: "npx",
     cwd: targetDirectory,
+    unsetEnv: ["NODE_OPTIONS"],
   });
 }

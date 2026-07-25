@@ -126,7 +126,9 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 ```
 
 `add-sample`은 create-ait-app으로 만든 지원 프로젝트만 수정해요. 이미 추가된 예제는
-건너뛰고 새 예제만 더해요.
+건너뛰고 새 예제만 더해요. 첫 예제를 나중에 추가할 때 Vite의 `App` 또는 `main`
+진입 파일이 이미 수정되어 있으면 사용자 코드를 덮어쓰지 않고 중단해요. 예제 셸이
+생성된 뒤에는 관리 주석 바깥의 사용자 코드를 유지하면서 새 예제만 추가해요.
 
 ## Agent Skills 사용하기
 

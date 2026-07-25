@@ -87,8 +87,30 @@ export function configureNpmInstallCompatibility(
   }
 }
 
+export function configurePnpmInstallCompatibility(
+  targetDirectory: string,
+  packageManager: PackageManager,
+): void {
+  if (packageManager !== "pnpm") {
+    return;
+  }
+
+  // pnpm 11 rejects unreviewed dependency build scripts by default. protobufjs
+  // is a transitive dependency of the pinned Apps in Toss framework and its
+  // published postinstall is intentionally trusted by generated projects.
+  writeFileSync(
+    path.join(targetDirectory, "pnpm-workspace.yaml"),
+    "allowBuilds:\n  protobufjs: true\n",
+  );
+}
+
 export function installDependencies(targetDirectory: string, packageManager: PackageManager): void {
-  runCommand({ args: ["install"], command: packageManager, cwd: targetDirectory });
+  runCommand({
+    args: ["install"],
+    command: packageManager,
+    cwd: targetDirectory,
+    unsetEnv: ["NODE_OPTIONS"],
+  });
 }
 
 export function runPackageScript(
@@ -97,5 +119,10 @@ export function runPackageScript(
   script: string,
 ): void {
   const args = packageManager === "npm" ? ["run", script] : [script];
-  runCommand({ args, command: packageManager, cwd: targetDirectory });
+  runCommand({
+    args,
+    command: packageManager,
+    cwd: targetDirectory,
+    unsetEnv: ["NODE_OPTIONS"],
+  });
 }

@@ -29,8 +29,9 @@ describe("installProjectSkills", () => {
         "--copy",
         "--yes",
       ],
-      command: process.platform === "win32" ? "npx.cmd" : "npx",
+      command: "npx",
       cwd: "/tmp/example-app",
+      unsetEnv: ["NODE_OPTIONS"],
     });
   });
 

@@ -70,7 +70,7 @@ jobs:
           fi
 
       - name: Validate package
-        if: steps.should_publish.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true'
         run: |
           yarn format:check
           yarn lint
@@ -80,7 +80,7 @@ jobs:
           yarn publint
 
       - name: Collect release notes
-        if: steps.should_publish.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -93,7 +93,7 @@ jobs:
         run: npm publish --tag "${{ steps.release.outputs.tag }}"
 
       - name: Create GitHub Release
-        if: steps.should_publish.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}

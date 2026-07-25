@@ -61,5 +61,6 @@ describe("assertCsrViteProject", () => {
     });
     expect(() => assertCsrViteProject(directory)).toThrow("SSR 전용 Vite build");
     expect(isSsrOnlyViteBuildCommand("vite build && vite build --ssr")).toBe(false);
+    expect(isSsrOnlyViteBuildCommand("vite build --ssr=src/entry-server.ts")).toBe(true);
   });
 });

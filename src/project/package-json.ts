@@ -13,10 +13,12 @@ export interface PackageJson {
   createAitApp?: {
     createViteVersion: string | null;
     framework: FrameworkKind;
+    isTypeScript?: boolean;
     originalScripts: {
       build: string;
       dev: string;
     };
+    sampleEntryHash?: string | null;
     sampleShellManaged: boolean;
     samples?: SampleId[];
     source: "create-vite" | "tds-template";

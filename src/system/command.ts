@@ -1,4 +1,5 @@
-import { spawnSync, type SpawnSyncOptions } from "node:child_process";
+import type { SpawnSyncOptions } from "node:child_process";
+import crossSpawn from "cross-spawn";
 
 export interface RunCommandOptions {
   args?: string[];
@@ -6,6 +7,7 @@ export interface RunCommandOptions {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   stdio?: SpawnSyncOptions["stdio"];
+  unsetEnv?: string[];
 }
 
 export function runCommand({
@@ -14,10 +16,16 @@ export function runCommand({
   cwd,
   env,
   stdio = "inherit",
+  unsetEnv = [],
 }: RunCommandOptions): void {
-  const result = spawnSync(command, args, {
+  const commandEnvironment = { ...process.env, ...env };
+  for (const key of unsetEnv) {
+    delete commandEnvironment[key];
+  }
+
+  const result = crossSpawn.sync(command, args, {
     cwd,
-    env: env ? { ...process.env, ...env } : process.env,
+    env: commandEnvironment,
     stdio,
   });
 

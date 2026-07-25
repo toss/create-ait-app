@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
-const version = process.argv[2];
-if (!version) {
-  console.error("Usage: node collect-release-notes.mjs <version>");
-  process.exit(1);
-}
-
-function run(command) {
-  return execSync(command, {
+function run(command, args) {
+  return execFileSync(command, args, {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
@@ -17,16 +12,25 @@ function run(command) {
 
 function getPreviousTag() {
   try {
-    return run("git describe --tags --abbrev=0 HEAD^");
+    return run("git", ["describe", "--tags", "--abbrev=0", "HEAD^"]);
   } catch {
     return null;
   }
 }
 
 function getMergedPullRequests() {
-  const json = run(
-    "gh pr list --state merged --base main --limit 100 --json number,title,body,mergeCommit,mergedAt",
-  );
+  const json = run("gh", [
+    "pr",
+    "list",
+    "--state",
+    "merged",
+    "--base",
+    "main",
+    "--limit",
+    "100",
+    "--json",
+    "number,title,body,mergeCommit,mergedAt",
+  ]);
   return JSON.parse(json);
 }
 
@@ -65,25 +69,40 @@ function extractReleaseNotes(body) {
   return text;
 }
 
-function isMergedAfterTag(mergeCommitOid, previousTag) {
-  if (!previousTag) return true;
-
+function isAncestor(ancestor, descendant) {
   try {
-    const tagOid = run(`git rev-parse ${previousTag}`);
-    if (mergeCommitOid === tagOid) return false;
-
-    execSync(`git merge-base --is-ancestor ${previousTag} ${mergeCommitOid}`, {
+    execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], {
       stdio: "ignore",
     });
     return true;
   } catch {
-    // 태그 이후 커밋이 아니거나(이미 릴리스에 포함됨), shallow clone 등으로
-    // ancestry를 확인할 수 없는 경우 제외합니다.
     return false;
   }
 }
 
+export function isMergedAfterTag(
+  mergeCommitOid,
+  previousTag,
+  head = "HEAD",
+  ancestorCheck = isAncestor,
+) {
+  if (!ancestorCheck(mergeCommitOid, head)) {
+    return false;
+  }
+  if (!previousTag) {
+    return true;
+  }
+
+  return ancestorCheck(previousTag, mergeCommitOid) && !ancestorCheck(mergeCommitOid, previousTag);
+}
+
 function main() {
+  const version = process.argv[2];
+  if (!version) {
+    console.error("Usage: node collect-release-notes.mjs <version>");
+    process.exit(1);
+  }
+
   const previousTag = getPreviousTag();
   const pullRequests = getMergedPullRequests()
     .filter((pr) => pr.mergeCommit?.oid && isMergedAfterTag(pr.mergeCommit.oid, previousTag))
@@ -107,4 +126,6 @@ function main() {
   );
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

@@ -42,9 +42,11 @@
   },
   "dependencies": {
     "@inquirer/prompts": "8.5.2",
-    "create-vite": "9.1.1"
+    "create-vite": "9.1.1",
+    "cross-spawn": "7.0.6"
   },
   "devDependencies": {
+    "@types/cross-spawn": "6.0.6",
     "@types/node": "26.1.1",
     "oxfmt": "0.60.0",
     "oxlint": "1.75.0",

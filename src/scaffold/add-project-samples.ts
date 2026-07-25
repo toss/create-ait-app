@@ -10,11 +10,15 @@ import {
   type SampleId,
 } from "../samples/apply-samples.js";
 import type { FrameworkKind } from "../project/framework.js";
+import { getViteSampleEntryHash, isUnmodifiedBundledViteSampleEntry } from "../vite/create-vite.js";
 
 export interface SampleProject {
   framework: FrameworkKind;
   installedSampleIds: SampleId[];
   isTypeScript: boolean;
+  sampleEntryHash: string | null;
+  sampleShellManaged: boolean;
+  template: string | null;
   useTds: boolean;
 }
 
@@ -56,7 +60,10 @@ export function inspectSampleProject(targetDirectory: string): SampleProject {
   return {
     framework: metadata.framework,
     installedSampleIds: metadata.samples ?? detectInstalledSampleIds(targetDirectory),
-    isTypeScript: isTypeScriptProject(targetDirectory),
+    isTypeScript: metadata.isTypeScript ?? isTypeScriptProject(targetDirectory),
+    sampleEntryHash: metadata.sampleEntryHash ?? null,
+    sampleShellManaged: metadata.sampleShellManaged === true,
+    template: metadata.template,
     useTds,
   };
 }
@@ -85,12 +92,37 @@ export function addProjectSamples(
     };
   }
 
+  if (
+    !project.useTds &&
+    !project.sampleShellManaged &&
+    (project.sampleEntryHash
+      ? project.sampleEntryHash !==
+        getViteSampleEntryHash({
+          framework: project.framework,
+          isTypeScript: project.isTypeScript,
+          targetDirectory,
+        })
+      : !isUnmodifiedBundledViteSampleEntry({
+          framework: project.framework,
+          isTypeScript: project.isTypeScript,
+          targetDirectory,
+          template: project.template,
+        }))
+  ) {
+    throw new Error(
+      "App/main 파일이 Vite 초기 상태에서 수정되어 첫 예제 코드를 안전하게 추가할 수 없어요.",
+    );
+  }
+
   if (project.useTds) {
-    applyTdsSamples(targetDirectory, installedSampleIds);
+    applyTdsSamples(targetDirectory, installedSampleIds, {
+      preserveExistingShell: project.sampleShellManaged,
+    });
   } else {
     applyViteSamples({
       framework: project.framework,
       isTypeScript: project.isTypeScript,
+      preserveExistingShell: project.sampleShellManaged,
       sampleIds: installedSampleIds,
       targetDirectory,
     });
