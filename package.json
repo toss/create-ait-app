@@ -18,9 +18,7 @@
     "type": "git",
     "url": "git+https://github.com/toss/create-ait-app.git"
   },
-  "bin": {
-    "create-ait-app": "./dist/cli.mjs"
-  },
+  "bin": "./dist/cli.mjs",
   "files": [
     "dist",
     "skills",
