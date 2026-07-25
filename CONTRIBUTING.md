@@ -69,9 +69,10 @@ SSG+hydration은 모두 대상이에요.
 - 생성 프로젝트의 `@apps-in-toss/web-framework` 버전은
   `src/apps-in-toss/version-policy.ts`의 `APPS_IN_TOSS_WEB_FRAMEWORK_VERSION`만 SSoT로
   사용해요. `beta`, `rc`, `latest` 사이에서 전환할 때는 이 값 하나만 바꿔요.
-- `templates/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
-- 선택형 예제 조각은 `assets/samples/`에 두고, 지원되는 React/Vanilla 계열에만
-  적용해요.
+- `templates/projects/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
+- 생성 결과에 복사하는 파일 원본은 `templates/`에서 관리해요. 완성형 프로젝트 뼈대는
+  `templates/projects/`, 선택형 예제 조각은 `templates/samples/`에 두고 지원되는
+  React/Vanilla 계열에만 적용해요.
 - Agent Skills는 루트 `skills/`에 vercel-labs/skills 형식으로 관리해요.
 - `npx skills add . --list`로 두 스킬을 찾을 수 있어야 해요.
 - 생성 프로젝트에는 `npx --yes skills@latest add`와 `--copy`로 설치해 스캐폴더

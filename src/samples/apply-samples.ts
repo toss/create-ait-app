@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { FrameworkKind } from "../project/framework.js";
 import { copyDirectory } from "../system/copy-directory.js";
-import { assetsDirectory, templatesDirectory } from "../system/paths.js";
+import { templatesDirectory } from "../system/paths.js";
 
 export const SAMPLE_IDS = ["iap", "iaa"] as const;
 export type SampleId = (typeof SAMPLE_IDS)[number];
@@ -69,9 +69,13 @@ function copySampleAssets(
   sampleIds: SampleId[],
 ): void {
   for (const sampleId of sampleIds) {
-    copyDirectory(path.join(assetsDirectory, "samples", assetVariant, sampleId), targetDirectory, {
-      skipExisting: true,
-    });
+    copyDirectory(
+      path.join(templatesDirectory, "samples", assetVariant, sampleId),
+      targetDirectory,
+      {
+        skipExisting: true,
+      },
+    );
   }
 }
 
@@ -180,7 +184,13 @@ render();
 
 export function applyTdsSamples(targetDirectory: string, sampleIds: SampleId[]): void {
   const appPath = path.join(targetDirectory, "src", "App.tsx");
-  const templateAppPath = path.join(templatesDirectory, "react-ts-tds", "src", "App.tsx");
+  const templateAppPath = path.join(
+    templatesDirectory,
+    "projects",
+    "react-ts-tds",
+    "src",
+    "App.tsx",
+  );
   const definitions = reactDefinitions(true, true);
   let content = readFileSync(templateAppPath, "utf8");
 
@@ -207,7 +217,7 @@ export function applyTdsSamples(targetDirectory: string, sampleIds: SampleId[]):
   writeFileSync(appPath, content);
   for (const sampleId of sampleIds) {
     copyDirectory(
-      path.join(templatesDirectory, "react-ts-tds", "samples", sampleId),
+      path.join(templatesDirectory, "samples", "react-ts-tds", sampleId),
       targetDirectory,
       { skipExisting: true },
     );

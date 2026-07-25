@@ -36,8 +36,8 @@ export function toNpmPackageName(input: string): string {
 }
 
 function createTdsProject(targetDirectory: string, packageName: string): BaseProject {
-  const templateDirectory = path.join(templatesDirectory, "react-ts-tds");
-  copyDirectory(templateDirectory, targetDirectory, { exclude: ["samples"] });
+  const templateDirectory = path.join(templatesDirectory, "projects", "react-ts-tds");
+  copyDirectory(templateDirectory, targetDirectory);
 
   const packageJson = readPackageJson(targetDirectory);
   packageJson.name = packageName;

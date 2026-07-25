@@ -22,7 +22,6 @@
     "create-ait-app": "./dist/cli.mjs"
   },
   "files": [
-    "assets",
     "dist",
     "skills",
     "templates"
