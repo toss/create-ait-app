@@ -57,6 +57,10 @@ SSG+hydration은 모두 대상이에요.
 - `dist/`와 `package.json`의 export/bin 경로는 tsdown의 `exports: true`가 관리해요.
 - 일반 정적 클라이언트 앱의 뼈대는 `create-vite`가 유일한 원본이에요. 저장소에
   프레임워크별 전체 템플릿을 복제하지 마세요.
+- create-vite 실행 뒤 루트 `index.html`, Vite 의존성, `dev`·`build` 스크립트를
+  확인해요. Vite SSR 번들만 만드는 `build`는 거부해요.
+- 원래 Vite 스크립트는 생성 프로젝트의 `dev:vite`, `build:vite`로 보존하고 Apps in
+  Toss 명령은 `dev`, `build`, `deploy`로 제공해요.
 - `templates/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
 - 선택형 예제 조각은 `assets/samples/`에 두고, 지원되는 React/Vanilla 계열에만
   적용해요.
