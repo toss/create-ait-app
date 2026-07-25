@@ -12,9 +12,19 @@ import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
 import { installProjectDependencies } from "../scaffold/install-project-dependencies.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
 import { installProjectSkills } from "../skills/install-skills.js";
-import { getCreateViteVersion } from "../vite/create-vite.js";
+import {
+  getCreateViteVersion,
+  getSupportedViteTemplates,
+  VITE_TEMPLATE_ALIASES,
+} from "../vite/create-vite.js";
 import { runAddSample } from "./add-sample.js";
-import { parseArgs, parseSampleIds, printHelp, type CliArgs } from "./args.js";
+import {
+  assertNonInteractiveArgs,
+  parseArgs,
+  parseSampleIds,
+  printHelp,
+  type CliArgs,
+} from "./args.js";
 
 function assertChoice<T extends string>(
   value: string | undefined,
@@ -37,7 +47,6 @@ async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
   const detected = detectInvokedPackageManager();
   if (detected) return detected;
 
-  if (args.inline) return "npm";
   return select({
     choices: PACKAGE_MANAGERS.map((value) => ({ name: value, value })),
     message: "사용할 패키지 매니저를 골라 주세요:",
@@ -91,6 +100,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     await runAddSample(args);
     return;
   }
+  assertNonInteractiveArgs(args);
   if (args._.length > 1) {
     throw new Error(`알 수 없는 인수예요: ${args._.slice(1).join(" ")}`);
   }
@@ -116,11 +126,18 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
       message: "TDS를 사용할까요? (React 18 전용 템플릿 사용)",
     });
   }
-  if (useTds && args.template && !["react-ts", "react-ts-tds"].includes(args.template)) {
-    throw new Error("--tds는 react-ts 프리셋에서만 사용할 수 있어요.");
+  if (useTds && args.template) {
+    throw new Error("--template과 --tds는 함께 사용할 수 없어요. 둘 중 하나만 선택해 주세요.");
   }
+  const supportedTemplates = [
+    ...getSupportedViteTemplates(),
+    ...Object.keys(VITE_TEMPLATE_ALIASES),
+  ];
+  const explicitTemplate = useTds
+    ? undefined
+    : assertChoice(args.template, supportedTemplates, "지원하지 않는 Vite 프리셋이에요");
 
-  const template = useTds ? "react-ts" : (args.template ?? (args.inline ? "react-ts" : undefined));
+  const template = useTds ? "react-ts" : explicitTemplate;
   const packageName = toNpmPackageName(path.basename(projectName));
 
   console.log(

@@ -1,7 +1,7 @@
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { parseAddSampleCommand } from "../src/cli/add-sample.js";
-import { parseArgs, parseSampleIds } from "../src/cli/args.js";
+import { assertNonInteractiveArgs, parseArgs, parseSampleIds, printHelp } from "../src/cli/args.js";
 
 describe("parseArgs", () => {
   it("parses typed CLI options", () => {
@@ -33,6 +33,38 @@ describe("parseArgs", () => {
 
   it("rejects unknown options", () => {
     expect(() => parseArgs(["--wat"])).toThrow("알 수 없는 옵션");
+  });
+
+  it("requires every decision that could otherwise open a prompt", () => {
+    expect(() => assertNonInteractiveArgs(parseArgs(["--inline"]))).toThrow(
+      "프로젝트 경로, --pm <npm|yarn|pnpm>, --template <프리셋> 또는 --tds",
+    );
+    expect(() =>
+      assertNonInteractiveArgs(
+        parseArgs(["my-app", "--inline", "--pm", "npm", "--template", "react-ts"]),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertNonInteractiveArgs(parseArgs(["my-app", "--inline", "--pm", "pnpm", "--tds"])),
+    ).not.toThrow();
+    expect(() =>
+      assertNonInteractiveArgs(
+        parseArgs(["my-app", "--inline", "--pm", "npm", "--template", "react-ts", "--tds"]),
+      ),
+    ).toThrow("둘 중 하나만 선택");
+  });
+
+  it("explains the complete non-interactive contract", () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    printHelp();
+
+    const help = String(log.mock.calls[0]?.[0]);
+    expect(help).toContain("에이전트·CI 비대화형 실행");
+    expect(help).toContain("프로젝트 경로, --inline, --pm");
+    expect(help).toContain("--template 또는 --tds");
+    expect(help).toContain("react-ts");
+    expect(help).toContain("--skills를 생략하면 Agent Skills를 추가하지 않아요.");
+    log.mockRestore();
   });
 });
 

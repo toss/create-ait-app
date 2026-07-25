@@ -1,4 +1,4 @@
-export { parseArgs, parseSampleIds, printHelp } from "./cli/args.js";
+export { assertNonInteractiveArgs, parseArgs, parseSampleIds, printHelp } from "./cli/args.js";
 export { parseAddSampleCommand, runAddSample } from "./cli/add-sample.js";
 export {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,

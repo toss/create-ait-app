@@ -1,5 +1,6 @@
 import type { PackageManager } from "../package-manager/package-manager.js";
 import { SAMPLE_IDS, type SampleId } from "../samples/apply-samples.js";
+import { getSupportedViteTemplates } from "../vite/create-vite.js";
 
 export interface CliArgs {
   _: string[];
@@ -77,20 +78,60 @@ export function parseSampleIds(values: string[]): SampleId[] {
   return [...new Set(values)] as SampleId[];
 }
 
+export function assertNonInteractiveArgs(args: CliArgs): void {
+  if (!args.inline) return;
+  if (args.tds && args.template) {
+    throw new Error("--template과 --tds는 함께 사용할 수 없어요. 둘 중 하나만 선택해 주세요.");
+  }
+
+  const missing: string[] = [];
+  if (!args._[0]) missing.push("프로젝트 경로");
+  if (!args.pm) missing.push("--pm <npm|yarn|pnpm>");
+  if (!args.tds && !args.template) missing.push("--template <프리셋> 또는 --tds");
+
+  if (missing.length > 0) {
+    throw new Error(
+      `비대화형 실행에 필요한 값이 빠졌어요: ${missing.join(", ")}. 사용 가능한 선택지는 --help에서 확인해 주세요.`,
+    );
+  }
+}
+
 export function printHelp(): void {
+  const templates = getSupportedViteTemplates().join(", ");
   console.log(`
 사용법: create-ait-app [project-name] [options]
        create-ait-app add-sample [directory] [iap,iaa] [--sample iap,iaa]
 
 옵션:
-  --inline           질문을 생략해요 (기본 Vite 프리셋: react-ts)
+  --inline           모든 질문을 생략하고 비대화형으로 실행해요
   --pm <name>        패키지 매니저를 골라요 (npm, yarn, pnpm)
-  --template <name>  create-vite 프리셋을 골라요 (예: vue-ts, svelte, solid-ts)
+  --template <name>  create-vite 프리셋을 골라요
   --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요
   --skills           최신 공식 문서를 조회하는 Agent Skills를 추가해요
   --sample <name>    예제 코드를 추가해요 (iap, iaa / 복수: iap,iaa)
   --skip-install     의존성 설치를 생략해요
   --help             도움말을 보여 줘요
+
+에이전트·CI 비대화형 실행:
+  프로젝트 경로, --inline, --pm, 그리고 --template 또는 --tds가 반드시 필요해요.
+  --template과 --tds 중 하나를 선택해 주세요.
+
+  Vite 프리셋:
+    ${templates}
+
+  선택 기능:
+    --sample은 React, Vanilla, TDS 프로젝트에서만 사용할 수 있어요.
+    --sample을 생략하면 예제를 추가하지 않아요.
+    --skills를 지정하면 공식 Skills CLI가 에이전트를 자동 감지해요.
+    일반 프로젝트에는 apps-in-toss, TDS에는 apps-in-toss와 tds-mobile을 설치해요.
+    --skills를 생략하면 Agent Skills를 추가하지 않아요.
+    --skip-install을 생략하면 의존성을 설치해요.
+
+  예시:
+    create-ait-app my-app --inline --pm npm --template react-ts
+    create-ait-app my-app --inline --pm pnpm --tds --sample iap,iaa --skills
+
+  add-sample을 비대화형으로 실행할 때는 --inline --sample <iap|iaa>를 지정해요.
 
 일반 프로젝트는 고정된 create-vite 버전의 선택 화면을 그대로 사용해요.
 CSR과 SSG+hydration을 지원하지만 SSR 전용 프로젝트는 지원하지 않아요.

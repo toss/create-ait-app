@@ -5,6 +5,27 @@ Apps in Toss 웹앱을 시작할 수 있도록 Vite 프로젝트를 만들고 �
 
 Node.js 24 이상이 필요해요.
 
+## 에이전트에게 프로젝트 생성을 맡기기
+
+아래 프롬프트를 에이전트에게 전달하면 필요한 선택을 먼저 확인한 뒤 프로젝트 생성까지
+비대화형으로 완료해요.
+
+> `npx --yes create-ait-app --help`를 먼저 실행해 주세요. 도움말을 기준으로 프로젝트
+> 경로, 패키지 매니저, TDS 사용 여부 또는 Vite 프리셋, 예제 코드, Agent Skills 설치
+> 여부를 선택지와 결과가 보이도록 저에게 물어봐 주세요. 제 답을 받으면 프로젝트 경로,
+> `--inline`, `--pm`, 그리고 `--template` 또는 `--tds`를 반드시 포함하고, 선택한
+> `--sample`과 `--skills`를 추가해 전체 명령을 비대화형으로 끝까지 실행해 주세요.
+> 대화형 프롬프트가 나타나는 명령은 실행하지 마세요.
+
+에이전트는 예를 들어 다음 내용을 물어봐요.
+
+1. 프로젝트를 만들 경로를 물어봐요.
+2. TDS를 사용할지, 일반 Vite 프로젝트를 사용할지 물어봐요.
+3. 일반 Vite 프로젝트라면 `--help`에 나온 프리셋 중 하나를 선택하도록 안내해요.
+4. npm, Yarn, pnpm 중 사용할 패키지 매니저를 물어봐요.
+5. 지원되는 프로젝트라면 IAP·IAA 예제를 추가할지 물어봐요.
+6. Agent Skills를 설치할지 물어봐요.
+
 ## 1. 프로젝트 만들기
 
 ```bash
@@ -60,7 +81,8 @@ npx create-ait-app my-app \
   --skills
 ```
 
-`--inline`에서 프리셋을 생략하면 `react-ts`를 사용해요.
+`--inline`은 필요한 값을 추측하지 않아요. 프로젝트 경로, `--pm`, 그리고
+`--template` 또는 `--tds`가 빠지면 도움말을 확인하라는 오류로 종료해요.
 
 ## 프레임워크 선택하기
 
@@ -77,7 +99,7 @@ React, Vue, Svelte, Solid, Preact, Lit, Qwik, Vanilla와 각 TypeScript 변형�
 TDS는 React 18이 필요하므로 `--tds`로 전용 프로젝트를 만들어 주세요.
 
 ```bash
-npx create-ait-app my-app --inline --tds
+npx create-ait-app my-app --inline --pm npm --tds
 ```
 
 TDS에서는 프리셋이 자동으로 결정되므로 `--template`은 생략해 주세요.
@@ -90,7 +112,7 @@ IAP·IAA 예제는 React, React TypeScript, Vanilla, Vanilla TypeScript, TDS 프
 프로젝트를 만들 때 바로 추가하려면 `--sample`을 사용해 주세요.
 
 ```bash
-npx create-ait-app my-app --inline --sample iap,iaa
+npx create-ait-app my-app --inline --pm npm --template react-ts --sample iap,iaa
 ```
 
 이미 만든 프로젝트에 나중에 추가할 수도 있어요. 예제를 지정하지 않으면 아직
@@ -119,7 +141,7 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 프롬프트 없이 만들 때는 `--skills`를 지정해 주세요.
 
 ```bash
-npx create-ait-app my-app --inline --skills
+npx create-ait-app my-app --inline --pm npm --template react-ts --skills
 ```
 
 이미 만든 프로젝트에 나중에 추가하고 싶다면 프로젝트 루트에서 같은 CLI를 실행하면
@@ -144,16 +166,16 @@ npx --yes skills@latest add toss/create-ait-app \
 
 ## CLI 옵션
 
-| 옵션                | 설명                                                             |
-| ------------------- | ---------------------------------------------------------------- |
-| `--inline`          | 대화형 질문을 생략해요. 기본 프리셋은 `react-ts`예요.            |
-| `--pm <name>`       | 패키지 매니저를 지정해요. `npm`, `yarn`, `pnpm`을 지원해요.      |
-| `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`       |
-| `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요.                 |
-| `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요. |
-| `--skills`          | 최신 공식 문서를 조회하는 Agent Skills를 추가해요.               |
-| `--skip-install`    | 프로젝트 생성 뒤 의존성 설치를 생략해요.                         |
-| `--help`            | 도움말을 출력해요.                                               |
+| 옵션                | 설명                                                              |
+| ------------------- | ----------------------------------------------------------------- |
+| `--inline`          | 모든 질문을 생략해요. 프로젝트 경로와 필수 옵션을 함께 써야 해요. |
+| `--pm <name>`       | 패키지 매니저를 지정해요. `npm`, `yarn`, `pnpm`을 지원해요.       |
+| `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`        |
+| `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요.                  |
+| `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요.  |
+| `--skills`          | 최신 공식 문서를 조회하는 Agent Skills를 추가해요.                |
+| `--skip-install`    | 프로젝트 생성 뒤 의존성 설치를 생략해요.                          |
+| `--help`            | 도움말을 출력해요.                                                |
 
 ## 관련 링크
 
