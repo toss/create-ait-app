@@ -1,0 +1,15 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: cron
+      cronjob: "0 9 * * *"
+      timezone: Asia/Seoul
+    allow:
+      - dependency-name: create-vite
+    cooldown:
+      exclude:
+        - create-vite
+    open-pull-requests-limit: 1

@@ -98,8 +98,13 @@ yarn publint
 AIT_E2E_TEMPLATES=all yarn test:e2e
 ```
 
-`.github/workflows/update-create-vite.yml`도 매일 같은 절차를 실행하고, 성공했을 때만
-버전 업데이트 PR을 만들어요.
+Dependabot은 매일 오전 9시(KST)에 create-vite 새 버전을 확인해요. create-vite는
+기본 업데이트 대기 기간을 적용하지 않고, 새 버전이 있으면 `package.json`과
+`yarn.lock`을 업데이트하는 PR을 만들어요.
+
+Dependabot PR에서도 일반 PR과 같은 `.github/workflows/ci.yml`이 실행돼요. 포맷·린트·
+타입 검사·단위 테스트·패키지 빌드와 동적으로 찾은 모든 정적 클라이언트 프리셋 및
+TDS 스캐폴딩 테스트가 성공한 뒤에만 병합해 주세요.
 
 ## Pull Request
 
