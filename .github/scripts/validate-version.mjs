@@ -61,9 +61,7 @@ function main() {
   }
 
   if (compareVersions(currentParsed, previousParsed) <= 0) {
-    console.error(
-      `Version must be greater than the previous version (${previous} -> ${current}).`,
-    );
+    console.error(`Version must be greater than the previous version (${previous} -> ${current}).`);
     process.exit(1);
   }
 

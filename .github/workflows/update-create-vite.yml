@@ -1,0 +1,99 @@
+name: Update create-vite
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: update-create-vite
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Resolve latest create-vite
+        id: version
+        run: |
+          current="$(node -p "require('./package.json').dependencies['create-vite']")"
+          latest="$(npm view create-vite version)"
+          echo "current=${current}" >> "$GITHUB_OUTPUT"
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
+          if [ "$current" = "$latest" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update pinned dependency
+        if: steps.version.outputs.changed == 'true'
+        run: yarn up "create-vite@${{ steps.version.outputs.latest }}"
+
+      - name: Run quality gates
+        if: steps.version.outputs.changed == 'true'
+        run: yarn check
+
+      - name: Smoke all bundled create-vite templates
+        if: steps.version.outputs.changed == 'true'
+        env:
+          AIT_E2E_TEMPLATES: all
+        run: yarn test:e2e
+
+      - name: Create pull request
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST: ${{ steps.version.outputs.latest }}
+          PR_BODY: |
+            ## 요약
+
+            create-vite를 ${{ steps.version.outputs.latest }}로 업데이트합니다.
+
+            ## 검증
+
+            - lint
+            - format check
+            - typecheck
+            - Vitest unit tests
+            - tsdown build 및 publint
+            - create-vite가 제공하는 모든 CSR 프리셋의 생성, build, dev smoke test
+
+            이 PR은 매일 실행되는 자동 호환성 검증을 모두 통과한 뒤 생성됐습니다.
+        run: |
+          branch="chore/create-vite-${LATEST}"
+          existing="$(gh pr list --state open --head "$branch" --json url --jq '.[0].url // empty')"
+          if [ -n "$existing" ]; then
+            echo "Open pull request already exists: $existing"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add package.json yarn.lock
+          git commit -m "chore: create-vite ${LATEST}로 업데이트"
+          git push origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore: create-vite ${LATEST}로 업데이트" \
+            --body "$PR_BODY"

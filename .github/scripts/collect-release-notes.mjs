@@ -25,7 +25,7 @@ function getPreviousTag() {
 
 function getMergedPullRequests() {
   const json = run(
-    'gh pr list --state merged --base main --limit 100 --json number,title,body,mergeCommit,mergedAt',
+    "gh pr list --state merged --base main --limit 100 --json number,title,body,mergeCommit,mergedAt",
   );
   return JSON.parse(json);
 }
@@ -86,10 +86,7 @@ function isMergedAfterTag(mergeCommitOid, previousTag) {
 function main() {
   const previousTag = getPreviousTag();
   const pullRequests = getMergedPullRequests()
-    .filter(
-      (pr) =>
-        pr.mergeCommit?.oid && isMergedAfterTag(pr.mergeCommit.oid, previousTag),
-    )
+    .filter((pr) => pr.mergeCommit?.oid && isMergedAfterTag(pr.mergeCommit.oid, previousTag))
     .sort((a, b) => new Date(a.mergedAt) - new Date(b.mergedAt));
 
   const sections = [];
@@ -103,14 +100,10 @@ function main() {
 
   const rangeLabel = previousTag ? `${previousTag}..HEAD` : "initial release";
   const changes =
-    sections.length > 0
-      ? sections.join("\n\n")
-      : "_이번 릴리스에 포함된 Release Notes가 없어요._";
+    sections.length > 0 ? sections.join("\n\n") : "_이번 릴리스에 포함된 Release Notes가 없어요._";
 
   process.stdout.write(
-    `## create-ait-app v${version}\n\n` +
-      `Changes since \`${rangeLabel}\`:\n\n` +
-      `${changes}\n`,
+    `## create-ait-app v${version}\n\n` + `Changes since \`${rangeLabel}\`:\n\n` + `${changes}\n`,
   );
 }
 

@@ -1,0 +1,130 @@
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
+import { getBundledViteTemplates } from "../../src/vite.js";
+
+const enabled = process.env.AIT_RUN_E2E === "1";
+const requested = process.env.AIT_E2E_TEMPLATES ?? "react-ts";
+const requestedSamples = process.env.AIT_E2E_SAMPLES;
+const templates =
+  requested === "all"
+    ? [...getBundledViteTemplates(), "tds"]
+    : requested.split(",").filter(Boolean);
+const running = new Set<ChildProcess>();
+const temporaryDirectories = new Set<string>();
+
+function generatedProjectEnvironment(): NodeJS.ProcessEnv {
+  const environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" };
+  for (const key of Object.keys(environment)) {
+    if (
+      key === "NODE_OPTIONS" ||
+      key === "npm_config_user_agent" ||
+      key === "npm_execpath" ||
+      key.startsWith("YARN_")
+    ) {
+      delete environment[key];
+    }
+  }
+  return environment;
+}
+
+function run(
+  command: string,
+  args: string[],
+  cwd: string,
+  environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" },
+): void {
+  const result = spawnSync(command, args, {
+    cwd,
+    encoding: "utf8",
+    env: environment,
+  });
+  if (result.status !== 0) {
+    throw new Error(
+      [result.stdout, result.stderr, `${command} ${args.join(" ")} failed`]
+        .filter(Boolean)
+        .join("\n"),
+    );
+  }
+}
+
+async function waitForDevServer(processHandle: ChildProcess, timeoutMs = 60_000): Promise<void> {
+  let output = "";
+  processHandle.stdout?.on("data", (chunk: Buffer | string) => {
+    output += String(chunk);
+  });
+  processHandle.stderr?.on("data", (chunk: Buffer | string) => {
+    output += String(chunk);
+  });
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    if (processHandle.exitCode !== null) {
+      throw new Error(`dev server exited with ${String(processHandle.exitCode)}\n${output}`);
+    }
+    try {
+      const response = await fetch("http://localhost:5173");
+      if (response.ok) return;
+    } catch {
+      // Server is still starting.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`dev server did not become ready within 60 seconds\n${output}`);
+}
+
+afterEach(() => {
+  for (const processHandle of running) {
+    processHandle.kill("SIGTERM");
+  }
+  running.clear();
+  for (const directory of temporaryDirectories) {
+    rmSync(directory, { force: true, recursive: true });
+  }
+  temporaryDirectories.clear();
+}, 120_000);
+
+describe.skipIf(!enabled)("generated project smoke", () => {
+  it.each(templates)(
+    "%s: create, dev, and build",
+    async (template) => {
+      const parent = mkdtempSync(path.join(tmpdir(), `create-ait-${template}-`));
+      temporaryDirectories.add(parent);
+      const projectDirectory = path.join(parent, "smoke-app");
+      const cliArguments = [
+        "yarn",
+        "exec",
+        "create-ait-app",
+        projectDirectory,
+        "--inline",
+        "--pm",
+        "npm",
+      ];
+      if (template === "tds") {
+        cliArguments.push("--tds");
+      } else {
+        cliArguments.push("--template", template);
+      }
+      if (requestedSamples) {
+        cliArguments.push("--sample", requestedSamples);
+      }
+
+      run("corepack", cliArguments, process.cwd());
+      run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
+
+      const devServer = spawn("npm", ["run", "dev"], {
+        cwd: projectDirectory,
+        env: generatedProjectEnvironment(),
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      running.add(devServer);
+      await waitForDevServer(devServer);
+      expect(devServer.exitCode).toBeNull();
+      devServer.kill("SIGTERM");
+      running.delete(devServer);
+    },
+    180_000,
+  );
+});

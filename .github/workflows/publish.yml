@@ -60,11 +60,23 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - name: Validate CLI syntax
+      - name: Enable Corepack
+        if: steps.should_publish.outputs.publish == 'true'
+        run: corepack enable
+
+      - name: Install dependencies
+        if: steps.should_publish.outputs.publish == 'true'
+        run: yarn install --immutable
+
+      - name: Validate package
         if: steps.should_publish.outputs.publish == 'true'
         run: |
-          node -c ./bin/index.js
-          node -e "require('fs').readdirSync('./src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('child_process').execSync('node -c ./src/'+f,{stdio:'inherit'}))"
+          yarn format:check
+          yarn lint
+          yarn typecheck
+          yarn test
+          yarn build
+          yarn publint
 
       - name: Collect release notes
         if: steps.should_publish.outputs.publish == 'true'

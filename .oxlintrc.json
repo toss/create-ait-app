@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": ["assets/**", "dist/**", "templates/**", ".yarn/**"],
+  "plugins": ["import", "node", "promise", "typescript"],
+  "rules": {
+    "no-console": "off"
+  }
+}
