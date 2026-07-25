@@ -123,7 +123,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   if (!args.inline && !args.tds) {
     useTds = await confirm({
       default: false,
-      message: "TDS를 사용할까요? (React 18 전용 템플릿 사용)",
+      message: "TDS를 사용할까요? (기본값: 사용하지 않음, React 18 전용 템플릿 사용)",
     });
   }
   if (useTds && args.template) {
