@@ -84,6 +84,7 @@ export function parseSampleIds(values: string[]): SampleId[] {
 export function printHelp(): void {
   console.log(`
 사용법: create-ait-app [project-name] [options]
+       create-ait-app add-sample [directory] [iap,iaa] [--sample iap,iaa]
 
 옵션:
   --inline           질문을 생략해요 (기본 Vite 프리셋: react-ts)

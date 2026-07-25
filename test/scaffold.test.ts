@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
 import {
   createBaseProject,
   toNpmPackageName,
@@ -98,6 +99,35 @@ describe("finalizeProject", () => {
         JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp
           .sampleShellManaged,
       ).toBe(true);
+    } finally {
+      rmSync(path.dirname(directory), { force: true, recursive: true });
+    }
+  });
+
+  it("adds a sample to an existing TDS project", () => {
+    const directory = path.join(mkdtempSync(path.join(tmpdir(), "create-ait-tds-add-")), "app");
+    try {
+      const baseProject = createBaseProject({
+        packageName: "tds-app",
+        targetDirectory: directory,
+        useTds: true,
+      });
+
+      finalizeProject({
+        baseProject,
+        packageManager: "npm",
+        packageName: "tds-app",
+        sampleIds: [],
+        skipInstall: true,
+        targetDirectory: directory,
+        useTds: true,
+      });
+      addProjectSamples(directory, ["iap"]);
+
+      expect(existsSync(path.join(directory, "src", "pages", "InAppPurchasePage.tsx"))).toBe(true);
+      expect(readFileSync(path.join(directory, "src", "App.tsx"), "utf8")).toContain(
+        "InAppPurchasePage",
+      );
     } finally {
       rmSync(path.dirname(directory), { force: true, recursive: true });
     }

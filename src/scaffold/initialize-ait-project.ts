@@ -122,6 +122,7 @@ export function initializeAitProject({
       dev: baseProject.inspection.originalDevCommand,
     },
     sampleShellManaged: false,
+    samples: [],
     source: baseProject.source,
     template: baseProject.template,
   };

@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import type { SampleId } from "../samples/apply-samples.js";
 import type { FrameworkKind } from "./framework.js";
 
 export interface PackageJson {
@@ -17,6 +18,7 @@ export interface PackageJson {
       dev: string;
     };
     sampleShellManaged: boolean;
+    samples?: SampleId[];
     source: "create-vite" | "tds-template";
     template: string | null;
   };

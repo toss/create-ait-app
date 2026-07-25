@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -117,6 +117,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       const parent = mkdtempSync(path.join(tmpdir(), `create-ait-scaffolding-${template}-`));
       temporaryDirectories.add(parent);
       const projectDirectory = path.join(parent, "scaffolded-app");
+      const sampleIds = requestedSamples?.split(",").filter(Boolean) ?? [];
       const cliArguments = [
         "yarn",
         "exec",
@@ -134,11 +135,33 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       if (template === "react-ts" || template === "tds") {
         cliArguments.push("--skills", "--ai", "codex");
       }
-      if (requestedSamples) {
-        cliArguments.push("--sample", requestedSamples);
+      if (sampleIds[0]) {
+        cliArguments.push("--sample", sampleIds[0]);
       }
 
       run("corepack", cliArguments, process.cwd());
+      if (sampleIds.length > 1) {
+        run(
+          "corepack",
+          [
+            "yarn",
+            "exec",
+            "create-ait-app",
+            "add-sample",
+            projectDirectory,
+            "--inline",
+            "--sample",
+            sampleIds.slice(1).join(","),
+          ],
+          process.cwd(),
+        );
+      }
+      if (sampleIds.length > 0) {
+        const packageJson = JSON.parse(
+          readFileSync(path.join(projectDirectory, "package.json"), "utf8"),
+        );
+        expect(packageJson.createAitApp.samples).toEqual(sampleIds);
+      }
       if (template === "react-ts" || template === "tds") {
         expect(
           existsSync(path.join(projectDirectory, ".agents", "skills", "apps-in-toss", "SKILL.md")),

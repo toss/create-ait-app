@@ -180,8 +180,9 @@ render();
 
 export function applyTdsSamples(targetDirectory: string, sampleIds: SampleId[]): void {
   const appPath = path.join(targetDirectory, "src", "App.tsx");
+  const templateAppPath = path.join(templatesDirectory, "react-ts-tds", "src", "App.tsx");
   const definitions = reactDefinitions(true, true);
-  let content = readFileSync(appPath, "utf8");
+  let content = readFileSync(templateAppPath, "utf8");
 
   content = content
     .replace(

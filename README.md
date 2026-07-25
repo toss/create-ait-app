@@ -75,8 +75,20 @@ React 18 + TDS 프로젝트에서 예제 코드를 추가할지 물어요. 프�
 `--sample iap,iaa`로 같은 예제를 추가할 수 있어요. 임의의 다른 프레임워크 소스에는
 코드를 안전하게 합치기 어려워 예제를 추가하지 않아요.
 
-기존 프로젝트에 예제를 합치던 `add-sample` 명령은 제거했어요. 프로젝트를 생성할 때
-`--sample`을 지정해 주세요.
+프로젝트를 만든 뒤 예제가 더 필요하면 `add-sample`을 사용할 수 있어요. 예제를
+지정하지 않으면 아직 추가하지 않은 예제를 대화형으로 골라요.
+
+```bash
+# 현재 프로젝트에 대화형으로 추가
+npx create-ait-app add-sample
+
+# 경로와 예제를 직접 지정
+npx create-ait-app add-sample ./my-app --sample iap,iaa
+```
+
+`add-sample`은 create-ait-app으로 만든 React, React TypeScript, Vanilla,
+Vanilla TypeScript, TDS 프로젝트에서 사용할 수 있어요. 이미 추가된 예제는
+건너뛰고 새 예제만 더해요.
 
 ## Agent Skills
 

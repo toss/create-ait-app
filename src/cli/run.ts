@@ -13,6 +13,7 @@ import { installProjectDependencies } from "../scaffold/install-project-dependen
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
 import { AI_TOOLS, type AiTool, installProjectSkills } from "../skills/install-skills.js";
 import { getCreateViteVersion } from "../vite/create-vite.js";
+import { runAddSample } from "./add-sample.js";
 import { parseArgs, parseSampleIds, printHelp, type CliArgs } from "./args.js";
 
 function assertChoice<T extends string>(
@@ -107,9 +108,8 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     return;
   }
   if (args._[0] === "add-sample") {
-    throw new Error(
-      "앱 코드를 안전하게 합치기 어려워 add-sample을 제거했어요. 프로젝트를 만들 때 --sample을 사용해 주세요.",
-    );
+    await runAddSample(args);
+    return;
   }
   if (args._.length > 1) {
     throw new Error(`알 수 없는 인수예요: ${args._.slice(1).join(" ")}`);

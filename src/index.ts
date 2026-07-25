@@ -1,4 +1,5 @@
 export { parseArgs, parseSampleIds, printHelp } from "./cli/args.js";
+export { parseAddSampleCommand, runAddSample } from "./cli/add-sample.js";
 export {
   detectInvokedPackageManager,
   packageManagerFromExecPath,
@@ -14,6 +15,8 @@ export {
 } from "./project/inspect-project.js";
 export type { ProjectInspection } from "./project/inspect-project.js";
 export type { PackageJson } from "./project/package-json.js";
+export { addProjectSamples, inspectSampleProject } from "./scaffold/add-project-samples.js";
+export type { AddProjectSamplesResult, SampleProject } from "./scaffold/add-project-samples.js";
 export { applyProjectSamples } from "./scaffold/apply-project-samples.js";
 export { createBaseProject, toNpmPackageName } from "./scaffold/create-base-project.js";
 export type { BaseProject } from "./scaffold/create-base-project.js";

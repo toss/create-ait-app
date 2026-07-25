@@ -24,11 +24,12 @@ export function applyProjectSamples({
     });
   }
 
-  if (sampleIds.length > 0) {
-    const packageJson = readPackageJson(targetDirectory);
-    if (packageJson.createAitApp) {
+  const packageJson = readPackageJson(targetDirectory);
+  if (packageJson.createAitApp) {
+    packageJson.createAitApp.samples = sampleIds;
+    if (sampleIds.length > 0) {
       packageJson.createAitApp.sampleShellManaged = true;
-      writePackageJson(targetDirectory, packageJson);
     }
+    writePackageJson(targetDirectory, packageJson);
   }
 }
