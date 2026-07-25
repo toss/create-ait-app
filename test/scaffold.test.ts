@@ -57,16 +57,16 @@ describe("finalizeProject", () => {
 
     const packageJson = JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8"));
     expect(packageJson.scripts).toMatchObject({
-      build: "ait build",
+      build: "vite build && ait build",
       "build:vite": "vite build",
-      dev: "granite dev",
+      dev: "vite --host",
       "dev:vite": "vite --host",
     });
-    expect(packageJson.dependencies["@apps-in-toss/web-framework"]).toBe("latest");
+    expect(packageJson.dependencies["@apps-in-toss/web-framework"]).toBe("beta");
     expect(packageJson.createAitApp.createViteVersion).toMatch(/^\d+\.\d+\.\d+$/);
     expect(packageJson.createAitApp.sampleShellManaged).toBe(false);
-    expect(readFileSync(path.join(directory, "granite.config.ts"), "utf8")).toContain(
-      'dev: "vite --host"',
+    expect(readFileSync(path.join(directory, "apps-in-toss.config.ts"), "utf8")).toContain(
+      'webBundleDir: "dist"',
     );
     expect(existsSync(path.join(directory, "README.md"))).toBe(true);
   });

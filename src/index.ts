@@ -21,7 +21,10 @@ export { applyProjectSamples } from "./scaffold/apply-project-samples.js";
 export { createBaseProject, toNpmPackageName } from "./scaffold/create-base-project.js";
 export type { BaseProject } from "./scaffold/create-base-project.js";
 export { finalizeProject } from "./scaffold/finalize-project.js";
-export { initializeAitProject } from "./scaffold/initialize-ait-project.js";
+export {
+  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+  initializeAitProject,
+} from "./scaffold/initialize-ait-project.js";
 export { installProjectDependencies } from "./scaffold/install-project-dependencies.js";
 export type { SampleId } from "./samples/apply-samples.js";
 export { getSkillRoot, installProjectSkills, writeAiSkills } from "./skills/install-skills.js";

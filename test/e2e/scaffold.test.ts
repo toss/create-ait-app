@@ -99,9 +99,38 @@ async function waitForDevServer(processHandle: ChildProcess, timeoutMs = 60_000)
   throw new Error(`dev server did not become ready within 60 seconds\n${output}`);
 }
 
-afterEach(() => {
+async function stopProcessTree(processHandle: ChildProcess): Promise<void> {
+  if (processHandle.exitCode !== null || processHandle.signalCode !== null) return;
+
+  await new Promise<void>((resolve) => {
+    const finish = () => {
+      clearTimeout(forceTimer);
+      clearTimeout(giveUpTimer);
+      resolve();
+    };
+    const kill = (signal: NodeJS.Signals) => {
+      try {
+        if (process.platform !== "win32" && processHandle.pid) {
+          process.kill(-processHandle.pid, signal);
+        } else {
+          processHandle.kill(signal);
+        }
+      } catch {
+        finish();
+      }
+    };
+    const forceTimer = setTimeout(() => kill("SIGKILL"), 5_000);
+    const giveUpTimer = setTimeout(finish, 10_000);
+
+    processHandle.once("error", finish);
+    processHandle.once("exit", finish);
+    kill("SIGTERM");
+  });
+}
+
+afterEach(async () => {
   for (const processHandle of running) {
-    processHandle.kill("SIGTERM");
+    await stopProcessTree(processHandle);
   }
   running.clear();
   for (const directory of temporaryDirectories) {
@@ -156,10 +185,24 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
           process.cwd(),
         );
       }
+      const packageJson = JSON.parse(
+        readFileSync(path.join(projectDirectory, "package.json"), "utf8"),
+      );
+      expect(packageJson.dependencies["@apps-in-toss/web-framework"]).toBe("beta");
+      const installedWebFrameworkPackageJson = JSON.parse(
+        readFileSync(
+          path.join(
+            projectDirectory,
+            "node_modules",
+            "@apps-in-toss",
+            "web-framework",
+            "package.json",
+          ),
+          "utf8",
+        ),
+      );
+      expect(installedWebFrameworkPackageJson.version).toMatch(/^3\.0\.0-beta\./);
       if (sampleIds.length > 0) {
-        const packageJson = JSON.parse(
-          readFileSync(path.join(projectDirectory, "package.json"), "utf8"),
-        );
         expect(packageJson.createAitApp.samples).toEqual(sampleIds);
       }
       if (template === "react-ts" || template === "tds") {
@@ -170,11 +213,9 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
           existsSync(path.join(projectDirectory, ".agents", "skills", "tds-mobile", "SKILL.md")),
         ).toBe(template === "tds");
       }
-      run("npm", ["run", "build:vite"], projectDirectory, generatedProjectEnvironment());
-      expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
-
       const aitArtifactsBeforeBuild = new Set(findAitArtifacts(projectDirectory));
       run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
+      expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
       const newAitArtifacts = findAitArtifacts(projectDirectory).filter(
         (artifact) => !aitArtifactsBeforeBuild.has(artifact),
       );
@@ -184,13 +225,14 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
 
       const devServer = spawn("npm", ["run", "dev"], {
         cwd: projectDirectory,
+        detached: process.platform !== "win32",
         env: generatedProjectEnvironment(),
         stdio: ["ignore", "pipe", "pipe"],
       });
       running.add(devServer);
       await waitForDevServer(devServer);
       expect(devServer.exitCode).toBeNull();
-      devServer.kill("SIGTERM");
+      await stopProcessTree(devServer);
       running.delete(devServer);
     },
     180_000,

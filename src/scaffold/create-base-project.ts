@@ -1,4 +1,3 @@
-import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { FrameworkKind } from "../project/framework.js";
 import { assertCsrViteProject, type ProjectInspection } from "../project/inspect-project.js";
@@ -6,7 +5,6 @@ import { readPackageJson, writePackageJson } from "../project/package-json.js";
 import { copyDirectory } from "../system/copy-directory.js";
 import { templatesDirectory } from "../system/paths.js";
 import { resolveViteTemplate, scaffoldWithCreateVite } from "../vite/create-vite.js";
-import { pickPrimaryColor } from "./primary-color.js";
 
 export interface BaseProject {
   framework: FrameworkKind;
@@ -44,14 +42,6 @@ function createTdsProject(targetDirectory: string, packageName: string): BasePro
   const packageJson = readPackageJson(targetDirectory);
   packageJson.name = packageName;
   writePackageJson(targetDirectory, packageJson);
-
-  const configPath = path.join(targetDirectory, "granite.config.ts");
-  writeFileSync(
-    configPath,
-    readFileSync(configPath, "utf8")
-      .replaceAll("{{APP_NAME}}", packageName)
-      .replaceAll("{{PRIMARY_COLOR}}", pickPrimaryColor()),
-  );
 
   return {
     framework: "react",

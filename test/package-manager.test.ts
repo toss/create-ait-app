@@ -31,7 +31,7 @@ describe("package manager detection", () => {
 });
 
 describe("npm install compatibility", () => {
-  it("works around the create-vite Qwik 1 and Vite 8 peer mismatch only", () => {
+  it("works around known peer mismatches only", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
     try {
       writeFileSync(
@@ -56,6 +56,17 @@ describe("npm install compatibility", () => {
       expect(requiresLegacyNpmPeerDeps(directory)).toBe(false);
       configureNpmInstallCompatibility(directory, "npm");
       expect(existsSync(path.join(directory, ".npmrc"))).toBe(false);
+
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({
+          dependencies: {
+            "@apps-in-toss/web-framework": "beta",
+            "@toss/tds-mobile-ait": "latest",
+          },
+        }),
+      );
+      expect(requiresLegacyNpmPeerDeps(directory)).toBe(true);
     } finally {
       rmSync(directory, { force: true, recursive: true });
     }

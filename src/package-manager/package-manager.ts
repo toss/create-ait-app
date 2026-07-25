@@ -44,11 +44,22 @@ export function requiresLegacyNpmPeerDeps(targetDirectory: string): boolean {
   const viteMajor = dependencyMajor(
     packageJson.devDependencies?.vite ?? packageJson.dependencies?.vite,
   );
+  const webFrameworkVersion = packageJson.dependencies?.["@apps-in-toss/web-framework"];
+  const usesTds = packageJson.dependencies?.["@toss/tds-mobile-ait"] != null;
+  const usesPrereleaseWebFramework =
+    webFrameworkVersion === "beta" || /-\w/.test(webFrameworkVersion ?? "");
 
   // create-vite 9.1.1 pairs Qwik 1.x (peer: Vite <8) with Vite 8.
   // The generated CSR app builds successfully, but npm otherwise rejects the
   // upstream dependency tree before Apps in Toss can be installed.
-  return qwikMajor !== null && qwikMajor < 2 && viteMajor !== null && viteMajor >= 8;
+  const needsQwikCompatibility =
+    qwikMajor !== null && qwikMajor < 2 && viteMajor !== null && viteMajor >= 8;
+
+  // @toss/tds-mobile-ait accepts stable web-framework releases, but npm does not
+  // consider a prerelease to satisfy that peer range and otherwise installs latest.
+  const needsTdsPrereleaseCompatibility = usesTds && usesPrereleaseWebFramework;
+
+  return needsQwikCompatibility || needsTdsPrereleaseCompatibility;
 }
 
 export function configureNpmInstallCompatibility(

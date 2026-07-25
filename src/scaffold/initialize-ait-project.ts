@@ -9,38 +9,26 @@ import { getCreateViteVersion } from "../vite/create-vite.js";
 import type { BaseProject } from "./create-base-project.js";
 import { pickPrimaryColor } from "./primary-color.js";
 
-function writeGraniteConfig({
+export const APPS_IN_TOSS_WEB_FRAMEWORK_VERSION = "beta";
+
+function writeAppsInTossConfig({
   appName,
-  buildCommand,
-  devCommand,
   targetDirectory,
 }: {
   appName: string;
-  buildCommand: string;
-  devCommand: string;
   targetDirectory: string;
 }): void {
   writeFileSync(
-    path.join(targetDirectory, "granite.config.ts"),
+    path.join(targetDirectory, "apps-in-toss.config.ts"),
     `import { defineConfig } from "@apps-in-toss/web-framework/config";
 
 export default defineConfig({
   appName: ${JSON.stringify(appName)},
   brand: {
-    displayName: "앱 이름",
     primaryColor: ${JSON.stringify(pickPrimaryColor())},
-    icon: "",
-  },
-  web: {
-    host: "localhost",
-    port: 5173,
-    commands: {
-      dev: ${JSON.stringify(devCommand)},
-      build: ${JSON.stringify(buildCommand)},
-    },
   },
   permissions: [],
-  outdir: "dist",
+  webBundleDir: "dist",
 });
 `,
   );
@@ -65,7 +53,7 @@ ${buildCommand}
 ${deployCommand}
 \`\`\`
 
-플랫폼 설정은 \`granite.config.ts\`에서 관리해요.
+플랫폼 설정은 \`apps-in-toss.config.ts\`에서 관리해요.
 `;
 
   if (!existsSync(readmePath)) {
@@ -104,14 +92,14 @@ export function initializeAitProject({
   packageJson.name = packageName;
   packageJson.dependencies = {
     ...packageJson.dependencies,
-    "@apps-in-toss/web-framework": "latest",
+    "@apps-in-toss/web-framework": APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   };
   packageJson.scripts = {
     ...packageJson.scripts,
-    build: "ait build",
+    build: `${baseProject.inspection.originalBuildCommand} && ait build`,
     "build:vite": baseProject.inspection.originalBuildCommand,
     deploy: "ait deploy",
-    dev: "granite dev",
+    dev: baseProject.inspection.originalDevCommand,
     "dev:vite": baseProject.inspection.originalDevCommand,
   };
   packageJson.createAitApp = {
@@ -128,10 +116,8 @@ export function initializeAitProject({
   };
   writePackageJson(targetDirectory, packageJson);
 
-  writeGraniteConfig({
+  writeAppsInTossConfig({
     appName: packageName.split("/").at(-1) ?? packageName,
-    buildCommand: baseProject.inspection.originalBuildCommand,
-    devCommand: baseProject.inspection.originalDevCommand,
     targetDirectory,
   });
   updateReadme(targetDirectory, packageName, packageManager);

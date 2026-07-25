@@ -5,6 +5,8 @@ Apps in Toss 웹앱을 시작할 수 있도록 Vite 프로젝트를 만들고 �
 
 Node.js 24 이상이 필요해요.
 
+생성한 프로젝트에는 `@apps-in-toss/web-framework@beta`를 설치해요.
+
 ## 1. 프로젝트 만들기
 
 ```bash
@@ -37,7 +39,7 @@ npm run deploy
 ```
 
 Yarn이나 pnpm을 선택했다면 `npm run` 대신 해당 패키지 매니저를 사용해 주세요.
-앱 이름, 브랜드, 권한과 개발 서버 설정은 `granite.config.ts`에서 바꿀 수 있어요.
+앱 이름, 브랜드와 권한 설정은 `apps-in-toss.config.ts`에서 바꿀 수 있어요.
 `build`가 성공하면 배포할 수 있는 `.ait` 파일이 생성돼요.
 
 ## 프롬프트 없이 만들기

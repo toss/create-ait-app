@@ -4,9 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "granite dev",
-    "build": "ait build",
-    "deploy": "ait deploy",
+    "dev": "vite dev",
+    "build": "vite build",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
