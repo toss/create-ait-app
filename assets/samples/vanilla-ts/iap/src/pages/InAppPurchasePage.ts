@@ -13,6 +13,7 @@ function escapeHtml(value: unknown) {
 export function mountInAppPurchasePage(onBack: () => void) {
   const root = document.getElementById("root");
   if (!root) return;
+  const rootElement: HTMLElement = root;
 
   const iap = createInAppPurchase();
 
@@ -20,7 +21,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
     const { products, productsLoading, purchasingSku } = iap.getState();
 
     if (productsLoading) {
-      root.innerHTML = `
+      rootElement.innerHTML = `
         <div class="app-header">
           <h1 class="page-title">인앱 결제</h1>
         </div>
@@ -30,7 +31,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
     }
 
     if (products.length === 0) {
-      root.innerHTML = `
+      rootElement.innerHTML = `
         <div class="app-header">
           <h1 class="page-title">인앱 결제</h1>
         </div>
@@ -43,7 +44,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
           <button type="button" class="iap-empty-state-back-btn" data-action="back">홈으로</button>
         </div>
       `;
-      root.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
+      rootElement.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
       return;
     }
 
@@ -80,7 +81,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
       )
       .join("");
 
-    root.innerHTML = `
+    rootElement.innerHTML = `
       <div class="app-header">
         <h1 class="page-title">인앱 결제</h1>
       </div>
@@ -90,8 +91,8 @@ export function mountInAppPurchasePage(onBack: () => void) {
       </div>
     `;
 
-    root.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
-    root.querySelectorAll<HTMLButtonElement>("[data-sku]").forEach((button) => {
+    rootElement.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
+    rootElement.querySelectorAll<HTMLButtonElement>("[data-sku]").forEach((button) => {
       button.addEventListener("click", () => {
         const sku = button.dataset.sku;
         if (sku) iap.purchaseProduct(sku);

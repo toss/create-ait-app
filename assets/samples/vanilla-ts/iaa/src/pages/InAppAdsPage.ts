@@ -8,6 +8,7 @@ const TEST_REWARDED_ID = "ait-ad-test-rewarded-id";
 export function mountInAppAdsPage(onBack: () => void) {
   const root = document.getElementById("root");
   if (!root) return;
+  const rootElement: HTMLElement = root;
 
   const interstitial = createInAppAds(TEST_INTERSTITIAL_ID);
   const rewarded = createInAppAds(TEST_REWARDED_ID);
@@ -16,7 +17,7 @@ export function mountInAppAdsPage(onBack: () => void) {
     const interstitialState = interstitial.getState();
     const rewardedState = rewarded.getState();
 
-    root.innerHTML = `
+    rootElement.innerHTML = `
       <div class="app-header">
         <h1 class="page-title">인앱 광고</h1>
         ${
@@ -70,13 +71,13 @@ export function mountInAppAdsPage(onBack: () => void) {
       <button type="button" class="text-button iaa-back-btn" data-action="back">← 홈으로</button>
     `;
 
-    root
+    rootElement
       .querySelector('[data-action="show-interstitial"]')
       ?.addEventListener("click", () => interstitial.showAd());
-    root
+    rootElement
       .querySelector('[data-action="show-rewarded"]')
       ?.addEventListener("click", () => rewarded.showAd());
-    root.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
+    rootElement.querySelector('[data-action="back"]')?.addEventListener("click", onBack);
   }
 
   interstitial.subscribe(render);
