@@ -1,9 +1,10 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { runCommand } from "./command.js";
 import { packageRoot } from "./paths.js";
 import { readPackageJson } from "./fs-utils.js";
+import { isSsrOnlyViteBuildCommand } from "./csr.js";
 
 const require = createRequire(import.meta.url);
 
@@ -32,6 +33,31 @@ export function getBundledViteTemplates(): string[] {
     .filter((entry) => entry.isDirectory() && entry.name.startsWith("template-"))
     .map((entry) => entry.name.slice("template-".length))
     .sort();
+}
+
+export function getSupportedViteTemplates(): string[] {
+  const createViteRoot = path.dirname(require.resolve("create-vite"));
+
+  return getBundledViteTemplates().filter((template) => {
+    const templateDirectory = path.join(createViteRoot, `template-${template}`);
+    if (!existsSync(path.join(templateDirectory, "index.html"))) {
+      return false;
+    }
+
+    const packageJson = readPackageJson(templateDirectory);
+    const dependencies = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    };
+    const buildCommand = packageJson.scripts?.build;
+
+    return Boolean(
+      dependencies.vite &&
+      packageJson.scripts?.dev &&
+      buildCommand &&
+      !isSsrOnlyViteBuildCommand(buildCommand),
+    );
+  });
 }
 
 export function scaffoldWithCreateVite(targetDirectory: string, template?: string): void {

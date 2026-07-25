@@ -1,5 +1,10 @@
 export { parseArgs, parseSampleIds, printHelp } from "./args.js";
-export { assertCsrViteProject, detectFramework, isTypeScriptProject } from "./csr.js";
+export {
+  assertCsrViteProject,
+  detectFramework,
+  isSsrOnlyViteBuildCommand,
+  isTypeScriptProject,
+} from "./csr.js";
 export {
   detectInvokedPackageManager,
   packageManagerFromExecPath,
@@ -7,7 +12,11 @@ export {
 } from "./package-manager.js";
 export { createBaseProject, finalizeProject, toNpmPackageName } from "./scaffold.js";
 export { getSkillRoot, writeAiSkills } from "./skills.js";
-export { getBundledViteTemplates, getCreateViteVersion } from "./vite.js";
+export {
+  getBundledViteTemplates,
+  getCreateViteVersion,
+  getSupportedViteTemplates,
+} from "./vite.js";
 export type {
   AiTool,
   FrameworkKind,

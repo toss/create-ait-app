@@ -1,16 +1,16 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { getBundledViteTemplates } from "../../src/vite.js";
+import { getSupportedViteTemplates } from "../../src/vite.js";
 
 const enabled = process.env.AIT_RUN_E2E === "1";
 const requested = process.env.AIT_E2E_TEMPLATES ?? "react-ts";
 const requestedSamples = process.env.AIT_E2E_SAMPLES;
 const templates =
   requested === "all"
-    ? [...getBundledViteTemplates(), "tds"]
+    ? [...getSupportedViteTemplates(), "tds"]
     : requested.split(",").filter(Boolean);
 const running = new Set<ChildProcess>();
 const temporaryDirectories = new Set<string>();
@@ -86,13 +86,13 @@ afterEach(() => {
   temporaryDirectories.clear();
 }, 120_000);
 
-describe.skipIf(!enabled)("generated project smoke", () => {
+describe.skipIf(!enabled)("scaffolding compatibility", () => {
   it.each(templates)(
-    "%s: create, dev, and build",
+    "%s: scaffold, build Vite and Apps in Toss, and start dev server",
     async (template) => {
-      const parent = mkdtempSync(path.join(tmpdir(), `create-ait-${template}-`));
+      const parent = mkdtempSync(path.join(tmpdir(), `create-ait-scaffolding-${template}-`));
       temporaryDirectories.add(parent);
-      const projectDirectory = path.join(parent, "smoke-app");
+      const projectDirectory = path.join(parent, "scaffolded-app");
       const cliArguments = [
         "yarn",
         "exec",
@@ -112,6 +112,8 @@ describe.skipIf(!enabled)("generated project smoke", () => {
       }
 
       run("corepack", cliArguments, process.cwd());
+      run("npm", ["run", "build:vite"], projectDirectory, generatedProjectEnvironment());
+      expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
       run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
 
       const devServer = spawn("npm", ["run", "dev"], {

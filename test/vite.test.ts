@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getBundledViteTemplates, getCreateViteVersion, resolveViteTemplate } from "../src/vite.js";
+import {
+  getBundledViteTemplates,
+  getCreateViteVersion,
+  getSupportedViteTemplates,
+  resolveViteTemplate,
+} from "../src/vite.js";
 
 describe("pinned create-vite", () => {
   it("uses an exact version and discovers its bundled templates", () => {
@@ -7,6 +12,10 @@ describe("pinned create-vite", () => {
     expect(getBundledViteTemplates()).toEqual(
       expect.arrayContaining(["vanilla", "react-ts", "vue-ts", "svelte-ts", "solid-ts"]),
     );
+    expect(getSupportedViteTemplates()).toEqual(
+      expect.arrayContaining(["qwik", "react-ts", "vue-ts", "svelte-ts", "solid-ts"]),
+    );
+    expect(getBundledViteTemplates()).toEqual(expect.arrayContaining(getSupportedViteTemplates()));
   });
 
   it("keeps backward-compatible vanilla aliases", () => {

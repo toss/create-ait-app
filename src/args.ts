@@ -93,6 +93,7 @@ options:
   --help             도움말
 
 일반 프로젝트는 고정된 create-vite 버전의 선택 화면을 그대로 사용합니다.
-Vite CSR 프로젝트만 지원합니다. TDS는 --tds 경로에서만 지원합니다.
+CSR과 SSG+hydration을 지원하며 SSR 전용 프로젝트는 지원하지 않습니다.
+TDS는 --tds 경로에서만 지원합니다.
 `);
 }

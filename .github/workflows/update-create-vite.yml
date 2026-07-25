@@ -52,7 +52,7 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         run: yarn check
 
-      - name: Smoke all bundled create-vite templates
+      - name: 모든 지원 프리셋 스캐폴딩 테스트
         if: steps.version.outputs.changed == 'true'
         env:
           AIT_E2E_TEMPLATES: all
@@ -75,7 +75,7 @@ jobs:
             - typecheck
             - Vitest unit tests
             - tsdown build 및 publint
-            - create-vite가 제공하는 모든 CSR 프리셋의 생성, build, dev smoke test
+            - create-vite에서 동적으로 찾은 모든 정적 클라이언트 프리셋과 TDS의 스캐폴딩, build, dev 테스트
 
             이 PR은 매일 실행되는 자동 호환성 검증을 모두 통과한 뒤 생성됐습니다.
         run: |

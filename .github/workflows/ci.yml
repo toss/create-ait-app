@@ -46,15 +46,11 @@ jobs:
           yarn build
           yarn publint
 
-  smoke:
+  scaffolding-matrix:
+    name: 스캐폴딩 테스트 대상 산출
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        template:
-          - react-ts
-          - vue-ts
-          - tds
+    outputs:
+      templates: ${{ steps.templates.outputs.templates }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -70,7 +66,39 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Create, build, and start generated project
+      - name: Build package
+        run: yarn build
+
+      - name: 스캐폴딩 테스트 대상 확인
+        id: templates
+        run: |
+          templates="$(yarn node --input-type=module -e 'import { getSupportedViteTemplates } from "./dist/index.mjs"; process.stdout.write(JSON.stringify([...getSupportedViteTemplates(), "tds"]))')"
+          echo "templates=${templates}" >> "$GITHUB_OUTPUT"
+
+  scaffolding-tests:
+    name: 스캐폴딩 테스트 (${{ matrix.template }})
+    needs: scaffolding-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJSON(needs.scaffolding-matrix.outputs.templates) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: 프로젝트 생성, 빌드, 개발 서버 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
           AIT_E2E_SAMPLES: ${{ matrix.template == 'tds' && 'iap,iaa' || '' }}

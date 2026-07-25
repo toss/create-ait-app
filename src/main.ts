@@ -81,7 +81,7 @@ async function chooseSamples(
   if (explicit.length > 0) {
     if (!supportsSamples(framework, useTds)) {
       throw new Error(
-        "iap/iaa 예제는 React와 Vanilla 프리셋만 지원합니다. 선택한 Vite CSR 프리셋은 예제 없이 생성해 주세요.",
+        "iap/iaa 예제는 React와 Vanilla 프리셋만 지원합니다. 선택한 Vite 프리셋은 예제 없이 생성해 주세요.",
       );
     }
     return explicit;
@@ -146,7 +146,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   console.log(
     useTds
       ? "\n🚀 React 18 + TDS 전용 템플릿을 생성합니다.\n"
-      : `\n🚀 create-vite@${getCreateViteVersion()}로 CSR 프로젝트를 생성합니다.\n`,
+      : `\n🚀 create-vite@${getCreateViteVersion()}로 정적 클라이언트 프로젝트를 생성합니다.\n`,
   );
 
   try {

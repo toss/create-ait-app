@@ -227,7 +227,7 @@ export function applyViteSamples({
 
   if (!supportsSamples(framework)) {
     throw new Error(
-      "현재 iap/iaa 예제는 React와 Vanilla Vite 프리셋만 지원합니다. 프로젝트 생성 자체는 모든 Vite CSR 프리셋을 지원합니다.",
+      "현재 iap/iaa 예제는 React와 Vanilla Vite 프리셋만 지원합니다. 프로젝트 생성 자체는 모든 Vite 정적 클라이언트 프리셋을 지원합니다.",
     );
   }
 

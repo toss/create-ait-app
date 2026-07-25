@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { mkdtempSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { assertCsrViteProject } from "../src/csr.js";
+import { assertCsrViteProject, isSsrOnlyViteBuildCommand } from "../src/csr.js";
 
 function fixture(packageJson: unknown, withIndex = true): string {
   const directory = mkdtempSync(path.join(tmpdir(), "create-ait-csr-"));
@@ -17,7 +17,7 @@ function fixture(packageJson: unknown, withIndex = true): string {
 }
 
 describe("assertCsrViteProject", () => {
-  it("accepts a Vite CSR and preserves its commands", () => {
+  it("accepts a Vite client project and preserves its commands", () => {
     const directory = fixture({
       devDependencies: { typescript: "latest", vite: "latest" },
       scripts: { build: "tsc -b && vite build", dev: "vite" },
@@ -31,7 +31,7 @@ describe("assertCsrViteProject", () => {
     });
   });
 
-  it("rejects a project without a CSR index", () => {
+  it("rejects a project without a client index", () => {
     const directory = fixture(
       {
         devDependencies: { vite: "latest" },
@@ -39,15 +39,27 @@ describe("assertCsrViteProject", () => {
       },
       false,
     );
-    expect(() => assertCsrViteProject(directory)).toThrow("CSR 진입점");
+    expect(() => assertCsrViteProject(directory)).toThrow("클라이언트 진입점");
   });
 
-  it("rejects known SSR frameworks", () => {
+  it("allows a client build followed by prerendering and hydration", () => {
     const directory = fixture({
       dependencies: { next: "latest" },
       devDependencies: { vite: "latest" },
-      scripts: { build: "vite build", dev: "vite" },
+      scripts: {
+        build: "vite build && vite build --ssr && node scripts/prerender.mjs",
+        dev: "vite",
+      },
     });
-    expect(() => assertCsrViteProject(directory)).toThrow("SSR 프레임워크(next)");
+    expect(() => assertCsrViteProject(directory)).not.toThrow();
+  });
+
+  it("rejects an SSR-only Vite build", () => {
+    const directory = fixture({
+      devDependencies: { vite: "latest" },
+      scripts: { build: "vite build --ssr src/entry-server.ts", dev: "vite" },
+    });
+    expect(() => assertCsrViteProject(directory)).toThrow("SSR 전용 Vite build");
+    expect(isSsrOnlyViteBuildCommand("vite build && vite build --ssr")).toBe(false);
   });
 });
