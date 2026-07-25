@@ -147,7 +147,7 @@ jobs:
       - name: 프로젝트 생성, 빌드, .ait 산출물, 개발 서버 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
-          AIT_E2E_SAMPLES: ${{ matrix.template == 'tds' && 'iap,iaa' || '' }}
+          AIT_E2E_SAMPLES: ${{ (matrix.template == 'react' || matrix.template == 'react-ts' || matrix.template == 'vanilla' || matrix.template == 'vanilla-ts' || matrix.template == 'tds') && 'iap,iaa' || '' }}
         run: yarn test:e2e
 
   create-pr:

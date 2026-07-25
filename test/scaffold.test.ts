@@ -59,6 +59,7 @@ describe("finalizeProject", () => {
     });
     expect(packageJson.dependencies["@apps-in-toss/web-framework"]).toBe("latest");
     expect(packageJson.createAitApp.createViteVersion).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(packageJson.createAitApp.sampleShellManaged).toBe(false);
     expect(readFileSync(path.join(directory, "granite.config.ts"), "utf8")).toContain(
       'dev: "vite --host"',
     );
@@ -89,6 +90,10 @@ describe("finalizeProject", () => {
       expect(readFileSync(path.join(directory, "src", "App.tsx"), "utf8")).not.toContain(
         "{{SAMPLE_",
       );
+      expect(
+        JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp
+          .sampleShellManaged,
+      ).toBe(true);
     } finally {
       rmSync(path.dirname(directory), { force: true, recursive: true });
     }

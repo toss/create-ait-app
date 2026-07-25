@@ -10,8 +10,15 @@ export {
   packageManagerFromExecPath,
   packageManagerFromUserAgent,
 } from "./package-manager.js";
-export { createBaseProject, finalizeProject, toNpmPackageName } from "./scaffold.js";
-export { getSkillRoot, writeAiSkills } from "./skills.js";
+export {
+  applyProjectSamples,
+  createBaseProject,
+  finalizeProject,
+  initializeAitProject,
+  installProjectDependencies,
+  toNpmPackageName,
+} from "./scaffold.js";
+export { getSkillRoot, installProjectSkills, writeAiSkills } from "./skills.js";
 export {
   getBundledViteTemplates,
   getCreateViteVersion,

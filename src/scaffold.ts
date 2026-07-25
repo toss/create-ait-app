@@ -173,34 +173,17 @@ ${deployCommand}
   }
 }
 
-export function finalizeProject({
+export function initializeAitProject({
   baseProject,
   packageManager,
   packageName,
-  sampleIds,
-  skipInstall,
   targetDirectory,
-  useTds,
 }: {
   baseProject: BaseProject;
   packageManager: PackageManager;
   packageName: string;
-  sampleIds: SampleId[];
-  skipInstall: boolean;
   targetDirectory: string;
-  useTds: boolean;
 }): void {
-  if (useTds) {
-    applyTdsSamples(targetDirectory, sampleIds);
-  } else {
-    applyViteSamples({
-      framework: baseProject.framework,
-      isTypeScript: baseProject.inspection.isTypeScript,
-      sampleIds,
-      targetDirectory,
-    });
-  }
-
   const packageJson = readPackageJson(targetDirectory);
   packageJson.name = packageName;
   packageJson.dependencies = {
@@ -222,7 +205,7 @@ export function finalizeProject({
       build: baseProject.inspection.originalBuildCommand,
       dev: baseProject.inspection.originalDevCommand,
     },
-    sampleShellManaged: sampleIds.length > 0,
+    sampleShellManaged: false,
     source: baseProject.source,
     template: baseProject.template,
   };
@@ -236,7 +219,85 @@ export function finalizeProject({
   });
   updateReadme(targetDirectory, packageName, packageManager);
   configureNpmInstallCompatibility(targetDirectory, packageManager);
+}
+
+export function applyProjectSamples({
+  baseProject,
+  sampleIds,
+  targetDirectory,
+  useTds,
+}: {
+  baseProject: BaseProject;
+  sampleIds: SampleId[];
+  targetDirectory: string;
+  useTds: boolean;
+}): void {
+  if (useTds) {
+    applyTdsSamples(targetDirectory, sampleIds);
+  } else {
+    applyViteSamples({
+      framework: baseProject.framework,
+      isTypeScript: baseProject.inspection.isTypeScript,
+      sampleIds,
+      targetDirectory,
+    });
+  }
+
+  if (sampleIds.length > 0) {
+    const packageJson = readPackageJson(targetDirectory);
+    if (packageJson.createAitApp) {
+      packageJson.createAitApp.sampleShellManaged = true;
+      writePackageJson(targetDirectory, packageJson);
+    }
+  }
+}
+
+export function installProjectDependencies({
+  packageManager,
+  skipInstall,
+  targetDirectory,
+}: {
+  packageManager: PackageManager;
+  skipInstall: boolean;
+  targetDirectory: string;
+}): void {
   if (!skipInstall) {
     installDependencies(targetDirectory, packageManager);
   }
+}
+
+export function finalizeProject({
+  baseProject,
+  packageManager,
+  packageName,
+  sampleIds,
+  skipInstall,
+  targetDirectory,
+  useTds,
+}: {
+  baseProject: BaseProject;
+  packageManager: PackageManager;
+  packageName: string;
+  sampleIds: SampleId[];
+  skipInstall: boolean;
+  targetDirectory: string;
+  useTds: boolean;
+}): void {
+  initializeAitProject({
+    baseProject,
+    packageManager,
+    packageName,
+    targetDirectory,
+  });
+  applyProjectSamples({
+    baseProject,
+    sampleIds,
+    targetDirectory,
+    useTds,
+  });
+  installProjectDependencies({
+    packageManager,
+    skipInstall,
+    targetDirectory,
+  });
 }

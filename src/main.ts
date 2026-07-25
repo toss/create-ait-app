@@ -2,9 +2,15 @@ import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { parseArgs, parseSampleIds, printHelp, type CliArgs } from "./args.js";
-import { createBaseProject, finalizeProject, toNpmPackageName } from "./scaffold.js";
+import {
+  applyProjectSamples,
+  createBaseProject,
+  initializeAitProject,
+  installProjectDependencies,
+  toNpmPackageName,
+} from "./scaffold.js";
 import { supportsSamples } from "./samples.js";
-import { writeAiSkills } from "./skills.js";
+import { installProjectSkills } from "./skills.js";
 import {
   AI_TOOLS,
   PACKAGE_MANAGERS,
@@ -156,21 +162,31 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
       template,
       useTds,
     });
-    const sampleIds = await chooseSamples(args, baseProject.framework, useTds);
-    const aiTool = await chooseAiTool(args);
 
-    finalizeProject({
+    initializeAitProject({
       baseProject,
       packageManager,
       packageName,
+      targetDirectory,
+    });
+
+    const sampleIds = await chooseSamples(args, baseProject.framework, useTds);
+    const aiTool = await chooseAiTool(args);
+
+    applyProjectSamples({
+      baseProject,
       sampleIds,
-      skipInstall: args.skipInstall,
       targetDirectory,
       useTds,
     });
+    installProjectDependencies({
+      packageManager,
+      skipInstall: args.skipInstall,
+      targetDirectory,
+    });
 
     if (aiTool) {
-      writeAiSkills({ aiTool, targetDirectory, useTds });
+      installProjectSkills({ aiTool, targetDirectory, useTds });
     }
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;

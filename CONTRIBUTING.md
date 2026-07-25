@@ -54,8 +54,9 @@ SSG+hydration은 모두 대상이에요.
 - `templates/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
 - 선택형 예제 조각은 `assets/samples/`에 두고, 지원되는 React/Vanilla 계열에만
   적용해요.
-- Agent Skills는 `assets/skills/`에 vercel-labs/skills 형식으로 관리해요. 공식
-  문서 본문을 저장소에 복사하지 말고 동적 문서 조회 절차만 유지해 주세요.
+- Agent Skills는 루트 `skills/`에 vercel-labs/skills 형식으로 관리해요.
+- `npx skills add . --list`로 두 스킬을 찾을 수 있어야 해요.
+- 공식 문서 본문을 저장소에 복사하지 말고 동적 문서 조회 절차만 유지해 주세요.
 
 ## create-vite 업데이트
 

@@ -70,33 +70,30 @@ npx create-ait-app my-app --inline --tds
 
 ## 예제 코드
 
-`--sample iap,iaa`는 React, Vanilla, React 18 + TDS 프로젝트에서 사용할 수 있어요.
-임의의 CSR 프레임워크 소스에 코드를 안전하게 병합할 수 없으므로 다른 프리셋에서는
-예제를 추가하지 않아요.
+Apps in Toss 초기화가 끝나면 React, React TypeScript, Vanilla, Vanilla TypeScript,
+React 18 + TDS 프로젝트에서 예제 코드를 추가할지 물어요. 프롬프트 없이 만들 때는
+`--sample iap,iaa`로 같은 예제를 추가할 수 있어요. 임의의 다른 프레임워크 소스에는
+코드를 안전하게 합치기 어려워 예제를 추가하지 않아요.
 
-같은 이유로 기존 프로젝트를 수정하던 `add-sample` 명령은 제거했어요. 예제가 필요하면
-프로젝트를 생성할 때 `--sample`을 지정해 주세요.
+기존 프로젝트에 예제를 합치던 `add-sample` 명령은 제거했어요. 프로젝트를 생성할 때
+`--sample`을 지정해 주세요.
 
 ## Agent Skills
 
-`--skills --ai <도구>`를 지정하면
-[vercel-labs/skills](https://github.com/vercel-labs/skills)가 인식하는 구조로 Skills를
-생성해요.
+대화형 실행에서 Agent Skills를 추가할 수 있어요. 프롬프트 없이 만들 때는
+`--skills --ai <도구>`를 지정해 주세요. 선택한 Skills는
+[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI가 루트 `skills/`
+카탈로그에서 `npx --yes skills@latest add`로 설치해요.
 
 - Cursor와 Codex: `.agents/skills/`
 - Claude Code: `.claude/skills/`
+- Skills를 추가한 모든 프로젝트: `apps-in-toss`
+- `--tds` 프로젝트: `apps-in-toss`, `tds-mobile`
 
-Skills에는 문서 본문 스냅샷을 넣지 않아요. 작업 시점의 `llms.txt`를 문서 인덱스로
-읽고, 관련된 개별 문서를 우선 조회해요. 여러 영역을 함께 다루거나 인덱스만으로
-충분하지 않을 때는 `llms-full.txt`를 검색하도록 라우팅 지침이 포함돼요.
-
-## create-vite 버전 정책
-
-`create-vite`는 재현 가능한 생성을 위해 정확한 버전으로 고정해요. 매일 실행되는
-GitHub Actions가 npm의 최신 버전을 확인해요. 고정된 `create-vite` 패키지에서
-프리셋 목록을 동적으로 읽고 SSR 전용 프리셋만 제외한 뒤, 모든 대상에서
-생성·설치·빌드·정적 HTML·`.ait` 산출물·개발 서버 검증을 통과한 경우에만 버전
-업데이트 PR을 만들어요.
+설치할 때는 `--copy`를 사용하므로 스캐폴더 패키지 경로에 의존하는 심볼릭 링크가
+남지 않아요. Skills에는 문서 본문 스냅샷을 넣지 않아요. 작업 시점의 `llms.txt`를
+문서 인덱스로 읽고, 관련된 개별 문서를 우선 조회해요. 여러 영역을 함께 다루거나
+인덱스만으로 충분하지 않을 때는 `llms-full.txt`를 검색해요.
 
 ## 관련 링크
 

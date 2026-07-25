@@ -1,7 +1,13 @@
 import path from "node:path";
-import { assetsDirectory } from "./paths.js";
-import { copyDirectory } from "./fs-utils.js";
+import { runCommand } from "./command.js";
+import { skillsDirectory } from "./paths.js";
 import type { AiTool } from "./types.js";
+
+const SKILLS_AGENT_IDS: Readonly<Record<AiTool, string>> = {
+  claude: "claude-code",
+  codex: "codex",
+  cursor: "cursor",
+};
 
 export function getSkillRoot(targetDirectory: string, aiTool: AiTool): string {
   return aiTool === "claude"
@@ -9,7 +15,7 @@ export function getSkillRoot(targetDirectory: string, aiTool: AiTool): string {
     : path.join(targetDirectory, ".agents", "skills");
 }
 
-export function writeAiSkills({
+export function installProjectSkills({
   aiTool,
   targetDirectory,
   useTds,
@@ -18,10 +24,26 @@ export function writeAiSkills({
   targetDirectory: string;
   useTds: boolean;
 }): void {
-  const skillRoot = getSkillRoot(targetDirectory, aiTool);
   const skillNames = useTds ? ["apps-in-toss", "tds-mobile"] : ["apps-in-toss"];
+  const args = [
+    "--yes",
+    "skills@latest",
+    "add",
+    skillsDirectory,
+    "--agent",
+    SKILLS_AGENT_IDS[aiTool],
+  ];
 
   for (const skillName of skillNames) {
-    copyDirectory(path.join(assetsDirectory, "skills", skillName), path.join(skillRoot, skillName));
+    args.push("--skill", skillName);
   }
+  args.push("--copy", "--yes");
+
+  runCommand({
+    args,
+    command: process.platform === "win32" ? "npx.cmd" : "npx",
+    cwd: targetDirectory,
+  });
 }
+
+export const writeAiSkills = installProjectSkills;

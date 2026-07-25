@@ -131,11 +131,22 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       } else {
         cliArguments.push("--template", template);
       }
+      if (template === "react-ts" || template === "tds") {
+        cliArguments.push("--skills", "--ai", "codex");
+      }
       if (requestedSamples) {
         cliArguments.push("--sample", requestedSamples);
       }
 
       run("corepack", cliArguments, process.cwd());
+      if (template === "react-ts" || template === "tds") {
+        expect(
+          existsSync(path.join(projectDirectory, ".agents", "skills", "apps-in-toss", "SKILL.md")),
+        ).toBe(true);
+        expect(
+          existsSync(path.join(projectDirectory, ".agents", "skills", "tds-mobile", "SKILL.md")),
+        ).toBe(template === "tds");
+      }
       run("npm", ["run", "build:vite"], projectDirectory, generatedProjectEnvironment());
       expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
 
