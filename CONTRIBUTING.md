@@ -33,8 +33,8 @@ yarn check
 이 명령은 oxfmt 포맷, oxlint, TypeScript 타입 검사, Vitest 단위 테스트, tsdown 빌드,
 publint를 순서대로 확인해요. 포맷을 적용하려면 `yarn format`을 사용해 주세요.
 
-생성 결과의 실제 설치·빌드·정적 HTML·개발 서버를 확인하려면 스캐폴딩 테스트를
-실행해요.
+생성 결과의 실제 설치·빌드·정적 HTML·`.ait` 산출물·개발 서버를 확인하려면
+스캐폴딩 테스트를 실행해요.
 
 ```bash
 yarn test:e2e

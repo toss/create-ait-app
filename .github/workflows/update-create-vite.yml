@@ -144,7 +144,7 @@ jobs:
       - name: create-vite 업데이트
         run: yarn up "create-vite@${{ needs.version.outputs.latest }}"
 
-      - name: 프로젝트 생성, 빌드, 개발 서버 검증
+      - name: 프로젝트 생성, 빌드, .ait 산출물, 개발 서버 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
           AIT_E2E_SAMPLES: ${{ matrix.template == 'tds' && 'iap,iaa' || '' }}
@@ -196,7 +196,7 @@ jobs:
             - 타입 검사
             - Vitest 단위 테스트
             - tsdown 빌드 및 publint
-            - create-vite에서 동적으로 찾은 모든 정적 클라이언트 프리셋과 TDS의 스캐폴딩, build, dev 테스트
+            - create-vite에서 동적으로 찾은 모든 정적 클라이언트 프리셋과 TDS의 스캐폴딩, build, `.ait` 산출물, dev 테스트
 
             매일 실행하는 자동 호환성 검증을 모두 통과한 뒤 만든 PR이에요.
         run: |

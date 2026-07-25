@@ -99,7 +99,7 @@ jobs:
       - name: 의존성 설치
         run: yarn install --immutable
 
-      - name: 프로젝트 생성, 빌드, 개발 서버 검증
+      - name: 프로젝트 생성, 빌드, .ait 산출물, 개발 서버 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
           AIT_E2E_SAMPLES: ${{ matrix.template == 'tds' && 'iap,iaa' || '' }}

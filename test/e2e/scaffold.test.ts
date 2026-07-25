@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -14,6 +14,30 @@ const templates =
     : requested.split(",").filter(Boolean);
 const running = new Set<ChildProcess>();
 const temporaryDirectories = new Set<string>();
+
+function findAitArtifacts(projectDirectory: string): string[] {
+  const artifacts: string[] = [];
+  const directories = [projectDirectory];
+
+  while (directories.length > 0) {
+    const directory = directories.pop();
+    if (!directory) continue;
+
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (entry.name !== "node_modules" && entry.name !== ".git") {
+          directories.push(path.join(directory, entry.name));
+        }
+        continue;
+      }
+      if (entry.isFile() && entry.name.endsWith(".ait")) {
+        artifacts.push(path.relative(projectDirectory, path.join(directory, entry.name)));
+      }
+    }
+  }
+
+  return artifacts.sort();
+}
 
 function generatedProjectEnvironment(): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" };
@@ -114,7 +138,15 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       run("corepack", cliArguments, process.cwd());
       run("npm", ["run", "build:vite"], projectDirectory, generatedProjectEnvironment());
       expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
+
+      const aitArtifactsBeforeBuild = new Set(findAitArtifacts(projectDirectory));
       run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
+      const newAitArtifacts = findAitArtifacts(projectDirectory).filter(
+        (artifact) => !aitArtifactsBeforeBuild.has(artifact),
+      );
+      expect(newAitArtifacts, "ait build가 새로운 .ait 파일을 만들지 않았어요.").not.toHaveLength(
+        0,
+      );
 
       const devServer = spawn("npm", ["run", "dev"], {
         cwd: projectDirectory,
