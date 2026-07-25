@@ -13,60 +13,61 @@ permissions:
 
 jobs:
   quality:
+    name: 품질 검사
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 저장소 체크아웃
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
+      - name: Node.js 설정
         uses: actions/setup-node@v7
         with:
           node-version: 24
 
-      - name: Enable Corepack
+      - name: Corepack 활성화
         run: corepack enable
 
-      - name: Install dependencies
+      - name: 의존성 설치
         run: yarn install --immutable
 
-      - name: Check formatting
+      - name: 포맷 검사
         run: yarn format:check
 
-      - name: Lint
+      - name: 린트
         run: yarn lint
 
-      - name: Typecheck
+      - name: 타입 검사
         run: yarn typecheck
 
-      - name: Unit tests
+      - name: 단위 테스트
         run: yarn test
 
-      - name: Build and validate package
+      - name: 패키지 빌드 및 검증
         run: |
           yarn build
           yarn publint
 
   scaffolding-matrix:
-    name: 스캐폴딩 테스트 대상 산출
+    name: 스캐폴딩 테스트 준비
     runs-on: ubuntu-latest
     outputs:
       templates: ${{ steps.templates.outputs.templates }}
     steps:
-      - name: Checkout
+      - name: 저장소 체크아웃
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
+      - name: Node.js 설정
         uses: actions/setup-node@v7
         with:
           node-version: 24
 
-      - name: Enable Corepack
+      - name: Corepack 활성화
         run: corepack enable
 
-      - name: Install dependencies
+      - name: 의존성 설치
         run: yarn install --immutable
 
-      - name: Build package
+      - name: 패키지 빌드
         run: yarn build
 
       - name: 스캐폴딩 테스트 대상 확인
@@ -84,18 +85,18 @@ jobs:
       matrix:
         template: ${{ fromJSON(needs.scaffolding-matrix.outputs.templates) }}
     steps:
-      - name: Checkout
+      - name: 저장소 체크아웃
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
+      - name: Node.js 설정
         uses: actions/setup-node@v7
         with:
           node-version: 24
 
-      - name: Enable Corepack
+      - name: Corepack 활성화
         run: corepack enable
 
-      - name: Install dependencies
+      - name: 의존성 설치
         run: yarn install --immutable
 
       - name: 프로젝트 생성, 빌드, 개발 서버 검증

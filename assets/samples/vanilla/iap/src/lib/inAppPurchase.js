@@ -15,7 +15,7 @@ export function createInAppPurchase() {
   }
 
   function grantProduct(orderId) {
-    // TODO: 여기에 상품 지급 로직을 작성해주세요.
+    // TODO: 여기에 상품 지급 로직을 작성해 주세요.
     console.info(`상품 지급 처리: ${orderId}`);
   }
 
@@ -28,7 +28,7 @@ export function createInAppPurchase() {
       state.products = response?.products ?? [];
     } catch (error) {
       alert(
-        "상품 목록 조회 실패: \n\n-앱인토스 콘솔에서 미니앱을 생성후 인앱상품을 등록해주세요\n- 인앱결제 기능은 브라우저가 아닌 샌드박스앱/토스앱에서 실행해주세요\n\n" +
+        "상품 목록 조회 실패: \n\n-앱인토스 콘솔에서 미니앱을 만든 뒤 인앱 상품을 등록해 주세요\n- 인앱 결제 기능은 브라우저가 아닌 샌드박스 앱/토스 앱에서 실행해 주세요\n\n" +
           error,
       );
     } finally {
@@ -61,14 +61,14 @@ export function createInAppPurchase() {
           cleanup();
         },
         onError: (error) => {
-          console.error("인앱결제 실패:", error);
+          console.error("인앱 결제 실패:", error);
           state.purchasingSku = null;
           notify();
           cleanup();
         },
       });
     } catch (error) {
-      console.error("인앱결제 실패:", error);
+      console.error("인앱 결제 실패:", error);
       state.purchasingSku = null;
       notify();
     }

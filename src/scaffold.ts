@@ -149,7 +149,7 @@ ${buildCommand}
 ${deployCommand}
 \`\`\`
 
-플랫폼 설정은 \`granite.config.ts\`에서 관리합니다.
+플랫폼 설정은 \`granite.config.ts\`에서 관리해요.
 `;
 
   if (!existsSync(readmePath)) {

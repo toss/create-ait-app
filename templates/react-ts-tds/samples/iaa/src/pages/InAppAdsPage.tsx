@@ -3,7 +3,7 @@ import { Button, List, ListRow, TextButton, Top } from "@toss/tds-mobile";
 
 import { useInAppAds } from "../hooks/useInAppAds";
 
-// TODO: 서비스를 출시하기 전에 앱인토스 콘솔에서 발급한 광고그룹ID로 변경해주세요.
+// TODO: 서비스를 출시하기 전에 앱인토스 콘솔에서 발급한 광고 그룹 ID로 변경해 주세요.
 const TEST_INTERSTITIAL_ID = "ait-ad-test-interstitial-id";
 const TEST_REWARDED_ID = "ait-ad-test-rewarded-id";
 
@@ -18,7 +18,7 @@ export function InAppAdsPage({ onBack }: InAppAdsPageProps) {
   return (
     <>
       <Top
-        title={<Top.TitleParagraph size={22}>인앱광고</Top.TitleParagraph>}
+        title={<Top.TitleParagraph size={22}>인앱 광고</Top.TitleParagraph>}
         subtitleBottom={
           !interstitial.isSupported && (
             <Top.SubtitleParagraph

@@ -33,7 +33,7 @@ export function parseArgs(argv: string[]): CliArgs {
     if (VALUE_FLAGS.has(token)) {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) {
-        throw new Error(`${token} 옵션에 값이 필요합니다.`);
+        throw new Error(`${token} 옵션에 값이 필요해요.`);
       }
       index += 1;
 
@@ -60,7 +60,7 @@ export function parseArgs(argv: string[]): CliArgs {
     }
 
     if (token.startsWith("--")) {
-      throw new Error(`알 수 없는 옵션입니다: ${token}`);
+      throw new Error(`알 수 없는 옵션이에요: ${token}`);
     }
 
     args._.push(token);
@@ -72,7 +72,7 @@ export function parseArgs(argv: string[]): CliArgs {
 export function parseSampleIds(values: string[]): SampleId[] {
   const invalid = values.filter((value) => value !== "iap" && value !== "iaa");
   if (invalid.length > 0) {
-    throw new Error(`지원하지 않는 예제 코드입니다: ${invalid.join(", ")} (iap, iaa 중 선택)`);
+    throw new Error(`지원하지 않는 예제 코드예요: ${invalid.join(", ")} (iap, iaa 중 선택)`);
   }
   return [...new Set(values)] as SampleId[];
 }
@@ -81,19 +81,19 @@ export function printHelp(): void {
   console.log(`
 사용법: create-ait-app [project-name] [options]
 
-options:
-  --inline           질문을 생략합니다 (기본 Vite 프리셋: react-ts)
-  --pm <name>        패키지 매니저 (npm, yarn, pnpm)
-  --template <name>  create-vite 프리셋 (예: vue-ts, svelte, solid-ts)
-  --tds              React 18 + TypeScript + TDS 전용 템플릿 사용
-  --skills           최신 공식 문서를 조회하는 Agent Skills 추가
-  --ai <name>        AI 도구 (cursor, claude, codex)
-  --sample <name>    예제 코드 (iap, iaa / 복수: iap,iaa)
-  --skip-install     의존성 설치 생략
-  --help             도움말
+옵션:
+  --inline           질문을 생략해요 (기본 Vite 프리셋: react-ts)
+  --pm <name>        패키지 매니저를 골라요 (npm, yarn, pnpm)
+  --template <name>  create-vite 프리셋을 골라요 (예: vue-ts, svelte, solid-ts)
+  --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요
+  --skills           최신 공식 문서를 조회하는 Agent Skills를 추가해요
+  --ai <name>        AI 도구를 골라요 (cursor, claude, codex)
+  --sample <name>    예제 코드를 추가해요 (iap, iaa / 복수: iap,iaa)
+  --skip-install     의존성 설치를 생략해요
+  --help             도움말을 보여 줘요
 
-일반 프로젝트는 고정된 create-vite 버전의 선택 화면을 그대로 사용합니다.
-CSR과 SSG+hydration을 지원하며 SSR 전용 프로젝트는 지원하지 않습니다.
-TDS는 --tds 경로에서만 지원합니다.
+일반 프로젝트는 고정된 create-vite 버전의 선택 화면을 그대로 사용해요.
+CSR과 SSG+hydration을 지원하지만 SSR 전용 프로젝트는 지원하지 않아요.
+TDS는 --tds로만 사용할 수 있어요.
 `);
 }

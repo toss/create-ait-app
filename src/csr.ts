@@ -48,11 +48,11 @@ export function isSsrOnlyViteBuildCommand(command: string): boolean {
 
 export function assertCsrViteProject(targetDirectory: string): ProjectInspection {
   if (!existsSync(path.join(targetDirectory, "package.json"))) {
-    throw new Error("create-vite 결과에 package.json이 없습니다.");
+    throw new Error("create-vite 결과에 package.json이 없어요.");
   }
   if (!existsSync(path.join(targetDirectory, "index.html"))) {
     throw new Error(
-      "클라이언트 진입점 index.html이 없습니다. create-ait-app은 Vite 정적 클라이언트 프로젝트만 지원합니다.",
+      "클라이언트 진입점 index.html이 없어요. create-ait-app은 Vite 정적 클라이언트 프로젝트만 지원해요.",
     );
   }
 
@@ -60,7 +60,7 @@ export function assertCsrViteProject(targetDirectory: string): ProjectInspection
   const dependencies = allDependencies(packageJson);
   if (!dependencies.vite) {
     throw new Error(
-      "Vite 의존성이 없습니다. create-ait-app은 Vite 정적 클라이언트 프로젝트만 지원합니다.",
+      "Vite 의존성이 없어요. create-ait-app은 Vite 정적 클라이언트 프로젝트만 지원해요.",
     );
   }
 
@@ -68,12 +68,12 @@ export function assertCsrViteProject(targetDirectory: string): ProjectInspection
   const originalBuildCommand = packageJson.scripts?.build;
   if (!originalDevCommand || !originalBuildCommand) {
     throw new Error(
-      "Vite dev/build 스크립트가 없습니다. create-ait-app은 Vite 정적 클라이언트 프로젝트만 지원합니다.",
+      "Vite dev/build 스크립트가 없어요. create-ait-app은 Vite 정적 클라이언트 프로젝트만 지원해요.",
     );
   }
   if (isSsrOnlyViteBuildCommand(originalBuildCommand)) {
     throw new Error(
-      "SSR 전용 Vite build가 감지되었습니다. 정적 HTML과 클라이언트 자산을 만드는 프리셋만 지원합니다.",
+      "SSR 전용 Vite build를 감지했어요. 정적 HTML과 클라이언트 자산을 만드는 프리셋만 지원해요.",
     );
   }
 

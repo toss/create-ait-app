@@ -34,7 +34,7 @@ export function InAppPurchasePage({ onBack }: InAppPurchasePageProps) {
     return (
       <>
         <Top
-          title={<Top.TitleParagraph size={22}>인앱결제</Top.TitleParagraph>}
+          title={<Top.TitleParagraph size={22}>인앱 결제</Top.TitleParagraph>}
         />
 
         <Text style={{ padding: 24 }}>상품을 불러오는 중...</Text>
@@ -46,7 +46,7 @@ export function InAppPurchasePage({ onBack }: InAppPurchasePageProps) {
     return (
       <>
         <Top
-          title={<Top.TitleParagraph size={22}>인앱결제</Top.TitleParagraph>}
+          title={<Top.TitleParagraph size={22}>인앱 결제</Top.TitleParagraph>}
         />
 
         <Result
@@ -69,7 +69,7 @@ export function InAppPurchasePage({ onBack }: InAppPurchasePageProps) {
   return (
     <>
       <Top
-        title={<Top.TitleParagraph size={22}>인앱결제</Top.TitleParagraph>}
+        title={<Top.TitleParagraph size={22}>인앱 결제</Top.TitleParagraph>}
       />
 
       <List>

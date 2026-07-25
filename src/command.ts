@@ -26,7 +26,7 @@ export function runCommand({
   }
   if (result.status !== 0) {
     throw new Error(
-      `${command} ${args.join(" ")} 명령이 종료 코드 ${String(result.status)}로 실패했습니다.`,
+      `${command} ${args.join(" ")} 명령이 종료 코드 ${String(result.status)}로 실패했어요.`,
     );
   }
 }

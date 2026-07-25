@@ -24,7 +24,7 @@ export function InAppPurchasePage({ onBack }: InAppPurchasePageProps) {
     return (
       <>
         <div className="app-header">
-          <h1 className="page-title">인앱결제</h1>
+          <h1 className="page-title">인앱 결제</h1>
         </div>
 
         <p>상품을 불러오는 중...</p>
@@ -36,7 +36,7 @@ export function InAppPurchasePage({ onBack }: InAppPurchasePageProps) {
     return (
       <>
         <div className="app-header">
-          <h1 className="page-title">인앱결제</h1>
+          <h1 className="page-title">인앱 결제</h1>
         </div>
 
         <div className="iap-empty-state">
@@ -68,7 +68,7 @@ export function InAppPurchasePage({ onBack }: InAppPurchasePageProps) {
   return (
     <>
       <div className="app-header">
-        <h1 className="page-title">인앱결제</h1>
+        <h1 className="page-title">인앱 결제</h1>
       </div>
 
       <div className="iap-product-list">

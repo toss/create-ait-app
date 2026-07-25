@@ -17,7 +17,7 @@ export function getCreateViteVersion(): string {
   const packageJson = readPackageJson(packageRoot);
   const version = packageJson.dependencies?.["create-vite"];
   if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
-    throw new Error("create-vite 의존성은 정확한 버전으로 고정해야 합니다.");
+    throw new Error("create-vite 의존성은 정확한 버전으로 고정해야 해요.");
   }
   return version;
 }

@@ -22,7 +22,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
     if (productsLoading) {
       root.innerHTML = `
         <div class="app-header">
-          <h1 class="page-title">인앱결제</h1>
+          <h1 class="page-title">인앱 결제</h1>
         </div>
         <p>상품을 불러오는 중...</p>
       `;
@@ -32,7 +32,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
     if (products.length === 0) {
       root.innerHTML = `
         <div class="app-header">
-          <h1 class="page-title">인앱결제</h1>
+          <h1 class="page-title">인앱 결제</h1>
         </div>
         <div class="iap-empty-state">
           <img class="iap-empty-state-icon" src="icon-document.png" aria-hidden alt="" />
@@ -82,7 +82,7 @@ export function mountInAppPurchasePage(onBack: () => void) {
 
     root.innerHTML = `
       <div class="app-header">
-        <h1 class="page-title">인앱결제</h1>
+        <h1 class="page-title">인앱 결제</h1>
       </div>
       <div class="iap-product-list">
         ${productItems}

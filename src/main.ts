@@ -30,7 +30,7 @@ function assertChoice<T extends string>(
 }
 
 async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
-  const explicit = assertChoice(args.pm, PACKAGE_MANAGERS, "지원하지 않는 패키지 매니저입니다");
+  const explicit = assertChoice(args.pm, PACKAGE_MANAGERS, "지원하지 않는 패키지 매니저예요");
   if (explicit) return explicit;
 
   const detected = detectInvokedPackageManager();
@@ -39,16 +39,16 @@ async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
   if (args.inline) return "npm";
   return select({
     choices: PACKAGE_MANAGERS.map((value) => ({ name: value, value })),
-    message: "사용할 패키지 매니저를 선택하세요:",
+    message: "사용할 패키지 매니저를 골라 주세요:",
   });
 }
 
 async function chooseAiTool(args: CliArgs): Promise<AiTool | null> {
-  const explicit = assertChoice(args.ai, AI_TOOLS, "지원하지 않는 AI 도구입니다");
+  const explicit = assertChoice(args.ai, AI_TOOLS, "지원하지 않는 AI 도구예요");
   if (args.skills) {
     if (explicit) return explicit;
     if (args.inline) {
-      throw new Error("--inline --skills 사용 시 --ai를 지정해 주세요.");
+      throw new Error("--inline --skills를 사용할 때는 --ai도 지정해 주세요.");
     }
     return select({
       choices: [
@@ -56,7 +56,7 @@ async function chooseAiTool(args: CliArgs): Promise<AiTool | null> {
         { name: "Claude Code", value: "claude" },
         { name: "Codex", value: "codex" },
       ],
-      message: "사용하는 AI 도구를 선택하세요:",
+      message: "사용하는 AI 도구를 골라 주세요:",
     });
   }
 
@@ -81,7 +81,7 @@ async function chooseSamples(
   if (explicit.length > 0) {
     if (!supportsSamples(framework, useTds)) {
       throw new Error(
-        "iap/iaa 예제는 React와 Vanilla 프리셋만 지원합니다. 선택한 Vite 프리셋은 예제 없이 생성해 주세요.",
+        "iap/iaa 예제는 React와 Vanilla 프리셋만 지원해요. 선택한 Vite 프리셋은 예제 없이 생성해 주세요.",
       );
     }
     return explicit;
@@ -93,8 +93,8 @@ async function chooseSamples(
 
   return checkbox({
     choices: [
-      { name: "인앱결제", value: "iap" },
-      { name: "인앱광고", value: "iaa" },
+      { name: "인앱 결제", value: "iap" },
+      { name: "인앱 광고", value: "iaa" },
     ],
     message: "예제 코드를 추가할까요?",
   });
@@ -108,24 +108,24 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   }
   if (args._[0] === "add-sample") {
     throw new Error(
-      "Vite 프리셋 전체 지원 이후 add-sample은 안전하게 앱 코드를 병합할 수 없어 제거되었습니다. 생성 시 --sample을 사용해 주세요.",
+      "앱 코드를 안전하게 합치기 어려워 add-sample을 제거했어요. 프로젝트를 만들 때 --sample을 사용해 주세요.",
     );
   }
   if (args._.length > 1) {
-    throw new Error(`알 수 없는 인수입니다: ${args._.slice(1).join(" ")}`);
+    throw new Error(`알 수 없는 인수예요: ${args._.slice(1).join(" ")}`);
   }
 
   const projectName =
     args._[0] ??
     (await input({
-      message: "프로젝트 이름을 입력하세요:",
+      message: "프로젝트 이름을 입력해 주세요:",
       required: true,
     }));
   const targetDirectory = path.resolve(process.cwd(), projectName);
   const targetExisted = existsSync(targetDirectory);
 
   if (targetExisted && readdirSync(targetDirectory).length > 0) {
-    throw new Error(`"${projectName}" 디렉토리가 이미 존재하고 비어있지 않습니다.`);
+    throw new Error(`"${projectName}" 디렉터리가 이미 있고 비어 있지 않아요.`);
   }
 
   const packageManager = await choosePackageManager(args);
@@ -137,7 +137,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     });
   }
   if (useTds && args.template && !["react-ts", "react-ts-tds"].includes(args.template)) {
-    throw new Error("--tds는 react-ts 프리셋에서만 사용할 수 있습니다.");
+    throw new Error("--tds는 react-ts 프리셋에서만 사용할 수 있어요.");
   }
 
   const template = useTds ? "react-ts" : (args.template ?? (args.inline ? "react-ts" : undefined));
@@ -145,8 +145,8 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
 
   console.log(
     useTds
-      ? "\n🚀 React 18 + TDS 전용 템플릿을 생성합니다.\n"
-      : `\n🚀 create-vite@${getCreateViteVersion()}로 정적 클라이언트 프로젝트를 생성합니다.\n`,
+      ? "\n🚀 React 18 + TDS 전용 템플릿을 만들어요.\n"
+      : `\n🚀 create-vite@${getCreateViteVersion()}로 정적 클라이언트 프로젝트를 만들어요.\n`,
   );
 
   try {
@@ -175,7 +175,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;
     console.log(`
-✅ 프로젝트가 생성되었습니다.
+✅ 프로젝트가 생성됐어요.
 
   기반: ${useTds ? "React 18 + TDS template" : `create-vite@${getCreateViteVersion()}${baseProject.template ? ` (${baseProject.template})` : ""}`}
   cd ${projectName}

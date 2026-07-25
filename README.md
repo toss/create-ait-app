@@ -23,7 +23,7 @@ npm run dev
 
 ## CLI 옵션
 
-프롬프트 없이 생성하려면 `--inline`을 사용하세요.
+프롬프트 없이 생성하려면 `--inline`을 사용해 주세요.
 
 ```bash
 npx create-ait-app my-app --inline --pm yarn --template vue-ts
@@ -60,7 +60,7 @@ npx create-ait-app my-app --inline --pm yarn --template vue-ts
 ## TDS
 
 TDS는 React 18을 요구하므로 일반 `create-vite` 경로와 분리되어 있어요. TDS가 필요한
-경우에만 전용 템플릿을 명시적으로 선택하세요.
+경우에만 전용 템플릿을 선택해 주세요.
 
 ```bash
 npx create-ait-app my-app --inline --tds
@@ -75,7 +75,7 @@ npx create-ait-app my-app --inline --tds
 예제를 추가하지 않아요.
 
 같은 이유로 기존 프로젝트를 수정하던 `add-sample` 명령은 제거했어요. 예제가 필요하면
-프로젝트를 생성할 때 `--sample`을 지정하세요.
+프로젝트를 생성할 때 `--sample`을 지정해 주세요.
 
 ## Agent Skills
 

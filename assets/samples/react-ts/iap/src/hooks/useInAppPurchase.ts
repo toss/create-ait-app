@@ -28,7 +28,7 @@ export function useInAppPurchase(): UseInAppPurchaseReturn {
 
         setProducts(fetchedProducts);
       } catch (error) {
-        alert("상품 목록 조회 실패: \n\n-앱인토스 콘솔에서 미니앱을 생성후 인앱상품을 등록해주세요\n- 인앱결제 기능은 브라우저가 아닌 샌드박스앱/토스앱에서 실행해주세요\n\n" + error);
+        alert("상품 목록 조회 실패: \n\n-앱인토스 콘솔에서 미니앱을 만든 뒤 인앱 상품을 등록해 주세요\n- 인앱 결제 기능은 브라우저가 아닌 샌드박스 앱/토스 앱에서 실행해 주세요\n\n" + error);
       } finally {
         setProductsLoading(false);
       }
@@ -38,14 +38,14 @@ export function useInAppPurchase(): UseInAppPurchaseReturn {
   }, []);
 
   const grantProduct = useCallback((orderId: string) => {
-    // TODO: 여기에 상품 지급 로직을 작성해주세요.
+    // TODO: 여기에 상품 지급 로직을 작성해 주세요.
 
     console.info(`상품 지급 처리: ${orderId}`);
   }, []);
 
   /**
-   * 인앱상품을 결제합니다.
-   * 앱에서 호출해주세요.
+   * 인앱 상품을 결제해요.
+   * 앱에서 호출해 주세요.
    * @param sku - 결제할 상품의 고유 식별자
    * @returns void
    */
@@ -73,13 +73,13 @@ export function useInAppPurchase(): UseInAppPurchaseReturn {
             cleanup();
           },
           onError: (error) => {
-            console.error("인앱결제 실패:", error);
+            console.error("인앱 결제 실패:", error);
             setPurchasingSku(null);
             cleanup();
           },
         });
       } catch (error) {
-        console.error("인앱결제 실패:", error);
+        console.error("인앱 결제 실패:", error);
         setPurchasingSku(null);
       }
     },
@@ -87,8 +87,8 @@ export function useInAppPurchase(): UseInAppPurchaseReturn {
   );
 
   /**
-   * 결제 완료되었지만 상품 지급이 이뤄지지 않은 미결 주문을 처리합니다.
-   * 앱에서 호출해주세요.
+   * 결제 완료되었지만 상품 지급이 이뤄지지 않은 미결 주문을 처리해요.
+   * 앱에서 호출해 주세요.
    * @returns void
    */
   const restorePendingOrders = useCallback(async () => {

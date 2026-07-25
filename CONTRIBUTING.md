@@ -15,7 +15,7 @@ VS Code에서는 저장소에 포함된 Yarn TypeScript SDK와 ZipFS 확장 권�
 워크스페이스를 연 뒤 TypeScript 버전 선택에서 `Use Workspace Version`을 선택하면
 PnP 의존성 타입을 정상적으로 탐색할 수 있어요.
 
-개발 중 CLI를 실행하려면 먼저 빌드하세요.
+개발 중 CLI를 실행하려면 먼저 빌드해 주세요.
 
 ```bash
 yarn build
@@ -31,7 +31,7 @@ yarn check
 ```
 
 이 명령은 oxfmt 포맷, oxlint, TypeScript 타입 검사, Vitest 단위 테스트, tsdown 빌드,
-publint를 순서대로 확인해요. 포맷을 적용하려면 `yarn format`을 사용하세요.
+publint를 순서대로 확인해요. 포맷을 적용하려면 `yarn format`을 사용해 주세요.
 
 생성 결과의 실제 설치·빌드·정적 HTML·개발 서버를 확인하려면 스캐폴딩 테스트를
 실행해요.
@@ -55,7 +55,7 @@ SSG+hydration은 모두 대상이에요.
 - 선택형 예제 조각은 `assets/samples/`에 두고, 지원되는 React/Vanilla 계열에만
   적용해요.
 - Agent Skills는 `assets/skills/`에 vercel-labs/skills 형식으로 관리해요. 공식
-  문서 본문을 저장소에 복사하지 말고 동적 문서 조회 절차만 유지하세요.
+  문서 본문을 저장소에 복사하지 말고 동적 문서 조회 절차만 유지해 주세요.
 
 ## create-vite 업데이트
 

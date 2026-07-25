@@ -1,6 +1,6 @@
 # {{APP_NAME}}
 
-Apps in Toss 프로젝트입니다.
+Apps in Toss 프로젝트예요.
 
 ## 시작하기
 

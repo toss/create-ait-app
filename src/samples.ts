@@ -22,12 +22,12 @@ function reactDefinitions(
 
   return {
     iap: {
-      button: button("iap", "인앱결제 테스트하기"),
+      button: button("iap", "인앱 결제 테스트하기"),
       import: `import { InAppPurchasePage } from "./pages/InAppPurchasePage${extension}";`,
       route: '  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;',
     },
     iaa: {
-      button: button("iaa", "인앱광고 테스트하기"),
+      button: button("iaa", "인앱 광고 테스트하기"),
       import: `import { InAppAdsPage } from "./pages/InAppAdsPage${extension}";`,
       route: '  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;',
     },
@@ -38,7 +38,7 @@ function vanillaDefinitions(isTypeScript: boolean): Record<SampleId, SampleDefin
   const extension = isTypeScript ? ".ts" : ".js";
   return {
     iap: {
-      button: '<button type="button" data-page="iap">인앱결제 테스트하기</button>',
+      button: '<button type="button" data-page="iap">인앱 결제 테스트하기</button>',
       import: `import { mountInAppPurchasePage } from "./pages/InAppPurchasePage${extension}";`,
       route: `  if (currentPage === "iap") {
     mountInAppPurchasePage(showHome);
@@ -46,7 +46,7 @@ function vanillaDefinitions(isTypeScript: boolean): Record<SampleId, SampleDefin
   }`,
     },
     iaa: {
-      button: '<button type="button" data-page="iaa">인앱광고 테스트하기</button>',
+      button: '<button type="button" data-page="iaa">인앱 광고 테스트하기</button>',
       import: `import { mountInAppAdsPage } from "./pages/InAppAdsPage${extension}";`,
       route: `  if (currentPage === "iaa") {
     mountInAppAdsPage(showHome);
@@ -80,7 +80,7 @@ function writeReactSampleShell(
   const definitions = reactDefinitions(isTypeScript, false);
   const appPath = path.join(targetDirectory, "src", isTypeScript ? "App.tsx" : "App.jsx");
   if (!existsSync(appPath)) {
-    throw new Error("React App 파일을 찾을 수 없어 예제 코드를 추가할 수 없습니다.");
+    throw new Error("React App 파일을 찾을 수 없어 예제 코드를 추가할 수 없어요.");
   }
 
   const imports = sampleIds.map((id) => definitions[id].import).join("\n");
@@ -101,7 +101,7 @@ ${routes}
   return (
     <main>
       <h1>Apps in Toss</h1>
-      <p>원하는 기능을 샌드박스 앱 또는 토스 앱에서 확인하세요.</p>
+      <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 ${buttons}
       </div>
@@ -122,7 +122,7 @@ function writeVanillaSampleShell(
   const definitions = vanillaDefinitions(isTypeScript);
   const mainPath = path.join(targetDirectory, "src", isTypeScript ? "main.ts" : "main.js");
   if (!existsSync(mainPath)) {
-    throw new Error("Vanilla main 파일을 찾을 수 없어 예제 코드를 추가할 수 없습니다.");
+    throw new Error("Vanilla main 파일을 찾을 수 없어 예제 코드를 추가할 수 없어요.");
   }
 
   const imports = sampleIds.map((id) => definitions[id].import).join("\n");
@@ -138,7 +138,7 @@ let currentPage = null${isTypeScript ? " as string | null" : ""};
 const app = document.querySelector${isTypeScript ? "<HTMLDivElement>" : ""}("#app");
 
 if (!app) {
-  throw new Error("#app 요소를 찾을 수 없습니다.");
+  throw new Error("#app 요소를 찾을 수 없어요.");
 }
 
 app.innerHTML = '<div id="root"></div>';
@@ -156,7 +156,7 @@ ${routes}
   root.innerHTML = \`
     <main>
       <h1>Apps in Toss</h1>
-      <p>원하는 기능을 샌드박스 앱 또는 토스 앱에서 확인하세요.</p>
+      <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
       <div>
 ${buttons}
       </div>
@@ -227,7 +227,7 @@ export function applyViteSamples({
 
   if (!supportsSamples(framework)) {
     throw new Error(
-      "현재 iap/iaa 예제는 React와 Vanilla Vite 프리셋만 지원합니다. 프로젝트 생성 자체는 모든 Vite 정적 클라이언트 프리셋을 지원합니다.",
+      "iap/iaa 예제는 React와 Vanilla Vite 프리셋만 지원해요. 프로젝트는 모든 Vite 정적 클라이언트 프리셋으로 만들 수 있어요.",
     );
   }
 

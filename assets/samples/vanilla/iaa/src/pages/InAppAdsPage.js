@@ -1,7 +1,7 @@
 import { createInAppAds } from "../lib/inAppAds.js";
 import "./InAppAdsPage.css";
 
-// TODO: 서비스를 출시하기 전에 앱인토스 콘솔에서 발급한 광고그룹ID로 변경해주세요.
+// TODO: 서비스를 출시하기 전에 앱인토스 콘솔에서 발급한 광고 그룹 ID로 변경해 주세요.
 const TEST_INTERSTITIAL_ID = "ait-ad-test-interstitial-id";
 const TEST_REWARDED_ID = "ait-ad-test-rewarded-id";
 
@@ -16,7 +16,7 @@ export function mountInAppAdsPage(onBack) {
 
     root.innerHTML = `
       <div class="app-header">
-        <h1 class="page-title">인앱광고</h1>
+        <h1 class="page-title">인앱 광고</h1>
         ${
           !interstitialState.isSupported
             ? '<p class="page-subtitle">이 환경에서는 인앱 광고를 사용할 수 없어요.</p>'

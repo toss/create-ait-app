@@ -28,7 +28,7 @@ export function useInAppAds(adGroupId: string): UseInAppAdsReturn {
   const unregisterRef = useRef<(() => void) | null>(null);
 
   /**
-   * 광고를 로드합니다.
+   * 광고를 로드해요.
    */
   const load = useCallback(() => {
     setIsAdLoaded(false);
@@ -62,7 +62,7 @@ export function useInAppAds(adGroupId: string): UseInAppAdsReturn {
       dialog.openAlert({
         title: "광고 지원 여부 확인 실패",
         description:
-          "광고 지원 여부 확인 실패: \n\n- 인앱광고 기능은 브라우저가 아닌 샌드박스앱/토스앱에서 실행해주세요.\n\n" +
+          "광고 지원 여부 확인 실패: \n\n- 인앱 광고 기능은 브라우저가 아닌 샌드박스 앱/토스 앱에서 실행해 주세요.\n\n" +
           error,
       });
       setIsSupported(false);
@@ -78,17 +78,17 @@ export function useInAppAds(adGroupId: string): UseInAppAdsReturn {
   }, []);
 
   /**
-   * 광고를 실제로 화면에 표시합니다.
-   * - 지원되지 않는 환경이거나, 아직 로드되지 않은 경우에는 아무 동작도 하지 않습니다.
+   * 광고를 실제로 화면에 표시해요.
+   * - 지원되지 않는 환경이거나, 아직 로드되지 않은 경우에는 아무 동작도 하지 않아요.
    */
   const showAd = useCallback(() => {
     if (!isSupported) {
-      console.info("현재 환경에서는 인앱 광고가 지원되지 않습니다.");
+      console.info("현재 환경에서는 인앱 광고가 지원되지 않아요.");
       return;
     }
 
     if (!isAdLoaded) {
-      console.info("아직 광고가 로드되지 않았습니다.");
+      console.info("아직 광고가 로드되지 않았어요.");
       return;
     }
 
@@ -110,7 +110,7 @@ export function useInAppAds(adGroupId: string): UseInAppAdsReturn {
             case "failedToShow":
               console.error("광고 표시 실패");
               setIsAdLoaded(false);
-              // 실패한 경우에도 다시 로드를 시도해 다음 기회를 준비합니다.
+              // 실패한 경우에도 다시 로드를 시도해 다음 기회를 준비해요.
               load();
               break;
           }
