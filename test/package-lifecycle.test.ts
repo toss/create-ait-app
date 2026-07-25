@@ -16,7 +16,7 @@ describe("package lifecycle", () => {
     expect(packageJson.scripts.build).toBe("tsdown");
     expect(packageJson.scripts.prepack).toBeUndefined();
     expect(packageJson.scripts.prepare).toBeUndefined();
-    expect(packageJson.scripts.prepublishOnly).toBe("yarn build");
+    expect(packageJson.scripts.prepublishOnly).toBeUndefined();
     expect(tsdownConfig).not.toMatch(/\bpublint\s*:/);
   });
 });

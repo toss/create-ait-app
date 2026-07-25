@@ -27,11 +27,16 @@ yarn exec create-ait-app test-project --inline --template react-ts --pm npm
 PR을 열기 전에 전체 검사를 실행해 주세요.
 
 ```bash
-yarn check
+yarn format:check
+yarn lint
+yarn typecheck
+yarn test
+yarn build
+yarn publint
 ```
 
-이 명령은 oxfmt 포맷, oxlint, TypeScript 타입 검사, Vitest 단위 테스트, tsdown 빌드,
-publint를 순서대로 확인해요. 포맷을 적용하려면 `yarn format`을 사용해 주세요.
+CI에서는 각 검사를 병렬로 실행해요. 포맷을 적용하려면 `yarn format`을 사용해
+주세요.
 
 생성 결과의 실제 설치·빌드·정적 HTML·`.ait` 산출물·개발 서버를 확인하려면
 스캐폴딩 테스트를 실행해요.
@@ -77,7 +82,12 @@ SSG+hydration은 모두 대상이에요.
 
 ```bash
 yarn up create-vite@<version>
-yarn check
+yarn format:check
+yarn lint
+yarn typecheck
+yarn test
+yarn build
+yarn publint
 AIT_E2E_TEMPLATES=all yarn test:e2e
 ```
 
@@ -88,7 +98,8 @@ AIT_E2E_TEMPLATES=all yarn test:e2e
 
 1. `main`에서 작업 브랜치를 만들어요.
 2. 구현과 직접 영향받는 문서를 함께 수정해요.
-3. `yarn check`와 필요한 스캐폴딩 테스트 결과를 확인해요.
+3. 포맷·린트·타입 검사·단위 테스트·패키지 빌드와 필요한 스캐폴딩 테스트 결과를
+   확인해요.
 4. [PR 템플릿](.github/PULL_REQUEST_TEMPLATE.md)에 맞춰 PR을 작성해요.
 
 `package.json`의 create-ait-app 버전은 메인테이너가 관리하므로 일반 PR에서는 올리지
