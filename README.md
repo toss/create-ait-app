@@ -80,20 +80,38 @@ React 18 + TDS 프로젝트에서 예제 코드를 추가할지 물어요. 프�
 
 ## Agent Skills
 
-대화형 실행에서 Agent Skills를 추가할 수 있어요. 프롬프트 없이 만들 때는
-`--skills --ai <도구>`를 지정해 주세요. 선택한 Skills는
-[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI가 루트 `skills/`
-카탈로그에서 `npx --yes skills@latest add`로 설치해요.
+프로젝트를 만들 때 사용 중인 AI 도구를 선택하면 필요한 Skills를 함께 설치해요.
+일반 프로젝트에는 Apps in Toss Skill을, TDS 프로젝트에는 Apps in Toss와 TDS
+Skills를 설치해요.
 
-- Cursor와 Codex: `.agents/skills/`
-- Claude Code: `.claude/skills/`
-- Skills를 추가한 모든 프로젝트: `apps-in-toss`
-- `--tds` 프로젝트: `apps-in-toss`, `tds-mobile`
+프롬프트 없이 만들 때는 `--skills`와 `--ai`를 함께 지정해 주세요.
 
-설치할 때는 `--copy`를 사용하므로 스캐폴더 패키지 경로에 의존하는 심볼릭 링크가
-남지 않아요. Skills에는 문서 본문 스냅샷을 넣지 않아요. 작업 시점의 `llms.txt`를
-문서 인덱스로 읽고, 관련된 개별 문서를 우선 조회해요. 여러 영역을 함께 다루거나
-인덱스만으로 충분하지 않을 때는 `llms-full.txt`를 검색해요.
+```bash
+npx create-ait-app my-app --inline --skills --ai codex
+```
+
+이미 만든 프로젝트에 나중에 추가하고 싶다면 프로젝트 루트에서
+[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI를 실행하면 돼요.
+`--agent`에는 `cursor`, `codex`, `claude-code` 중 사용하는 도구를 넣어 주세요.
+
+```bash
+# Apps in Toss
+npx --yes skills@latest add toss/create-ait-app \
+  --agent codex \
+  --skill apps-in-toss \
+  --copy --yes
+
+# Apps in Toss + TDS
+npx --yes skills@latest add toss/create-ait-app \
+  --agent codex \
+  --skill apps-in-toss \
+  --skill tds-mobile \
+  --copy --yes
+```
+
+설치된 Skills는 작업할 때 최신 Apps in Toss 문서 인덱스를 읽어요. 필요한 개별
+문서를 우선 확인하고, 여러 영역을 함께 다루거나 더 넓은 문맥이 필요할 때는
+`llms-full.txt`를 검색해요.
 
 ## 관련 링크
 

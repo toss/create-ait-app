@@ -62,6 +62,8 @@ SSG+hydration은 모두 대상이에요.
   적용해요.
 - Agent Skills는 루트 `skills/`에 vercel-labs/skills 형식으로 관리해요.
 - `npx skills add . --list`로 두 스킬을 찾을 수 있어야 해요.
+- 생성 프로젝트에는 `npx --yes skills@latest add`와 `--copy`로 설치해 스캐폴더
+  패키지 경로를 가리키는 심볼릭 링크가 남지 않게 해요.
 - 공식 문서 본문을 저장소에 복사하지 말고 동적 문서 조회 절차만 유지해 주세요.
 
 ## create-vite 업데이트
