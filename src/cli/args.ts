@@ -1,10 +1,8 @@
 import type { PackageManager } from "../package-manager/package-manager.js";
 import { SAMPLE_IDS, type SampleId } from "../samples/apply-samples.js";
-import type { AiTool } from "../skills/install-skills.js";
 
 export interface CliArgs {
   _: string[];
-  ai?: AiTool | string;
   help: boolean;
   inline: boolean;
   pm?: PackageManager | string;
@@ -15,7 +13,7 @@ export interface CliArgs {
   template?: string;
 }
 
-const VALUE_FLAGS = new Set(["--ai", "--pm", "--sample", "--template"]);
+const VALUE_FLAGS = new Set(["--pm", "--sample", "--template"]);
 const BOOLEAN_FLAGS = new Set(["--help", "--inline", "--skills", "--skip-install", "--tds"]);
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -41,8 +39,6 @@ export function parseArgs(argv: string[]): CliArgs {
 
       if (token === "--sample") {
         args.sample.push(...value.split(",").filter(Boolean));
-      } else if (token === "--ai") {
-        args.ai = value;
       } else if (token === "--pm") {
         args.pm = value;
       } else {
@@ -92,7 +88,6 @@ export function printHelp(): void {
   --template <name>  create-vite 프리셋을 골라요 (예: vue-ts, svelte, solid-ts)
   --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요
   --skills           최신 공식 문서를 조회하는 Agent Skills를 추가해요
-  --ai <name>        AI 도구를 골라요 (cursor, claude, codex)
   --sample <name>    예제 코드를 추가해요 (iap, iaa / 복수: iap,iaa)
   --skip-install     의존성 설치를 생략해요
   --help             도움말을 보여 줘요

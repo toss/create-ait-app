@@ -11,7 +11,7 @@ import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-pro
 import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
 import { installProjectDependencies } from "../scaffold/install-project-dependencies.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
-import { AI_TOOLS, type AiTool, installProjectSkills } from "../skills/install-skills.js";
+import { installProjectSkills } from "../skills/install-skills.js";
 import { getCreateViteVersion } from "../vite/create-vite.js";
 import { runAddSample } from "./add-sample.js";
 import { parseArgs, parseSampleIds, printHelp, type CliArgs } from "./args.js";
@@ -44,32 +44,12 @@ async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
   });
 }
 
-async function chooseAiTool(args: CliArgs): Promise<AiTool | null> {
-  const explicit = assertChoice(args.ai, AI_TOOLS, "지원하지 않는 AI 도구예요");
-  if (args.skills) {
-    if (explicit) return explicit;
-    if (args.inline) {
-      throw new Error("--inline --skills를 사용할 때는 --ai도 지정해 주세요.");
-    }
-    return select({
-      choices: [
-        { name: "Cursor", value: "cursor" },
-        { name: "Claude Code", value: "claude" },
-        { name: "Codex", value: "codex" },
-      ],
-      message: "사용하는 AI 도구를 골라 주세요:",
-    });
-  }
-
-  if (args.inline) return null;
-  return select({
-    choices: [
-      { name: "Cursor", value: "cursor" },
-      { name: "Claude Code", value: "claude" },
-      { name: "Codex", value: "codex" },
-      { name: "선택 안 함", value: null },
-    ],
-    message: "최신 공식 문서를 조회하는 Agent Skills를 추가할까요?",
+async function chooseSkills(args: CliArgs): Promise<boolean> {
+  if (args.skills) return true;
+  if (args.inline) return false;
+  return confirm({
+    default: false,
+    message: "Agent Skills를 추가할까요?",
   });
 }
 
@@ -165,7 +145,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     });
 
     const sampleIds = await chooseSamples(args, baseProject.framework, useTds);
-    const aiTool = await chooseAiTool(args);
+    const installSkills = await chooseSkills(args);
 
     applyProjectSamples({
       baseProject,
@@ -179,8 +159,8 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
       targetDirectory,
     });
 
-    if (aiTool) {
-      installProjectSkills({ aiTool, targetDirectory, useTds });
+    if (installSkills) {
+      installProjectSkills({ targetDirectory, useTds });
     }
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;

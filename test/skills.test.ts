@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { getSkillRoot, installProjectSkills } from "../src/skills/install-skills.js";
+import { installProjectSkills } from "../src/skills/install-skills.js";
 import { runCommand } from "../src/system/command.js";
 import { packageRoot } from "../src/system/paths.js";
 
@@ -12,7 +12,6 @@ vi.mock("../src/system/command.js", () => ({
 describe("installProjectSkills", () => {
   it("installs Apps in Toss and TDS through vercel-labs/skills", () => {
     installProjectSkills({
-      aiTool: "codex",
       targetDirectory: "/tmp/example-app",
       useTds: true,
     });
@@ -23,8 +22,6 @@ describe("installProjectSkills", () => {
         "skills@latest",
         "add",
         path.join(packageRoot, "skills"),
-        "--agent",
-        "codex",
         "--skill",
         "apps-in-toss",
         "--skill",
@@ -39,7 +36,6 @@ describe("installProjectSkills", () => {
 
   it("installs only Apps in Toss without TDS", () => {
     installProjectSkills({
-      aiTool: "claude",
       targetDirectory: "/tmp/example-app",
       useTds: false,
     });
@@ -47,10 +43,7 @@ describe("installProjectSkills", () => {
     const call = vi.mocked(runCommand).mock.calls.at(-1)?.[0];
     expect(call?.args).toContain("apps-in-toss");
     expect(call?.args).not.toContain("tds-mobile");
-    expect(call?.args).toContain("claude-code");
-    expect(getSkillRoot("/tmp/example-app", "claude")).toBe(
-      path.join("/tmp/example-app", ".claude", "skills"),
-    );
+    expect(call?.args).not.toContain("--agent");
   });
 
   it("keeps dynamic documentation routing in the installable catalog", () => {

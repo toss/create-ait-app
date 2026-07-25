@@ -56,7 +56,7 @@ SSG+hydration은 모두 대상이에요.
   사용해요.
 - 내부 의존성은 `system → project/package-manager/vite/samples/skills → scaffold → cli`
   방향으로만 이어져요. 상위 계층에서 하위 계층을 역참조하지 마세요.
-- 공용 `types.ts`를 만들지 않아요. `PackageJson`, `SampleId`, `AiTool`, `PackageManager`,
+- 공용 `types.ts`를 만들지 않아요. `PackageJson`, `SampleId`, `PackageManager`,
   `BaseProject` 같은 타입은 해당 책임을 구현하는 모듈에 함께 둬요.
 - `tsdown.config.ts`에서 공개 export와 bin을 생성해요.
 - `dist/`와 `package.json`의 export/bin 경로는 tsdown의 `exports: true`가 관리해요.
@@ -76,6 +76,8 @@ SSG+hydration은 모두 대상이에요.
 - `npx skills add . --list`로 두 스킬을 찾을 수 있어야 해요.
 - 생성 프로젝트에는 `npx --yes skills@latest add`와 `--copy`로 설치해 스캐폴더
   패키지 경로를 가리키는 심볼릭 링크가 남지 않게 해요.
+- 지원 에이전트 목록을 스캐폴더에 고정하지 않아요. 대상 에이전트 감지와 표준 설치
+  경로 선택은 vercel-labs/skills CLI에 맡겨요.
 - 공식 문서 본문을 저장소에 복사하지 말고 동적 문서 조회 절차만 유지해 주세요.
 
 ## create-vite 업데이트

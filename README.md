@@ -17,7 +17,7 @@ npx create-ait-app my-app
 2. TDS를 사용할지 선택해요.
 3. TDS를 사용하지 않는다면 Vite 프리셋을 골라요.
 4. 지원되는 프로젝트에서는 IAP·IAA 예제 코드를 추가할 수 있어요.
-5. Cursor·Claude Code·Codex용 Agent Skills를 추가할 수 있어요.
+5. Agent Skills를 추가할 수 있어요. 대상 에이전트는 공식 Skills CLI가 자동으로 감지해요.
 
 선택이 끝나면 Apps in Toss 설정과 의존성을 준비해요.
 
@@ -51,14 +51,13 @@ npx create-ait-app my-app --inline --pm npm --template react-ts
 # Vue + TypeScript
 npx create-ait-app my-app --inline --pm yarn --template vue-ts
 
-# React 18 + TDS, IAP·IAA 예제, Codex Skills
+# React 18 + TDS, IAP·IAA 예제, Agent Skills
 npx create-ait-app my-app \
   --inline \
   --pm yarn \
   --tds \
   --sample iap,iaa \
-  --skills \
-  --ai codex
+  --skills
 ```
 
 `--inline`에서 프리셋을 생략하면 `react-ts`를 사용해요.
@@ -110,34 +109,34 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 
 ## Agent Skills 사용하기
 
-프로젝트를 만들 때 사용 중인 AI 도구를 선택하면 필요한 Skills를 함께 설치해요.
+프로젝트를 만들 때 Skills 추가를 선택하면
+[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI를 실행해요. 대상
+에이전트와 표준 설치 경로는 공식 CLI가 자동으로 감지해요.
 
 - Skills를 선택한 일반 프로젝트에는 `apps-in-toss`를 설치해요.
 - Skills를 선택한 TDS 프로젝트에는 `apps-in-toss`와 `tds-mobile`을 설치해요.
 
-프롬프트 없이 만들 때는 `--skills`와 `--ai`를 함께 지정해 주세요.
+프롬프트 없이 만들 때는 `--skills`를 지정해 주세요.
 
 ```bash
-npx create-ait-app my-app --inline --skills --ai codex
+npx create-ait-app my-app --inline --skills
 ```
 
-이미 만든 프로젝트에 나중에 추가하고 싶다면 프로젝트 루트에서
-[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI를 실행하면 돼요.
-`--agent`에는 `cursor`, `codex`, `claude-code` 중 사용하는 도구를 넣어 주세요.
+이미 만든 프로젝트에 나중에 추가하고 싶다면 프로젝트 루트에서 같은 CLI를 실행하면
+돼요. `--agent`를 스캐폴더가 제한하지 않으므로 공식 CLI가 새 에이전트를 지원하면
+별도 변경 없이 사용할 수 있어요.
 
 ```bash
 # Apps in Toss
 npx --yes skills@latest add toss/create-ait-app \
-  --agent codex \
   --skill apps-in-toss \
-  --copy --yes
+  --copy
 
 # Apps in Toss + TDS
 npx --yes skills@latest add toss/create-ait-app \
-  --agent codex \
   --skill apps-in-toss \
   --skill tds-mobile \
-  --copy --yes
+  --copy
 ```
 
 설치된 Skills는 작업할 때 최신 Apps in Toss 문서 인덱스를 읽어요. 필요한 개별
@@ -153,7 +152,6 @@ npx --yes skills@latest add toss/create-ait-app \
 | `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요.                 |
 | `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요. |
 | `--skills`          | 최신 공식 문서를 조회하는 Agent Skills를 추가해요.               |
-| `--ai <name>`       | Skills 대상 도구를 지정해요. `cursor`, `claude`, `codex`         |
 | `--skip-install`    | 프로젝트 생성 뒤 의존성 설치를 생략해요.                         |
 | `--help`            | 도움말을 출력해요.                                               |
 

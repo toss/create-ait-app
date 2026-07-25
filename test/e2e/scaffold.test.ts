@@ -193,7 +193,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         cliArguments.push("--template", template);
       }
       if (template === "react-ts" || template === "tds") {
-        cliArguments.push("--skills", "--ai", "codex");
+        cliArguments.push("--skills");
       }
       if (sampleIds[0]) {
         cliArguments.push("--sample", sampleIds[0]);

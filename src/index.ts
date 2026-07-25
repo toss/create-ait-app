@@ -31,8 +31,7 @@ export { finalizeProject } from "./scaffold/finalize-project.js";
 export { initializeAitProject } from "./scaffold/initialize-ait-project.js";
 export { installProjectDependencies } from "./scaffold/install-project-dependencies.js";
 export type { SampleId } from "./samples/apply-samples.js";
-export { getSkillRoot, installProjectSkills, writeAiSkills } from "./skills/install-skills.js";
-export type { AiTool } from "./skills/install-skills.js";
+export { installProjectSkills } from "./skills/install-skills.js";
 export {
   getBundledViteTemplates,
   getCreateViteVersion,
