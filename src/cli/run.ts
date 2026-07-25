@@ -12,11 +12,7 @@ import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
 import { installProjectDependencies } from "../scaffold/install-project-dependencies.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
 import { installProjectSkills } from "../skills/install-skills.js";
-import {
-  getCreateViteVersion,
-  getSupportedViteTemplates,
-  VITE_TEMPLATE_ALIASES,
-} from "../vite/create-vite.js";
+import { getSupportedViteTemplates, VITE_TEMPLATE_ALIASES } from "../vite/create-vite.js";
 import { runAddSample } from "./add-sample.js";
 import {
   assertNonInteractiveArgs,
@@ -141,9 +137,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   const packageName = toNpmPackageName(path.basename(projectName));
 
   console.log(
-    useTds
-      ? "\n🚀 React 18 + TDS 전용 템플릿을 만들어요.\n"
-      : `\n🚀 create-vite@${getCreateViteVersion()}로 정적 클라이언트 프로젝트를 만들어요.\n`,
+    useTds ? "\n🚀 TDS 프로젝트를 만들고 있어요.\n" : "\n🚀 앱 프로젝트를 만들고 있어요.\n",
   );
 
   try {
@@ -181,10 +175,13 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     }
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;
+    const preset = useTds
+      ? "TDS (React 18)"
+      : `Vite ${baseProject.template ?? baseProject.framework}`;
     console.log(`
 ✅ 프로젝트가 생성됐어요.
 
-  기반: ${useTds ? "React 18 + TDS template" : `create-vite@${getCreateViteVersion()}${baseProject.template ? ` (${baseProject.template})` : ""}`}
+  프리셋: ${preset}
   cd ${projectName}
   ${devCommand}
 `);
