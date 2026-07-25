@@ -9,7 +9,9 @@ export default defineConfig({
   entry: {
     cli: "src/index.ts",
   },
-  exports: true,
+  exports: {
+    bin: false,
+  },
   format: "esm",
   platform: "node",
   sourcemap: true,
