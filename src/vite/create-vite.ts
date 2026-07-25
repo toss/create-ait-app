@@ -1,10 +1,10 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { runCommand } from "./command.js";
-import { packageRoot } from "./paths.js";
-import { readPackageJson } from "./fs-utils.js";
-import { isSsrOnlyViteBuildCommand } from "./csr.js";
+import { isSsrOnlyViteBuildCommand } from "../project/inspect-project.js";
+import { readPackageJson } from "../project/package-json.js";
+import { runCommand } from "../system/command.js";
+import { packageRoot } from "../system/paths.js";
 
 const require = createRequire(import.meta.url);
 

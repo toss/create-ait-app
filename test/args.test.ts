@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseArgs, parseSampleIds } from "../src/args.js";
+import { parseArgs, parseSampleIds } from "../src/cli/args.js";
 
 describe("parseArgs", () => {
   it("parses typed CLI options", () => {

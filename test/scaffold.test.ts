@@ -2,8 +2,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { createBaseProject, finalizeProject, toNpmPackageName } from "../src/scaffold.js";
-import type { BaseProject } from "../src/scaffold.js";
+import {
+  createBaseProject,
+  toNpmPackageName,
+  type BaseProject,
+} from "../src/scaffold/create-base-project.js";
+import { finalizeProject } from "../src/scaffold/finalize-project.js";
 
 describe("toNpmPackageName", () => {
   it("normalizes names and scopes", () => {

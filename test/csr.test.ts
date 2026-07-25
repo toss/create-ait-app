@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { mkdtempSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { assertCsrViteProject, isSsrOnlyViteBuildCommand } from "../src/csr.js";
+import { assertCsrViteProject, isSsrOnlyViteBuildCommand } from "../src/project/inspect-project.js";
 
 function fixture(packageJson: unknown, withIndex = true): string {
   const directory = mkdtempSync(path.join(tmpdir(), "create-ait-csr-"));

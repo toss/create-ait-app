@@ -47,7 +47,13 @@ SSG+hydration은 모두 대상이에요.
 
 ## 구조와 변경 원칙
 
-- CLI 구현은 `src/*.ts`에 두고 `tsdown.config.ts`에서 공개 export와 bin을 생성해요.
+- `src/index.ts`는 라이브러리 공개 API만 내보내고 `src/cli.ts`는 실행 파일 진입점으로만
+  사용해요.
+- 내부 의존성은 `system → project/package-manager/vite/samples/skills → scaffold → cli`
+  방향으로만 이어져요. 상위 계층에서 하위 계층을 역참조하지 마세요.
+- 공용 `types.ts`를 만들지 않아요. `PackageJson`, `SampleId`, `AiTool`, `PackageManager`,
+  `BaseProject` 같은 타입은 해당 책임을 구현하는 모듈에 함께 둬요.
+- `tsdown.config.ts`에서 공개 export와 bin을 생성해요.
 - `dist/`와 `package.json`의 export/bin 경로는 tsdown의 `exports: true`가 관리해요.
 - 일반 정적 클라이언트 앱의 뼈대는 `create-vite`가 유일한 원본이에요. 저장소에
   프레임워크별 전체 템플릿을 복제하지 마세요.

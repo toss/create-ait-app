@@ -1,13 +1,5 @@
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
-import type { PackageJson } from "./types.js";
 
 export function copyDirectory(
   source: string,
@@ -31,17 +23,4 @@ export function copyDirectory(
       copyFileSync(sourcePath, destinationPath);
     }
   }
-}
-
-export function readPackageJson(targetDirectory: string): PackageJson {
-  return JSON.parse(
-    readFileSync(path.join(targetDirectory, "package.json"), "utf8"),
-  ) as PackageJson;
-}
-
-export function writePackageJson(targetDirectory: string, packageJson: PackageJson): void {
-  writeFileSync(
-    path.join(targetDirectory, "package.json"),
-    `${JSON.stringify(packageJson, null, 2)}\n`,
-  );
 }

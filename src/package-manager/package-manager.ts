@@ -1,8 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { readPackageJson } from "./fs-utils.js";
-import { runCommand } from "./command.js";
-import { PACKAGE_MANAGERS, type PackageManager } from "./types.js";
+import { readPackageJson } from "../project/package-json.js";
+import { runCommand } from "../system/command.js";
+
+export const PACKAGE_MANAGERS = ["npm", "yarn", "pnpm"] as const;
+export type PackageManager = (typeof PACKAGE_MANAGERS)[number];
 
 export function packageManagerFromUserAgent(userAgent?: string): PackageManager | null {
   const name = userAgent?.split(" ")[0]?.split("/")[0];

@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { getSupportedViteTemplates } from "../../src/vite.js";
+import { getSupportedViteTemplates } from "../../src/vite/create-vite.js";
 
 const enabled = process.env.AIT_RUN_E2E === "1";
 const requested = process.env.AIT_E2E_TEMPLATES ?? "react-ts";

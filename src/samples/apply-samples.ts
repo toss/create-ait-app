@@ -1,8 +1,11 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { assetsDirectory, templatesDirectory } from "./paths.js";
-import { copyDirectory } from "./fs-utils.js";
-import type { FrameworkKind, SampleId } from "./types.js";
+import type { FrameworkKind } from "../project/framework.js";
+import { copyDirectory } from "../system/copy-directory.js";
+import { assetsDirectory, templatesDirectory } from "../system/paths.js";
+
+export const SAMPLE_IDS = ["iap", "iaa"] as const;
+export type SampleId = (typeof SAMPLE_IDS)[number];
 
 interface SampleDefinition {
   button: string;

@@ -5,7 +5,7 @@ import {
   packageManagerFromExecPath,
   packageManagerFromUserAgent,
   requiresLegacyNpmPeerDeps,
-} from "../src/package-manager.js";
+} from "../src/package-manager/package-manager.js";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";

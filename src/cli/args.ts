@@ -1,4 +1,6 @@
-import type { AiTool, PackageManager, SampleId } from "./types.js";
+import type { PackageManager } from "../package-manager/package-manager.js";
+import { SAMPLE_IDS, type SampleId } from "../samples/apply-samples.js";
+import type { AiTool } from "../skills/install-skills.js";
 
 export interface CliArgs {
   _: string[];
@@ -70,9 +72,11 @@ export function parseArgs(argv: string[]): CliArgs {
 }
 
 export function parseSampleIds(values: string[]): SampleId[] {
-  const invalid = values.filter((value) => value !== "iap" && value !== "iaa");
+  const invalid = values.filter((value) => !SAMPLE_IDS.includes(value as SampleId));
   if (invalid.length > 0) {
-    throw new Error(`지원하지 않는 예제 코드예요: ${invalid.join(", ")} (iap, iaa 중 선택)`);
+    throw new Error(
+      `지원하지 않는 예제 코드예요: ${invalid.join(", ")} (${SAMPLE_IDS.join(", ")} 중 선택)`,
+    );
   }
   return [...new Set(values)] as SampleId[];
 }

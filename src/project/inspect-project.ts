@@ -1,7 +1,15 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { readPackageJson } from "./fs-utils.js";
-import type { FrameworkKind, PackageJson, ProjectInspection } from "./types.js";
+import type { FrameworkKind } from "./framework.js";
+import { readPackageJson, type PackageJson } from "./package-json.js";
+
+export interface ProjectInspection {
+  framework: FrameworkKind;
+  isTypeScript: boolean;
+  packageJson: PackageJson;
+  originalBuildCommand: string;
+  originalDevCommand: string;
+}
 
 function allDependencies(packageJson: PackageJson): Record<string, string> {
   return {

@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { runCommand } from "../src/command.js";
-import { packageRoot } from "../src/paths.js";
-import { getSkillRoot, installProjectSkills } from "../src/skills.js";
+import { getSkillRoot, installProjectSkills } from "../src/skills/install-skills.js";
+import { runCommand } from "../src/system/command.js";
+import { packageRoot } from "../src/system/paths.js";
 
-vi.mock("../src/command.js", () => ({
+vi.mock("../src/system/command.js", () => ({
   runCommand: vi.fn(),
 }));
 

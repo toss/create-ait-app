@@ -4,7 +4,7 @@ import {
   getCreateViteVersion,
   getSupportedViteTemplates,
   resolveViteTemplate,
-} from "../src/vite.js";
+} from "../src/vite/create-vite.js";
 
 describe("pinned create-vite", () => {
   it("uses an exact version and discovers its bundled templates", () => {

@@ -1,25 +1,19 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
-import { parseArgs, parseSampleIds, printHelp, type CliArgs } from "./args.js";
 import {
-  applyProjectSamples,
-  createBaseProject,
-  initializeAitProject,
-  installProjectDependencies,
-  toNpmPackageName,
-} from "./scaffold.js";
-import { supportsSamples } from "./samples.js";
-import { installProjectSkills } from "./skills.js";
-import {
-  AI_TOOLS,
+  detectInvokedPackageManager,
   PACKAGE_MANAGERS,
-  type AiTool,
   type PackageManager,
-  type SampleId,
-} from "./types.js";
-import { detectInvokedPackageManager } from "./package-manager.js";
-import { getCreateViteVersion } from "./vite.js";
+} from "../package-manager/package-manager.js";
+import { applyProjectSamples } from "../scaffold/apply-project-samples.js";
+import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-project.js";
+import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
+import { installProjectDependencies } from "../scaffold/install-project-dependencies.js";
+import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
+import { AI_TOOLS, type AiTool, installProjectSkills } from "../skills/install-skills.js";
+import { getCreateViteVersion } from "../vite/create-vite.js";
+import { parseArgs, parseSampleIds, printHelp, type CliArgs } from "./args.js";
 
 function assertChoice<T extends string>(
   value: string | undefined,

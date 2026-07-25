@@ -1,7 +1,9 @@
 import path from "node:path";
-import { runCommand } from "./command.js";
-import { skillsDirectory } from "./paths.js";
-import type { AiTool } from "./types.js";
+import { runCommand } from "../system/command.js";
+import { skillsDirectory } from "../system/paths.js";
+
+export const AI_TOOLS = ["cursor", "claude", "codex"] as const;
+export type AiTool = (typeof AI_TOOLS)[number];
 
 const SKILLS_AGENT_IDS: Readonly<Record<AiTool, string>> = {
   claude: "claude-code",
