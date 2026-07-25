@@ -14,8 +14,153 @@ permissions:
   pull-requests: write
 
 jobs:
-  update:
-    name: create-vite 업데이트
+  version:
+    name: 최신 버전 확인
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.version.outputs.changed }}
+      latest: ${{ steps.version.outputs.latest }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: 최신 create-vite 버전 확인
+        id: version
+        run: |
+          current="$(node -p "require('./package.json').dependencies['create-vite']")"
+          latest="$(npm view create-vite version)"
+          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
+          if [ "$current" = "$latest" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  checks:
+    name: ${{ matrix.name }}
+    needs: version
+    if: needs.version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 포맷
+            command: yarn format:check
+          - name: 린트
+            command: yarn lint
+          - name: 타입 검사
+            command: yarn typecheck
+          - name: 단위 테스트
+            command: yarn test
+          - name: 패키지 빌드
+            command: yarn build && yarn publint
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: create-vite 업데이트
+        run: yarn up "create-vite@${{ needs.version.outputs.latest }}"
+
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.command }}
+
+  scaffolding-matrix:
+    name: 스캐폴딩 테스트 준비
+    needs: version
+    if: needs.version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      templates: ${{ steps.templates.outputs.templates }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: create-vite 업데이트
+        run: yarn up "create-vite@${{ needs.version.outputs.latest }}"
+
+      - name: 패키지 빌드
+        run: yarn build
+
+      - name: 스캐폴딩 테스트 대상 확인
+        id: templates
+        run: |
+          templates="$(yarn node --input-type=module -e 'import { getSupportedViteTemplates } from "./dist/index.mjs"; process.stdout.write(JSON.stringify([...getSupportedViteTemplates(), "tds"]))')"
+          echo "templates=${templates}" >> "$GITHUB_OUTPUT"
+
+  scaffolding-tests:
+    name: 스캐폴딩 테스트 (${{ matrix.template }})
+    needs:
+      - version
+      - scaffolding-matrix
+    if: needs.version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJSON(needs.scaffolding-matrix.outputs.templates) }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: create-vite 업데이트
+        run: yarn up "create-vite@${{ needs.version.outputs.latest }}"
+
+      - name: 프로젝트 생성, 빌드, 개발 서버 검증
+        env:
+          AIT_E2E_TEMPLATES: ${{ matrix.template }}
+          AIT_E2E_SAMPLES: ${{ matrix.template == 'tds' && 'iap,iaa' || '' }}
+        run: yarn test:e2e
+
+  create-pr:
+    name: PR 만들기
+    needs:
+      - version
+      - checks
+      - scaffolding-tests
+    if: >-
+      always() &&
+      needs.version.outputs.changed == 'true' &&
+      needs.checks.result == 'success' &&
+      needs.scaffolding-tests.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: 저장소 체크아웃
@@ -32,50 +177,25 @@ jobs:
       - name: 의존성 설치
         run: yarn install --immutable
 
-      - name: 최신 create-vite 버전 확인
-        id: version
-        run: |
-          current="$(node -p "require('./package.json').dependencies['create-vite']")"
-          latest="$(npm view create-vite version)"
-          echo "current=${current}" >> "$GITHUB_OUTPUT"
-          echo "latest=${latest}" >> "$GITHUB_OUTPUT"
-          if [ "$current" = "$latest" ]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: 고정된 의존성 업데이트
-        if: steps.version.outputs.changed == 'true'
-        run: yarn up "create-vite@${{ steps.version.outputs.latest }}"
-
-      - name: 품질 검사
-        if: steps.version.outputs.changed == 'true'
-        run: yarn check
-
-      - name: 모든 지원 프리셋 스캐폴딩 테스트
-        if: steps.version.outputs.changed == 'true'
-        env:
-          AIT_E2E_TEMPLATES: all
-        run: yarn test:e2e
+      - name: create-vite 업데이트
+        run: yarn up "create-vite@${{ needs.version.outputs.latest }}"
 
       - name: PR 만들기
-        if: steps.version.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LATEST: ${{ steps.version.outputs.latest }}
+          LATEST: ${{ needs.version.outputs.latest }}
           PR_BODY: |
             ## 요약
 
-            create-vite를 ${{ steps.version.outputs.latest }}로 업데이트해요.
+            create-vite를 ${{ needs.version.outputs.latest }}로 업데이트해요.
 
             ## 검증
 
-            - lint
-            - format check
-            - typecheck
-            - Vitest unit tests
-            - tsdown build 및 publint
+            - 포맷
+            - 린트
+            - 타입 검사
+            - Vitest 단위 테스트
+            - tsdown 빌드 및 publint
             - create-vite에서 동적으로 찾은 모든 정적 클라이언트 프리셋과 TDS의 스캐폴딩, build, dev 테스트
 
             매일 실행하는 자동 호환성 검증을 모두 통과한 뒤 만든 PR이에요.
