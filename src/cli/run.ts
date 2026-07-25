@@ -179,13 +179,9 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     }
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;
-    const preset = useTds
-      ? "TDS (React 18)"
-      : `Vite ${baseProject.template ?? baseProject.framework}`;
     console.log(`
 ✅ 프로젝트가 생성됐어요.
 
-  프리셋: ${preset}
   cd ${projectName}
   ${devCommand}
 `);
