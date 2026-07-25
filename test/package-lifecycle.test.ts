@@ -17,6 +17,9 @@ describe("package lifecycle", () => {
     expect(packageJson.scripts.prepack).toBeUndefined();
     expect(packageJson.scripts.prepare).toBeUndefined();
     expect(packageJson.scripts.prepublishOnly).toBeUndefined();
+    expect(packageJson.scripts.release).toBeUndefined();
+    expect(packageJson.scripts["release:beta"]).toBeUndefined();
+    expect(packageJson.scripts["release:rc"]).toBeUndefined();
     expect(tsdownConfig).not.toMatch(/\bpublint\s*:/);
   });
 });

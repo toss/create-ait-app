@@ -36,9 +36,25 @@ jobs:
             echo "publish=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Setup Node.js
+        if: steps.version.outputs.publish == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Enable Corepack
+        if: steps.version.outputs.publish == 'true'
+        run: corepack enable
+
+      - name: Install dependencies
+        if: steps.version.outputs.publish == 'true'
+        run: yarn install --immutable
+
       - name: Validate version
         if: steps.version.outputs.publish == 'true'
-        run: node .github/scripts/validate-version.mjs
+        id: release
+        run: yarn node .github/scripts/validate-version.mjs
 
       - name: Check if version is already published
         if: steps.version.outputs.publish == 'true'
@@ -52,21 +68,6 @@ jobs:
             echo "create-ait-app@${VERSION} is not published yet."
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Setup Node.js
-        if: steps.should_publish.outputs.publish == 'true'
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: Enable Corepack
-        if: steps.should_publish.outputs.publish == 'true'
-        run: corepack enable
-
-      - name: Install dependencies
-        if: steps.should_publish.outputs.publish == 'true'
-        run: yarn install --immutable
 
       - name: Validate package
         if: steps.should_publish.outputs.publish == 'true'
@@ -89,21 +90,28 @@ jobs:
 
       - name: Publish to npm
         if: steps.should_publish.outputs.publish == 'true'
-        run: npm publish
+        run: npm publish --tag "${{ steps.release.outputs.tag }}"
 
       - name: Create GitHub Release
         if: steps.should_publish.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}
         run: |
           VERSION="${{ steps.version.outputs.value }}"
           TAG="v${VERSION}"
+          RELEASE_FLAGS=()
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release ${TAG} already exists. Skipping."
             exit 0
           fi
 
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            RELEASE_FLAGS+=(--prerelease)
+          fi
+
           gh release create "$TAG" \
             --title "$TAG" \
-            --notes-file release-notes.md
+            --notes-file release-notes.md \
+            "${RELEASE_FLAGS[@]}"

@@ -123,5 +123,39 @@ fix: 생성 프로젝트의 SSR 전용 빌드 판별 보완
 docs: create-vite 업데이트 정책 설명
 ```
 
+## 릴리스
+
+릴리스는 최신 `main` 브랜치의 깨끗한 작업 트리에서 진행해요. `release-it`이 버전을
+올리고 `chore: release v<version>` 커밋과 Git 태그를 push하면 GitHub Actions가 품질
+검사를 거쳐 npm과 GitHub Release에 배포해요.
+
+안정 버전은 다음 명령으로 만들어요.
+
+```bash
+yarn release-it
+```
+
+첫 beta는 올릴 버전 종류를 함께 지정해요. 이후 beta에서는 같은 명령을 다시 실행하면
+`beta` 번호가 올라가요. 검증이 끝나면 RC로 전환하고, RC 검증까지 끝나면 안정 버전을
+배포해요.
+
+```bash
+yarn release-it major --preRelease=beta
+yarn release-it --preRelease=beta
+yarn release-it --preRelease=rc
+yarn release-it
+```
+
+beta와 RC는 각각 npm의 `beta`, `rc` dist-tag로 배포해요. 안정 버전은 `latest`로
+배포해요.
+
+```bash
+npm install create-ait-app@beta
+npm install create-ait-app@rc
+npm install create-ait-app@latest
+```
+
+`alpha`처럼 정책에 없는 prerelease 채널은 배포 워크플로에서 거부해요.
+
 버그를 제보할 때는 기대한 동작, 실제 동작, 재현 명령, OS와 Node.js 버전, 오류
 메시지를 함께 남겨 주세요.
