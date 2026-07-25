@@ -52,8 +52,8 @@ SSG+hydration은 모두 대상이에요.
 
 ## 구조와 변경 원칙
 
-- `src/index.ts`는 라이브러리 공개 API만 내보내고 `src/cli.ts`는 실행 파일 진입점으로만
-  사용해요.
+- `src/index.ts`는 `src/cli.ts`만 불러오는 실행 진입점이에요. 내부 모듈을 공개 API로
+  재노출하지 않아요.
 - 내부 의존성은 `system → project/package-manager/vite/samples/skills → scaffold → cli`
   방향으로만 이어져요. 상위 계층에서 하위 계층을 역참조하지 마세요.
 - 공용 `types.ts`를 만들지 않아요. `PackageJson`, `SampleId`, `PackageManager`,

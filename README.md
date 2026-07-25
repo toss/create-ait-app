@@ -168,6 +168,7 @@ npx --yes skills@latest add toss/create-ait-app \
 | 옵션                | 설명                                                              |
 | ------------------- | ----------------------------------------------------------------- |
 | `--inline`          | 모든 질문을 생략해요. 프로젝트 경로와 필수 옵션을 함께 써야 해요. |
+| `--list-templates`  | 지원하는 프로젝트 프리셋을 JSON으로 출력해요.                     |
 | `--pm <name>`       | 패키지 매니저를 지정해요. `npm`, `yarn`, `pnpm`을 지원해요.       |
 | `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`        |
 | `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요.                  |

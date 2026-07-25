@@ -88,6 +88,10 @@ async function chooseSamples(
 
 export async function run(argv: string[] = process.argv.slice(2)): Promise<void> {
   const args = parseArgs(argv);
+  if (args.listTemplates) {
+    process.stdout.write(JSON.stringify([...getSupportedViteTemplates(), "tds"]));
+    return;
+  }
   if (args.help) {
     printHelp();
     return;

@@ -6,6 +6,7 @@ export interface CliArgs {
   _: string[];
   help: boolean;
   inline: boolean;
+  listTemplates: boolean;
   pm?: PackageManager | string;
   sample: string[];
   skills: boolean;
@@ -15,13 +16,21 @@ export interface CliArgs {
 }
 
 const VALUE_FLAGS = new Set(["--pm", "--sample", "--template"]);
-const BOOLEAN_FLAGS = new Set(["--help", "--inline", "--skills", "--skip-install", "--tds"]);
+const BOOLEAN_FLAGS = new Set([
+  "--help",
+  "--inline",
+  "--list-templates",
+  "--skills",
+  "--skip-install",
+  "--tds",
+]);
 
 export function parseArgs(argv: string[]): CliArgs {
   const args: CliArgs = {
     _: [],
     help: false,
     inline: false,
+    listTemplates: false,
     sample: [],
     skills: false,
     skipInstall: false,
@@ -52,6 +61,8 @@ export function parseArgs(argv: string[]): CliArgs {
       const key = token.slice(2).replaceAll("-", "");
       if (key === "skipinstall") {
         args.skipInstall = true;
+      } else if (key === "listtemplates") {
+        args.listTemplates = true;
       } else {
         (args as unknown as Record<string, boolean>)[key] = true;
       }
@@ -104,6 +115,7 @@ export function printHelp(): void {
 
 옵션:
   --inline           모든 질문을 생략하고 비대화형으로 실행해요
+  --list-templates   지원하는 프로젝트 프리셋을 JSON으로 보여 줘요
   --pm <name>        패키지 매니저를 골라요 (npm, yarn, pnpm)
   --template <name>  create-vite 프리셋을 골라요
   --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요

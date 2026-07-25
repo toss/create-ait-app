@@ -12,6 +12,7 @@ describe("package lifecycle", () => {
       scripts: Record<string, string | undefined>;
     };
     const tsdownConfig = readFileSync(path.join(repositoryRoot, "tsdown.config.ts"), "utf8");
+    const entrySource = readFileSync(path.join(repositoryRoot, "src", "index.ts"), "utf8");
 
     expect(packageJson.scripts.build).toBe("tsdown");
     expect(packageJson.scripts.prepack).toBeUndefined();
@@ -20,6 +21,10 @@ describe("package lifecycle", () => {
     expect(packageJson.scripts.release).toBeUndefined();
     expect(packageJson.scripts["release:beta"]).toBeUndefined();
     expect(packageJson.scripts["release:rc"]).toBeUndefined();
+    expect(entrySource).toBe('#!/usr/bin/env node\n\nimport "./cli.js";\n');
+    expect(tsdownConfig).toContain('cli: "src/index.ts"');
+    expect(tsdownConfig).not.toMatch(/\bindex\s*:/);
+    expect(tsdownConfig).toContain("dts: false");
     expect(tsdownConfig).not.toMatch(/\bpublint\s*:/);
   });
 });

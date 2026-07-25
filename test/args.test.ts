@@ -22,6 +22,7 @@ describe("parseArgs", () => {
       _: ["my-app"],
       help: false,
       inline: true,
+      listTemplates: false,
       pm: "yarn",
       sample: ["iap", "iaa"],
       skills: true,
@@ -33,6 +34,10 @@ describe("parseArgs", () => {
 
   it("rejects unknown options", () => {
     expect(() => parseArgs(["--wat"])).toThrow("알 수 없는 옵션");
+  });
+
+  it("supports machine-readable template discovery", () => {
+    expect(parseArgs(["--list-templates"]).listTemplates).toBe(true);
   });
 
   it("requires every decision that could otherwise open a prompt", () => {

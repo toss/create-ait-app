@@ -5,10 +5,9 @@ export default defineConfig({
   deps: {
     neverBundle: true,
   },
-  dts: true,
+  dts: false,
   entry: {
-    cli: "src/cli.ts",
-    index: "src/index.ts",
+    cli: "src/index.ts",
   },
   exports: true,
   format: "esm",

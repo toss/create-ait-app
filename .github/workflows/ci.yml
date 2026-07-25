@@ -73,7 +73,7 @@ jobs:
       - name: 스캐폴딩 테스트 대상 확인
         id: templates
         run: |
-          templates="$(yarn node --input-type=module -e 'import { getSupportedViteTemplates } from "./dist/index.mjs"; process.stdout.write(JSON.stringify([...getSupportedViteTemplates(), "tds"]))')"
+          templates="$(yarn exec create-ait-app --list-templates)"
           echo "templates=${templates}" >> "$GITHUB_OUTPUT"
 
   scaffolding-tests:
