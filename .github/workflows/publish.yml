@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - v0.2.0-rc.0
 
 concurrency:
   group: npm-publish
@@ -19,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -36,9 +37,25 @@ jobs:
             echo "publish=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Setup Node.js
+        if: steps.version.outputs.publish == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Enable Corepack
+        if: steps.version.outputs.publish == 'true'
+        run: corepack enable
+
+      - name: Install dependencies
+        if: steps.version.outputs.publish == 'true'
+        run: yarn install --immutable
+
       - name: Validate version
         if: steps.version.outputs.publish == 'true'
-        run: node .github/scripts/validate-version.mjs
+        id: release
+        run: yarn node .github/scripts/validate-version.mjs
 
       - name: Check if version is already published
         if: steps.version.outputs.publish == 'true'
@@ -53,45 +70,51 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Setup Node.js
-        if: steps.should_publish.outputs.publish == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: Validate CLI syntax
-        if: steps.should_publish.outputs.publish == 'true'
+      - name: Validate package
+        if: steps.version.outputs.publish == 'true'
         run: |
-          node -c ./bin/index.js
-          node -e "require('fs').readdirSync('./src',{recursive:true}).filter(f=>f.endsWith('.js')).forEach(f=>require('child_process').execSync('node -c ./src/'+f,{stdio:'inherit'}))"
+          yarn format:check
+          yarn lint
+          yarn typecheck
+          yarn test
+          yarn build
+          yarn publint
 
       - name: Collect release notes
-        if: steps.should_publish.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node .github/scripts/collect-release-notes.mjs "${{ steps.version.outputs.value }}" > release-notes.md
+          node .github/scripts/collect-release-notes.mjs \
+            "${{ steps.version.outputs.value }}" \
+            "${GITHUB_REF_NAME}" > release-notes.md
           echo "Release notes:"
           cat release-notes.md
 
       - name: Publish to npm
         if: steps.should_publish.outputs.publish == 'true'
-        run: npm publish
+        run: npm publish --tag "${{ steps.release.outputs.tag }}"
 
       - name: Create GitHub Release
-        if: steps.should_publish.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}
         run: |
           VERSION="${{ steps.version.outputs.value }}"
           TAG="v${VERSION}"
+          RELEASE_FLAGS=()
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release ${TAG} already exists. Skipping."
             exit 0
           fi
 
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            RELEASE_FLAGS+=(--prerelease)
+          fi
+
           gh release create "$TAG" \
             --title "$TAG" \
-            --notes-file release-notes.md
+            --notes-file release-notes.md \
+            "${RELEASE_FLAGS[@]}"

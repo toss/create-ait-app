@@ -1,36 +1,64 @@
 {
   "name": "create-ait-app",
-  "version": "0.1.3",
+  "version": "0.2.0-rc.0",
   "description": "Create AIT App scaffolding tool",
+  "keywords": [
+    "ait",
+    "apps-in-toss",
+    "cli",
+    "create-app",
+    "react",
+    "scaffold",
+    "scaffolding",
+    "typescript",
+    "vite"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/toss/create-ait-app.git"
   },
-  "keywords": [
-    "cli",
-    "scaffold",
-    "scaffolding",
-    "vite",
-    "react",
-    "typescript",
-    "create-app",
-    "apps-in-toss",
-    "ait"
+  "bin": "./dist/cli.mjs",
+  "files": [
+    "dist",
+    "skills",
+    "templates"
   ],
-  "bin": {
-    "create-ait-app": "./bin/index.js"
+  "type": "module",
+  "exports": {
+    ".": "./dist/cli.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --deny-warnings .",
+    "test": "vitest run --exclude test/e2e/**",
+    "test:e2e": "yarn build && AIT_RUN_E2E=1 vitest run test/e2e",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "8.5.2",
+    "create-vite": "9.1.1",
+    "cross-spawn": "7.0.6",
+    "skills": "1.5.19"
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "6.0.6",
+    "@types/node": "26.1.1",
+    "oxfmt": "0.60.0",
+    "oxlint": "1.75.0",
+    "publint": "0.3.16",
+    "release-it": "20.2.1",
+    "semver": "7.8.5",
+    "tsdown": "0.22.14",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   },
   "engines": {
     "node": ">=24"
   },
-  "files": [
-    "bin",
-    "src",
-    "templates"
-  ],
-  "dependencies": {
-    "@inquirer/prompts": "^7.10.1"
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@4.17.1"
 }

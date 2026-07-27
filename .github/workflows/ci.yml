@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - "feat/**"
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 포맷
+            command: yarn format:check
+          - name: 린트
+            command: yarn lint
+          - name: 타입 검사
+            command: yarn typecheck
+          - name: 단위 테스트
+            command: yarn test
+          - name: 패키지 빌드
+            command: yarn build && yarn publint
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.command }}
+
+  scaffolding-matrix:
+    name: 스캐폴딩 테스트 준비
+    runs-on: ubuntu-latest
+    outputs:
+      templates: ${{ steps.templates.outputs.templates }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: 패키지 빌드
+        run: yarn build
+
+      - name: 스캐폴딩 테스트 대상 확인
+        id: templates
+        run: |
+          templates="$(yarn exec create-ait-app --list-templates)"
+          echo "templates=${templates}" >> "$GITHUB_OUTPUT"
+
+  scaffolding-tests:
+    name: 스캐폴딩 테스트 (${{ matrix.template }})
+    needs: scaffolding-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJSON(needs.scaffolding-matrix.outputs.templates) }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: 프로젝트 생성, 빌드, .ait 산출물, 개발 서버 검증
+        env:
+          AIT_E2E_TEMPLATES: ${{ matrix.template }}
+          AIT_E2E_SAMPLES: ${{ (matrix.template == 'react' || matrix.template == 'react-ts' || matrix.template == 'vanilla' || matrix.template == 'vanilla-ts' || matrix.template == 'tds') && 'iap,iaa' || '' }}
+        run: yarn test:e2e

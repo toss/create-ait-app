@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["assets/**", "dist/**", "templates/**", ".yarn/**", "yarn.lock"],
+  "printWidth": 100
+}

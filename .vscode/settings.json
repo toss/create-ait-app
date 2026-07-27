@@ -1,0 +1,10 @@
+{
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "oxc.path.oxfmt": ".yarn/sdks/oxfmt/bin/oxfmt",
+  "oxc.path.oxlint": ".yarn/sdks/oxlint/bin/oxlint"
+}

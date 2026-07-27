@@ -1,84 +1,189 @@
 # create-ait-app
 
-앱인토스(Apps in Toss) 프로젝트를 빠르게 시작할 수 있는 CLI 도구예요.
-Vite 기반 **React** 또는 **Vanilla** 프로젝트를 생성하고, 인앱결제·인앱광고 예제 등을 선택적으로 추가할 수 있어요.
+Apps in Toss 웹앱을 시작할 수 있도록 Vite 프로젝트를 만들고 필요한 설정을 추가해
+주는 CLI예요.
 
-**Node.js 24 이상**이 필요해요.
+Node.js 24 이상이 필요해요.
 
-## 빠르게 시작하기
+## 에이전트에게 프로젝트 생성을 맡기기
+
+아래 프롬프트를 에이전트에게 전달하면 필요한 선택을 먼저 확인한 뒤 프로젝트 생성까지
+비대화형으로 완료해요.
+
+> `npx --yes create-ait-app --help`를 먼저 실행해 주세요. 도움말을 기준으로 프로젝트
+> 경로, 패키지 매니저, 프로젝트 유형과 프리셋, 예제 코드, Agent Skills 설치 여부를
+> 선택지와 결과가 보이도록 저에게 물어봐 주세요. 제 답을 받으면 프로젝트 경로,
+> `--inline`, `--pm`, 그리고 `--template` 또는 `--tds`를 반드시 포함하고, 선택한
+> `--sample`과 `--skills`를 추가해 전체 명령을 비대화형으로 끝까지 실행해 주세요.
+
+에이전트는 예를 들어 다음 내용을 물어봐요.
+
+1. 프로젝트를 만들 경로를 물어봐요.
+2. 기본값인 일반 Vite 프로젝트로 안내하고 `--help`에 나온 프리셋 중 하나를
+   선택하도록 해요.
+3. 사용자가 TDS를 원할 때만 도움말의 권장사항을 안내하고 TDS 사용 여부를 확인해요.
+4. npm, Yarn, pnpm 중 사용할 패키지 매니저를 물어봐요.
+5. 지원되는 프로젝트라면 IAP·IAA 예제를 추가할지 물어봐요.
+6. Agent Skills를 설치할지 물어봐요.
+
+## 1. 프로젝트 만들기
 
 ```bash
 npx create-ait-app my-app
+```
+
+순서대로 필요한 선택지를 물어봐요.
+
+1. 실행한 패키지 매니저를 감지해 사용하고, 감지할 수 없으면 직접 골라요.
+2. Vite 프리셋을 골라요.
+3. 지원되는 프로젝트에서는 IAP·IAA 예제 코드를 추가할 수 있어요.
+4. Agent Skills를 추가할 수 있어요. 대상 에이전트는 공식 Skills CLI가 자동으로 감지해요.
+
+선택이 끝나면 Apps in Toss 설정과 의존성을 준비해요.
+
+## 2. 개발 시작하기
+
+```bash
 cd my-app
 npm run dev
 ```
 
-패키지 매니저는 생성 시 선택한 값에 맞게 `yarn dev`, `pnpm dev` 등으로 실행하면 돼요.
+생성한 프로젝트에서는 다음 명령을 사용할 수 있어요.
 
-## 대화형 설정
+```bash
+npm run dev
+npm run build
+npm run deploy
+```
 
-`npx create-ait-app my-app`으로 실행하면 대화형으로 설정할 수 있어요. `yarn create ait-app`, `npm create ait-app`, `pnpm create ait-app`으로 실행해도 템플릿은 선택할 수 있어요. (호출한 패키지 매니저는 자동으로 사용해요.)
+Yarn이나 pnpm을 선택했다면 `npm run` 대신 해당 패키지 매니저를 사용해 주세요.
+앱 이름, 브랜드와 권한 설정은 `apps-in-toss.config.ts`에서 바꿀 수 있어요.
+`build`가 성공하면 배포할 수 있는 `.ait` 파일이 생성돼요.
 
-1. **패키지 매니저** — npm, yarn, pnpm
-2. **프로젝트 템플릿** — `react-ts` / `react` / `js` / `ts`
-3. **AI Skills** — Cursor / Claude Code / Codex용 SDK 문서 파일 추가 여부
-4. **예제 코드** — 인앱결제(`iap`), 인앱광고(`iaa`) 샘플 추가 (복수 선택 가능)
+## 프롬프트 없이 만들기
+
+CI나 스크립트에서 사용한다면 `--inline`과 필요한 옵션을 함께 지정해 주세요.
+
+```bash
+# React + TypeScript
+npx create-ait-app my-app --inline --pm npm --template react-ts
+
+# Vue + TypeScript
+npx create-ait-app my-app --inline --pm yarn --template vue-ts
+
+# React 18 + TDS, IAP·IAA 예제, Agent Skills
+npx create-ait-app my-app \
+  --inline \
+  --pm yarn \
+  --tds \
+  --sample iap,iaa \
+  --skills
+```
+
+`--inline`은 필요한 값을 추측하지 않아요. 프로젝트 경로, `--pm`, 그리고
+`--template` 또는 `--tds`가 빠지면 도움말을 확인하라는 오류로 종료해요.
+
+## 프레임워크 선택하기
+
+React, Vue, Svelte, Solid, Preact, Lit, Qwik, Vanilla와 각 TypeScript 변형처럼 Vite가
+제공하는 정적 클라이언트 프리셋을 선택할 수 있어요.
+
+순수 CSR과 빌드 시 HTML을 생성한 뒤 클라이언트에서 hydration하는 SSG를 지원해요.
+요청마다 서버 런타임이 필요한 SSR 전용 프로젝트는 지원하지 않아요.
+
+이전 이름과의 호환을 위해 `js`는 `vanilla`, `ts`는 `vanilla-ts`로 해석해요.
+
+### TDS 사용하기
+
+TDS는 React 18이 필요하므로 `--tds`로 전용 프로젝트를 만들어 주세요. 대화형
+실행에서는 TDS 사용 여부를 묻지 않아요.
+
+```bash
+npx create-ait-app my-app --inline --pm npm --tds
+```
+
+TDS에서는 프리셋이 자동으로 결정되므로 `--template`은 생략해 주세요.
+
+## 예제 코드 사용하기
+
+IAP·IAA 예제는 React, React TypeScript, Vanilla, Vanilla TypeScript, TDS 프로젝트에
+추가할 수 있어요.
+
+프로젝트를 만들 때 바로 추가하려면 `--sample`을 사용해 주세요.
+
+```bash
+npx create-ait-app my-app --inline --pm npm --template react-ts --sample iap,iaa
+```
+
+이미 만든 프로젝트에 나중에 추가할 수도 있어요. 예제를 지정하지 않으면 아직
+추가하지 않은 예제를 대화형으로 골라요.
+
+```bash
+# 현재 프로젝트에 대화형으로 추가
+npx create-ait-app add-sample
+
+# 경로와 예제를 직접 지정
+npx create-ait-app add-sample ./my-app --sample iap,iaa
+```
+
+`add-sample`은 create-ait-app으로 만든 지원 프로젝트만 수정해요. 이미 추가된 예제는
+건너뛰고 새 예제만 더해요. 첫 예제를 나중에 추가할 때 Vite의 `App` 또는 `main`
+진입 파일이 이미 수정되어 있으면 사용자 코드를 덮어쓰지 않고 중단해요. 예제 셸이
+생성된 뒤에는 관리 주석 바깥의 사용자 코드를 유지하면서 새 예제만 추가해요.
+
+## Agent Skills 사용하기
+
+프로젝트를 만들 때 Skills 추가를 선택하면
+[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI를 실행해요. 대상
+에이전트와 표준 설치 경로는 공식 CLI가 자동으로 감지해요.
+
+- Skills를 선택한 일반 프로젝트에는 `apps-in-toss`를 설치해요.
+- Skills를 선택한 TDS 프로젝트에는 `apps-in-toss`와 `tds-mobile`을 설치해요.
+
+프롬프트 없이 만들 때는 `--skills`를 지정해 주세요.
+
+```bash
+npx create-ait-app my-app --inline --pm npm --template react-ts --skills
+```
+
+이미 만든 프로젝트에 나중에 추가하고 싶다면 프로젝트 루트에서 같은 CLI를 실행하면
+돼요. `--agent`를 스캐폴더가 제한하지 않으므로 공식 CLI가 새 에이전트를 지원하면
+별도 변경 없이 사용할 수 있어요.
+
+```bash
+# Apps in Toss
+npx --yes skills@latest add toss/create-ait-app \
+  --skill apps-in-toss \
+  --copy
+
+# Apps in Toss + TDS
+npx --yes skills@latest add toss/create-ait-app \
+  --skill apps-in-toss \
+  --skill tds-mobile \
+  --copy
+```
+
+설치된 Skills는 작업할 때 최신 Apps in Toss 문서 인덱스를 읽어요. 필요한 개별
+문서를 우선 확인하고, 더 넓은 문맥이 필요할 때는 `llms-full.txt`를 검색해요.
 
 ## CLI 옵션
 
-프롬프트 없이 한 줄로 생성할 수도 있어요.
-
-```bash
-create-ait-app my-app --inline --pm yarn --sample iap,iaa
-```
-
-| 옵션 | 설명 |
-| --- | --- |
-| `--inline` | 대화형 질문을 생략하고 옵션만으로 설정해요 (미지정 항목은 모두 `n`이에요) |
-| `--pm <name>` | 패키지 매니저를 지정해요 (`npm`, `yarn`, `pnpm`) |
-| `--template <name>` | 템플릿을 지정해요 (`js`, `ts`, `react`, `react-ts` / 기본값: `react-ts`) |
-| `--skills` | AI를 위한 Skills 파일을 추가해요 |
-| `--ai <name>` | 사용할 AI 도구를 지정해요 (`cursor`, `claude`, `codex`) |
-| `--sample <name>` | 예제 코드를 추가해요 (`iap`, `iaa` / 복수: `iap,iaa`) |
-| `--help` | 도움말을 출력해요 |
-
-### 기존 프로젝트에 예제 추가
-
-프로젝트 생성 시 예제를 넣지 않았다면, 나중에 아래 명령으로 추가할 수 있어요.
-
-```bash
-create-ait-app add-sample iap
-create-ait-app add-sample iap,iaa
-create-ait-app add-sample ./my-app iap
-```
-
-프로젝트 디렉토리에서 실행하면 경로 생략이 가능해요.
-
-## 생성되는 프로젝트
-
-기본 템플릿은 헤더, 개발자센터·커뮤니티 링크 등 최소 구성만 포함해요. `--sample`로 예제를 선택한 경우 `src/pages/`가 추가되고, React 템플릿은 `src/hooks/`, Vanilla(`js`/`ts`) 템플릿은 `src/lib/`가 추가돼요.
-
-## 선택 사항
-
-### TDS (Toss Design System)
-
-TDS는 토스에서 제공하는 디자인 시스템 컴포넌트 모음이에요. **앱인토스 개발에 필수는 아니에요.** 기본 생성 흐름에는 포함되지 않아요.
-
-TDS를 쓰려면 `react-ts` 템플릿과 함께 `--tds` 옵션을 명시적으로 지정해 주세요.
-
-```bash
-create-ait-app my-app --inline --template react-ts --tds
-```
-
-대화형으로 생성할 때는 `react-ts` 템플릿을 선택한 경우에만 TDS 사용 여부를 물어봐요 (기본값: 사용 안 함).
+| 옵션                | 설명                                                                     |
+| ------------------- | ------------------------------------------------------------------------ |
+| `--inline`          | 모든 질문을 생략해요. 프로젝트 경로와 필수 옵션을 함께 써야 해요.        |
+| `--list-templates`  | 지원하는 프로젝트 프리셋을 JSON으로 출력해요.                            |
+| `--pm <name>`       | 패키지 매니저를 지정해요. `npm`, `yarn`, `pnpm`을 지원해요.              |
+| `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`               |
+| `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요. 대화형으로 묻지 않아요. |
+| `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요.         |
+| `--skills`          | 최신 공식 문서를 조회하는 Agent Skills를 추가해요.                       |
+| `--skip-install`    | 프로젝트 생성 뒤 의존성 설치를 생략해요.                                 |
+| `--help`            | 도움말을 출력해요.                                                       |
 
 ## 관련 링크
 
-- [앱인토스 콘솔](https://apps-in-toss.toss.im/)
-- [앱인토스 개발자센터](https://developers-apps-in-toss.toss.im/)
-- [앱인토스 개발자 커뮤니티](https://techchat-apps-in-toss.toss.im/)
-- [AI를 위한 LLMs 문서](https://developers-apps-in-toss.toss.im/development/llms.html)
+- [Apps in Toss 콘솔](https://apps-in-toss.toss.im/)
+- [Apps in Toss 개발자센터](https://developers-apps-in-toss.toss.im/)
+- [Apps in Toss 개발자 커뮤니티](https://techchat-apps-in-toss.toss.im/)
 
----
-
-이 CLI 도구에 기여하고 싶다면 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고해 주세요.
+프로젝트 구조와 기여 방법은 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고해 주세요.

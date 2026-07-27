@@ -1,5 +1,7 @@
 node_modules
 dist
+.pnp.*
+.yarn/install-state.gz
 
 *.local
 .DS_Store

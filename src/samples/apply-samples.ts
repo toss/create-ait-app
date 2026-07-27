@@ -1,0 +1,313 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import type { FrameworkKind } from "../project/framework.js";
+import { copyDirectory } from "../system/copy-directory.js";
+import { templatesDirectory } from "../system/paths.js";
+import {
+  REACT_SAMPLE_BUTTON_MARKERS,
+  SAMPLE_IMPORT_MARKERS,
+  SAMPLE_ROUTE_MARKERS,
+  updateManagedSampleShell,
+  VANILLA_SAMPLE_BUTTON_MARKERS,
+} from "./managed-sample-shell.js";
+
+export const SAMPLE_IDS = ["iap", "iaa"] as const;
+export type SampleId = (typeof SAMPLE_IDS)[number];
+
+interface SampleDefinition {
+  button: string;
+  import: string;
+  route: string;
+}
+
+function reactDefinitions(
+  isTypeScript: boolean,
+  useTds: boolean,
+): Record<SampleId, SampleDefinition> {
+  const extension = isTypeScript ? "" : ".jsx";
+  const button = (id: SampleId, label: string): string =>
+    useTds
+      ? `<Button color="dark" variant="weak" onClick={() => setPage("${id}")}>${label}</Button>`
+      : `<button type="button" onClick={() => setPage("${id}")}>${label}</button>`;
+
+  return {
+    iap: {
+      button: button("iap", "인앱 결제 테스트하기"),
+      import: `import { InAppPurchasePage } from "./pages/InAppPurchasePage${extension}";`,
+      route: '  if (page === "iap") return <InAppPurchasePage onBack={() => setPage(null)} />;',
+    },
+    iaa: {
+      button: button("iaa", "인앱 광고 테스트하기"),
+      import: `import { InAppAdsPage } from "./pages/InAppAdsPage${extension}";`,
+      route: '  if (page === "iaa") return <InAppAdsPage onBack={() => setPage(null)} />;',
+    },
+  };
+}
+
+function vanillaDefinitions(isTypeScript: boolean): Record<SampleId, SampleDefinition> {
+  const extension = isTypeScript ? ".ts" : ".js";
+  return {
+    iap: {
+      button: '<button type="button" data-page="iap">인앱 결제 테스트하기</button>',
+      import: `import { mountInAppPurchasePage } from "./pages/InAppPurchasePage${extension}";`,
+      route: `  if (currentPage === "iap") {
+    mountInAppPurchasePage(showHome);
+    return;
+  }`,
+    },
+    iaa: {
+      button: '<button type="button" data-page="iaa">인앱 광고 테스트하기</button>',
+      import: `import { mountInAppAdsPage } from "./pages/InAppAdsPage${extension}";`,
+      route: `  if (currentPage === "iaa") {
+    mountInAppAdsPage(showHome);
+    return;
+  }`,
+    },
+  };
+}
+
+export function supportsSamples(framework: FrameworkKind, useTds = false): boolean {
+  return useTds || framework === "react" || framework === "vanilla";
+}
+
+function copySampleAssets(
+  targetDirectory: string,
+  assetVariant: string,
+  sampleIds: SampleId[],
+): void {
+  for (const sampleId of sampleIds) {
+    copyDirectory(
+      path.join(templatesDirectory, "samples", assetVariant, sampleId),
+      targetDirectory,
+      {
+        skipExisting: true,
+      },
+    );
+  }
+}
+
+function writeReactSampleShell(
+  targetDirectory: string,
+  isTypeScript: boolean,
+  sampleIds: SampleId[],
+  preserveExistingShell: boolean,
+): void {
+  const definitions = reactDefinitions(isTypeScript, false);
+  const appPath = path.join(targetDirectory, "src", isTypeScript ? "App.tsx" : "App.jsx");
+  if (!existsSync(appPath)) {
+    throw new Error("React App 파일을 찾을 수 없어 예제 코드를 추가할 수 없어요.");
+  }
+
+  const imports = sampleIds.map((id) => definitions[id].import).join("\n");
+  const routes = sampleIds.map((id) => definitions[id].route).join("\n");
+  const buttons = sampleIds.map((id) => `        ${definitions[id].button}`).join("\n");
+  const state = isTypeScript ? "useState<string | null>(null)" : "useState(null)";
+
+  const nextContent = `import { useState } from "react";
+${SAMPLE_IMPORT_MARKERS.start}
+${imports}
+${SAMPLE_IMPORT_MARKERS.end}
+
+function App() {
+  const [page, setPage] = ${state};
+
+  ${SAMPLE_ROUTE_MARKERS.start}
+${routes}
+  ${SAMPLE_ROUTE_MARKERS.end}
+
+  return (
+    <main>
+      <h1>Apps in Toss</h1>
+      <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        ${REACT_SAMPLE_BUTTON_MARKERS.start}
+${buttons}
+        ${REACT_SAMPLE_BUTTON_MARKERS.end}
+      </div>
+    </main>
+  );
+}
+
+export default App;
+`;
+
+  const content = preserveExistingShell
+    ? updateManagedSampleShell(
+        readFileSync(appPath, "utf8"),
+        nextContent,
+        REACT_SAMPLE_BUTTON_MARKERS,
+      )
+    : nextContent;
+  writeFileSync(appPath, content);
+}
+
+function writeVanillaSampleShell(
+  targetDirectory: string,
+  isTypeScript: boolean,
+  sampleIds: SampleId[],
+  preserveExistingShell: boolean,
+): void {
+  const definitions = vanillaDefinitions(isTypeScript);
+  const mainPath = path.join(targetDirectory, "src", isTypeScript ? "main.ts" : "main.js");
+  if (!existsSync(mainPath)) {
+    throw new Error("Vanilla main 파일을 찾을 수 없어 예제 코드를 추가할 수 없어요.");
+  }
+
+  const imports = sampleIds.map((id) => definitions[id].import).join("\n");
+  const routes = sampleIds.map((id) => definitions[id].route).join("\n");
+  const buttons = sampleIds.map((id) => `      ${definitions[id].button}`).join("\n");
+
+  const nextContent = `${SAMPLE_IMPORT_MARKERS.start}
+${imports}
+${SAMPLE_IMPORT_MARKERS.end}
+import "./style.css";
+
+let currentPage = null${isTypeScript ? " as string | null" : ""};
+const app = document.querySelector${isTypeScript ? "<HTMLDivElement>" : ""}("#app");
+
+if (!app) {
+  throw new Error("#app 요소를 찾을 수 없어요.");
+}
+
+app.innerHTML = '<div id="root"></div>';
+
+function showHome() {
+  currentPage = null;
+  render();
+}
+
+function render() {
+  ${SAMPLE_ROUTE_MARKERS.start}
+${routes}
+  ${SAMPLE_ROUTE_MARKERS.end}
+
+  const root = document.getElementById("root");
+  if (!root) return;
+  root.innerHTML = \`
+    <main>
+      <h1>Apps in Toss</h1>
+      <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
+      <div>
+      ${VANILLA_SAMPLE_BUTTON_MARKERS.start}
+${buttons}
+      ${VANILLA_SAMPLE_BUTTON_MARKERS.end}
+      </div>
+    </main>
+  \`;
+  root.querySelectorAll("[data-page]").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentPage = button.getAttribute("data-page");
+      render();
+    });
+  });
+}
+
+render();
+`;
+
+  const content = preserveExistingShell
+    ? updateManagedSampleShell(
+        readFileSync(mainPath, "utf8"),
+        nextContent,
+        VANILLA_SAMPLE_BUTTON_MARKERS,
+      )
+    : nextContent;
+  writeFileSync(mainPath, content);
+}
+
+function renderTdsSampleShell(sampleIds: SampleId[]): string {
+  const templateAppPath = path.join(
+    templatesDirectory,
+    "projects",
+    "react-ts-tds",
+    "src",
+    "App.tsx",
+  );
+  const definitions = reactDefinitions(true, true);
+  const imports = sampleIds.map((id) => definitions[id].import).join("\n");
+  const routes = sampleIds.map((id) => definitions[id].route).join("\n");
+  const buttons = sampleIds.map((id) => `        ${definitions[id].button}`).join("\n");
+  let content = readFileSync(templateAppPath, "utf8");
+
+  content = content
+    .replace(
+      "{{SAMPLE_IMPORTS}}",
+      `${SAMPLE_IMPORT_MARKERS.start}
+${imports}${sampleIds.length > 0 ? '\nimport { useState } from "react";' : ""}
+${SAMPLE_IMPORT_MARKERS.end}`,
+    )
+    .replace(
+      "{{PAGE_STATE_AND_ROUTES}}",
+      `${SAMPLE_ROUTE_MARKERS.start}
+${sampleIds.length > 0 ? "  const [page, setPage] = useState<string | null>(null);\n\n" : ""}${routes}
+  ${SAMPLE_ROUTE_MARKERS.end}`,
+    )
+    .replace(
+      "{{SAMPLE_BUTTONS}}",
+      `${REACT_SAMPLE_BUTTON_MARKERS.start}
+${buttons}
+        ${REACT_SAMPLE_BUTTON_MARKERS.end}`,
+    );
+
+  return content;
+}
+
+export function applyTdsSamples(
+  targetDirectory: string,
+  sampleIds: SampleId[],
+  options: { preserveExistingShell?: boolean } = {},
+): void {
+  const appPath = path.join(targetDirectory, "src", "App.tsx");
+  const nextContent = renderTdsSampleShell(sampleIds);
+  const content = options.preserveExistingShell
+    ? updateManagedSampleShell(
+        readFileSync(appPath, "utf8"),
+        nextContent,
+        REACT_SAMPLE_BUTTON_MARKERS,
+      )
+    : nextContent;
+
+  writeFileSync(appPath, content);
+  for (const sampleId of sampleIds) {
+    copyDirectory(
+      path.join(templatesDirectory, "samples", "react-ts-tds", sampleId),
+      targetDirectory,
+      { skipExisting: true },
+    );
+  }
+}
+
+export function applyViteSamples({
+  framework,
+  isTypeScript,
+  sampleIds,
+  targetDirectory,
+  preserveExistingShell = false,
+}: {
+  framework: FrameworkKind;
+  isTypeScript: boolean;
+  sampleIds: SampleId[];
+  targetDirectory: string;
+  preserveExistingShell?: boolean;
+}): void {
+  if (sampleIds.length === 0) {
+    return;
+  }
+
+  if (!supportsSamples(framework)) {
+    throw new Error(
+      "iap/iaa 예제는 React와 Vanilla Vite 프리셋만 지원해요. 프로젝트는 모든 Vite 정적 클라이언트 프리셋으로 만들 수 있어요.",
+    );
+  }
+
+  if (framework === "react") {
+    const variant = isTypeScript ? "react-ts" : "react";
+    writeReactSampleShell(targetDirectory, isTypeScript, sampleIds, preserveExistingShell);
+    copySampleAssets(targetDirectory, variant, sampleIds);
+    return;
+  }
+
+  const variant = isTypeScript ? "vanilla-ts" : "vanilla";
+  writeVanillaSampleShell(targetDirectory, isTypeScript, sampleIds, preserveExistingShell);
+  copySampleAssets(targetDirectory, variant, sampleIds);
+}
