@@ -18,14 +18,14 @@ function getPreviousTag() {
   }
 }
 
-function getMergedPullRequests() {
+function getMergedPullRequests(baseBranch) {
   const json = run("gh", [
     "pr",
     "list",
     "--state",
     "merged",
     "--base",
-    "main",
+    baseBranch,
     "--limit",
     "100",
     "--json",
@@ -98,13 +98,14 @@ export function isMergedAfterTag(
 
 function main() {
   const version = process.argv[2];
+  const baseBranch = process.argv[3] ?? "main";
   if (!version) {
-    console.error("Usage: node collect-release-notes.mjs <version>");
+    console.error("Usage: node collect-release-notes.mjs <version> [base-branch]");
     process.exit(1);
   }
 
   const previousTag = getPreviousTag();
-  const pullRequests = getMergedPullRequests()
+  const pullRequests = getMergedPullRequests(baseBranch)
     .filter((pr) => pr.mergeCommit?.oid && isMergedAfterTag(pr.mergeCommit.oid, previousTag))
     .sort((a, b) => new Date(a.mergedAt) - new Date(b.mergedAt));
 

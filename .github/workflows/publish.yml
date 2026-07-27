@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - v0.2.0-rc.0
 
 concurrency:
   group: npm-publish
@@ -84,7 +85,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          node .github/scripts/collect-release-notes.mjs "${{ steps.version.outputs.value }}" > release-notes.md
+          node .github/scripts/collect-release-notes.mjs \
+            "${{ steps.version.outputs.value }}" \
+            "${GITHUB_REF_NAME}" > release-notes.md
           echo "Release notes:"
           cat release-notes.md
 
