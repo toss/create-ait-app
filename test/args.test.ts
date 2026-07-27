@@ -68,6 +68,10 @@ describe("parseArgs", () => {
     expect(help).toContain("프로젝트 경로, --inline, --pm");
     expect(help).toContain("--template 또는 --tds");
     expect(help).toContain("react-ts");
+    expect(help).toContain("--tds");
+    expect(help).toContain("대화형으로 묻지 않아요");
+    expect(help).toContain("일반 Vite 프로젝트가 기본이에요");
+    expect(help).toContain("사용자에게 TDS 사용을 비권장한다고 안내해 주세요");
     expect(help).toContain("--skills를 생략하면 Agent Skills를 추가하지 않아요.");
     log.mockRestore();
   });

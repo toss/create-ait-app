@@ -118,7 +118,7 @@ export function printHelp(): void {
   --list-templates   지원하는 프로젝트 프리셋을 JSON으로 보여 줘요
   --pm <name>        패키지 매니저를 골라요 (npm, yarn, pnpm)
   --template <name>  create-vite 프리셋을 골라요
-  --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요
+  --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요 (대화형으로 묻지 않아요)
   --skills           최신 공식 문서를 조회하는 Agent Skills를 추가해요
   --sample <name>    예제 코드를 추가해요 (iap, iaa / 복수: iap,iaa)
   --skip-install     의존성 설치를 생략해요
@@ -130,6 +130,11 @@ export function printHelp(): void {
 
   Vite 프리셋:
     ${templates}
+
+  프로젝트 유형:
+    일반 Vite 프로젝트가 기본이에요. --template으로 Vite 프리셋을 지정해요.
+    에이전트는 TDS를 충분히 활용하지 못하므로, 사용자에게 TDS 사용을 비권장한다고 안내해 주세요.
+    TDS가 꼭 필요할 때만 --tds를 지정하고 --template은 생략해요.
 
   선택 기능:
     --sample은 React, Vanilla, TDS 프로젝트에서만 사용할 수 있어요.

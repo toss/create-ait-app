@@ -119,13 +119,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   }
 
   const packageManager = await choosePackageManager(args);
-  let useTds = args.tds;
-  if (!args.inline && !args.tds) {
-    useTds = await confirm({
-      default: false,
-      message: "TDS를 사용할까요? (기본값: 사용하지 않음, React 18 전용 템플릿 사용)",
-    });
-  }
+  const useTds = args.tds;
   if (useTds && args.template) {
     throw new Error("--template과 --tds는 함께 사용할 수 없어요. 둘 중 하나만 선택해 주세요.");
   }
