@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { installProjectSkills } from "../src/skills/install-skills.js";
@@ -9,6 +10,9 @@ vi.mock("../src/system/command.js", () => ({
   runCommand: vi.fn(),
 }));
 
+const require = createRequire(import.meta.url);
+const skillsCli = require.resolve("skills/bin/cli.mjs");
+
 describe("installProjectSkills", () => {
   it("installs Apps in Toss and TDS through vercel-labs/skills", () => {
     installProjectSkills({
@@ -18,8 +22,7 @@ describe("installProjectSkills", () => {
 
     expect(runCommand).toHaveBeenCalledWith({
       args: [
-        "--yes",
-        "skills@latest",
+        skillsCli,
         "add",
         path.join(packageRoot, "skills"),
         "--skill",
@@ -29,9 +32,8 @@ describe("installProjectSkills", () => {
         "--copy",
         "--yes",
       ],
-      command: "npx",
+      command: process.execPath,
       cwd: "/tmp/example-app",
-      unsetEnv: ["NODE_OPTIONS"],
     });
   });
 

@@ -43,7 +43,8 @@
   "dependencies": {
     "@inquirer/prompts": "8.5.2",
     "create-vite": "9.1.1",
-    "cross-spawn": "7.0.6"
+    "cross-spawn": "7.0.6",
+    "skills": "1.5.19"
   },
   "devDependencies": {
     "@types/cross-spawn": "6.0.6",

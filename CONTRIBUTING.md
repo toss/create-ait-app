@@ -76,8 +76,8 @@ SSG+hydration은 모두 대상이에요.
   React/Vanilla 계열에만 적용해요.
 - Agent Skills는 루트 `skills/`에 vercel-labs/skills 형식으로 관리해요.
 - `npx skills add . --list`로 두 스킬을 찾을 수 있어야 해요.
-- 생성 프로젝트에는 `npx --yes skills@latest add`와 `--copy`로 설치해 스캐폴더
-  패키지 경로를 가리키는 심볼릭 링크가 남지 않게 해요.
+- 생성 프로젝트에는 `package.json`에 고정된 `skills` CLI와 `--copy`로 설치해
+  스캐폴더 패키지 경로를 가리키는 심볼릭 링크가 남지 않게 해요.
 - 지원 에이전트 목록을 스캐폴더에 고정하지 않아요. 대상 에이전트 감지와 표준 설치
   경로 선택은 vercel-labs/skills CLI에 맡겨요.
 - `--inline`은 프로젝트 경로, `--pm`, `--template` 또는 `--tds`가 모두 있을 때만
