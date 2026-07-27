@@ -35,7 +35,6 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings .",
-    "publint": "publint",
     "test": "vitest run --exclude test/e2e/**",
     "test:e2e": "yarn build && AIT_RUN_E2E=1 vitest run test/e2e",
     "typecheck": "tsc --noEmit"
