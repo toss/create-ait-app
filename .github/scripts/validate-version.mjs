@@ -14,13 +14,13 @@ function getPreviousVersion() {
   }
 }
 
-export function validateVersion(current, previous) {
+export function validateVersion(current, previous, publishTag) {
   if (!semver.valid(current)) {
     throw new Error(`Invalid semver: "${current}"`);
   }
 
   if (!previous) {
-    return getRelease(current);
+    return getRelease(current, publishTag);
   }
 
   if (!semver.valid(previous)) {
@@ -33,13 +33,20 @@ export function validateVersion(current, previous) {
     );
   }
 
-  return getRelease(current);
+  return getRelease(current, publishTag);
 }
 
-function getRelease(version) {
+function getRelease(version, publishTag) {
   const prerelease = semver.prerelease(version);
   if (!prerelease) {
-    return { npmTag: "latest", prerelease: false };
+    if (publishTag !== undefined && publishTag !== "latest" && publishTag !== "next") {
+      throw new Error(`Only latest and next are allowed as publishConfig.tag: "${publishTag}"`);
+    }
+    return { npmTag: publishTag ?? "latest", prerelease: false };
+  }
+
+  if (publishTag !== undefined) {
+    throw new Error(`publishConfig.tag cannot be combined with a prerelease version: "${version}"`);
   }
 
   const channel = prerelease[0];
@@ -52,9 +59,9 @@ function getRelease(version) {
 
 function main() {
   try {
-    const { version: current } = JSON.parse(readFileSync("package.json", "utf8"));
+    const { version: current, publishConfig } = JSON.parse(readFileSync("package.json", "utf8"));
     const previous = getPreviousVersion();
-    const release = validateVersion(current, previous);
+    const release = validateVersion(current, previous, publishConfig?.tag);
 
     if (previous) {
       console.log(`Valid version bump: ${previous} -> ${current}`);

@@ -10,6 +10,25 @@ describe("release version policy", () => {
     });
   });
 
+  it("publishes stable versions to next when publishConfig.tag is next", () => {
+    expect(validateVersion("0.2.0", "0.2.0-rc.0", "next")).toEqual({
+      npmTag: "next",
+      prerelease: false,
+    });
+  });
+
+  it("rejects unsupported publishConfig.tag values", () => {
+    expect(() => validateVersion("0.2.0", "0.1.3", "canary")).toThrow(
+      'Only latest and next are allowed as publishConfig.tag: "canary"',
+    );
+  });
+
+  it("rejects publishConfig.tag on prerelease versions", () => {
+    expect(() => validateVersion("1.0.0-rc.1", "1.0.0-rc.0", "next")).toThrow(
+      'publishConfig.tag cannot be combined with a prerelease version: "1.0.0-rc.1"',
+    );
+  });
+
   it("publishes rc versions to rc using semver ordering", () => {
     expect(validateVersion("1.0.0-rc.10", "1.0.0-rc.2")).toEqual({
       npmTag: "rc",

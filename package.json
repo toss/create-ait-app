@@ -1,6 +1,6 @@
 {
   "name": "create-ait-app",
-  "version": "0.2.0-rc.0",
+  "version": "0.2.0",
   "description": "Create AIT App scaffolding tool",
   "keywords": [
     "ait",
@@ -28,6 +28,9 @@
   "exports": {
     ".": "./dist/cli.mjs",
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "tag": "next"
   },
   "scripts": {
     "build": "tsdown",
