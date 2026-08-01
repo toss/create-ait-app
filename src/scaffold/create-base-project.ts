@@ -1,3 +1,4 @@
+import { renameSync } from "node:fs";
 import path from "node:path";
 import type { FrameworkKind } from "../project/framework.js";
 import { assertCsrViteProject, type ProjectInspection } from "../project/inspect-project.js";
@@ -38,6 +39,8 @@ export function toNpmPackageName(input: string): string {
 function createTdsProject(targetDirectory: string, packageName: string): BaseProject {
   const templateDirectory = path.join(templatesDirectory, "projects", "react-ts-tds");
   copyDirectory(templateDirectory, targetDirectory);
+  // npm은 배포 시 .gitignore를 항상 제외해서 템플릿에는 _gitignore로 두고 복사 직후 되돌려요.
+  renameSync(path.join(targetDirectory, "_gitignore"), path.join(targetDirectory, ".gitignore"));
 
   const packageJson = readPackageJson(targetDirectory);
   packageJson.name = packageName;

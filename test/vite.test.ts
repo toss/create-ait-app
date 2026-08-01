@@ -1,8 +1,10 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { runCommand } from "../src/system/command.js";
+import { templatesDirectory } from "../src/system/paths.js";
 import {
   getBundledViteTemplates,
   getCreateViteVersion,
@@ -10,6 +12,8 @@ import {
   resolveViteTemplate,
   scaffoldWithCreateVite,
 } from "../src/vite/create-vite.js";
+
+const require = createRequire(import.meta.url);
 
 vi.mock("../src/system/command.js", () => ({
   runCommand: vi.fn(),
@@ -25,6 +29,14 @@ describe("pinned create-vite", () => {
       expect.arrayContaining(["qwik", "react-ts", "vue-ts", "svelte-ts", "solid-ts"]),
     );
     expect(getBundledViteTemplates()).toEqual(expect.arrayContaining(getSupportedViteTemplates()));
+  });
+
+  it("keeps the TDS template _gitignore identical to the react-ts preset", () => {
+    const createViteRoot = path.dirname(require.resolve("create-vite"));
+
+    expect(
+      readFileSync(path.join(templatesDirectory, "projects", "react-ts-tds", "_gitignore"), "utf8"),
+    ).toBe(readFileSync(path.join(createViteRoot, "template-react-ts", "_gitignore"), "utf8"));
   });
 
   it("keeps backward-compatible vanilla aliases", () => {

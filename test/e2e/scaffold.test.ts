@@ -237,6 +237,9 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       if (sampleIds.length > 0) {
         expect(packageJson.createAitApp.samples).toEqual(sampleIds);
       }
+      expect(readFileSync(path.join(projectDirectory, ".gitignore"), "utf8")).toContain(
+        "node_modules",
+      );
       if (template === "react-ts" || template === "tds") {
         expect(
           existsSync(path.join(projectDirectory, ".agents", "skills", "apps-in-toss", "SKILL.md")),
