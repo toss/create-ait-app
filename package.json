@@ -1,6 +1,7 @@
 {
   "name": "create-ait-app",
   "version": "0.2.1",
+  "description": "Create AIT App scaffolding tool",
   "keywords": [
     "ait",
     "apps-in-toss",
