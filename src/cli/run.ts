@@ -22,6 +22,12 @@ import {
   type CliArgs,
 } from "./args.js";
 
+const IGNORED_TARGET_ENTRIES = new Set([".git"]);
+
+export function hasProjectFiles(targetDirectory: string): boolean {
+  return readdirSync(targetDirectory).some((entry) => !IGNORED_TARGET_ENTRIES.has(entry));
+}
+
 function assertChoice<T extends string>(
   value: string | undefined,
   choices: readonly T[],
@@ -114,7 +120,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   const targetDirectory = path.resolve(process.cwd(), projectName);
   const targetExisted = existsSync(targetDirectory);
 
-  if (targetExisted && readdirSync(targetDirectory).length > 0) {
+  if (targetExisted && hasProjectFiles(targetDirectory)) {
     throw new Error(`"${projectName}" 디렉터리가 이미 있고 비어 있지 않아요.`);
   }
 
