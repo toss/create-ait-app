@@ -112,6 +112,7 @@ export function printHelp(): void {
   console.log(`
 사용법: create-ait-app [project-name] [options]
        create-ait-app add-sample [directory] [iap,iaa] [--sample iap,iaa]
+       create-ait-app init [directory] [options]
 
 옵션:
   --inline           모든 질문을 생략하고 비대화형으로 실행해요
@@ -124,9 +125,11 @@ export function printHelp(): void {
   --skip-install     의존성 설치를 생략해요
   --help             도움말을 보여 줘요
 
-에이전트·CI 비대화형 실행:
+에이전트·CI 비대화형 실행 (새 프로젝트 생성 시):
   프로젝트 경로, --inline, --pm, 그리고 --template 또는 --tds가 반드시 필요해요.
   --template과 --tds 중 하나를 선택해 주세요.
+  (init은 계약이 달라요: 경로 생략 가능(기본 "."), --pm만 필수, --template·--tds·
+  --sample은 금지 — 아래 "기존 프로젝트에 Apps in Toss 추가하기 (init)" 참고)
 
   Vite 프리셋:
     ${templates}
@@ -151,8 +154,26 @@ export function printHelp(): void {
 
   add-sample을 비대화형으로 실행할 때는 --inline --sample <iap|iaa>를 지정해요.
 
+  init을 비대화형으로 실행할 때는 --inline --pm <npm|yarn|pnpm>을 지정해요.
+  예: create-ait-app init . --inline --pm npm
+
 일반 프로젝트는 고정된 create-vite 버전의 선택 화면을 그대로 사용해요.
 CSR과 SSG+hydration을 지원하지만 SSR 전용 프로젝트는 지원하지 않아요.
 TDS는 --tds로만 사용할 수 있어요.
+
+기존 프로젝트에 Apps in Toss 추가하기 (init):
+  create-ait-app init [directory]는 이미 만든 Vite CSR 프로젝트를 Apps in Toss
+  프로젝트로 전환해요. package.json의 dev는 그대로 두고 dev:vite로 복사하고,
+  build는 build:vite로 복사한 뒤 원본 뒤에 ait build를 이어 실행하도록 바꿔요.
+  deploy만 deploy:original로 옮기고 ait deploy로 바꿔요(세 스크립트 중 동작이
+  실제로 바뀌는 유일한 스크립트예요). @apps-in-toss/web-framework 의존성을
+  추가한 뒤, apps-in-toss.config.ts를 새로 만들어요. 기존 파일은 덮어쓰지 않고,
+  덮어써야만 하는 상황은 실행 전에 오류로 거부해요.
+
+  --inline으로 실행하려면 --pm <npm|yarn|pnpm>이 반드시 필요해요.
+  --template, --tds, --sample은 지원하지 않아요. 예제 코드는 add-sample로도 추가할
+  수 없으므로 직접 작성해 주세요.
+  모노레포라면 --skip-install로 의존성 설치를 생략하고 워크스페이스 루트에서 직접
+  설치해 주세요.
 `);
 }

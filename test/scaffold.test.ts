@@ -8,6 +8,7 @@ import {
   isPrereleaseWebFrameworkChannel,
 } from "../src/apps-in-toss/version-policy.js";
 import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
+import { adoptExistingProject } from "../src/scaffold/adopt-existing-project.js";
 import {
   createBaseProject,
   toNpmPackageName,
@@ -276,6 +277,73 @@ describe("finalizeProject", () => {
       );
     } finally {
       rmSync(path.dirname(directory), { force: true, recursive: true });
+    }
+  });
+});
+
+describe("adoptExistingProject", () => {
+  it("converts a brownfield Vite project without renaming it or losing user content", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-brownfield-"));
+    try {
+      mkdirSync(path.join(directory, "src"));
+      writeFileSync(path.join(directory, "index.html"), "");
+      writeFileSync(path.join(directory, "src", "main.js"), "");
+      writeFileSync(path.join(directory, "README.md"), "# Legacy App\n\nUser-authored docs.\n");
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify(
+          {
+            devDependencies: { vite: "9.0.0" },
+            name: "legacy-app",
+            scripts: { build: "vite build", deploy: "gh-pages -d dist", dev: "vite --host" },
+          },
+          null,
+          4,
+        ),
+      );
+
+      const baseProject = adoptExistingProject(directory);
+      expect(baseProject.source).toBe("existing-vite");
+      expect(baseProject.template).toBeNull();
+
+      finalizeProject({
+        baseProject,
+        packageManager: "npm",
+        packageName: "legacy-app",
+        sampleIds: [],
+        skipInstall: true,
+        targetDirectory: directory,
+        useTds: false,
+      });
+
+      const packageJsonRaw = readFileSync(path.join(directory, "package.json"), "utf8");
+      const packageJson = JSON.parse(packageJsonRaw);
+
+      expect(packageJson.name).toBe("legacy-app");
+      expect(packageJson.scripts).toMatchObject({
+        build: "vite build && ait build",
+        "build:vite": "vite build",
+        deploy: "ait deploy",
+        "deploy:original": "gh-pages -d dist",
+        dev: "vite --host",
+        "dev:vite": "vite --host",
+      });
+      expect(packageJson.createAitApp.source).toBe("existing-vite");
+      expect(packageJson.createAitApp.createViteVersion).toBeNull();
+      expect(packageJson.createAitApp.sampleEntryHash).toBeNull();
+      expect(packageJson.createAitApp.originalScripts.deploy).toBe("gh-pages -d dist");
+
+      const readme = readFileSync(path.join(directory, "README.md"), "utf8");
+      expect(readme).toContain("User-authored docs.");
+      expect(readme).toContain("## Apps in Toss");
+
+      expect(readFileSync(path.join(directory, "apps-in-toss.config.ts"), "utf8")).toContain(
+        'webBundleDir: "dist"',
+      );
+
+      expect(packageJsonRaw).toContain('\n    "');
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
     }
   });
 });

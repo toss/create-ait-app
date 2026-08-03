@@ -8,7 +8,7 @@ import {
   APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER,
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
 } from "../../src/apps-in-toss/version-policy.js";
-import { getSupportedViteTemplates } from "../../src/vite/create-vite.js";
+import { getSupportedViteTemplates, scaffoldWithCreateVite } from "../../src/vite/create-vite.js";
 
 const enabled = process.env.AIT_RUN_E2E === "1";
 const requested = process.env.AIT_E2E_TEMPLATES ?? "react-ts";
@@ -278,4 +278,49 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
     },
     180_000,
   );
+});
+
+describe.skipIf(!enabled)("init subcommand", () => {
+  it("adopts a plain Vite project scaffolded directly with the bundled create-vite", async () => {
+    const parent = mkdtempSync(path.join(tmpdir(), "create-ait-init-"));
+    temporaryDirectories.add(parent);
+    const projectDirectory = path.join(parent, "existing-app");
+
+    // No network involved: this uses the bundled create-vite package directly,
+    // bypassing create-ait-app entirely, to produce a pristine brownfield fixture.
+    scaffoldWithCreateVite(projectDirectory, "react-ts", { quiet: true });
+
+    const initResult = run(
+      "corepack",
+      ["yarn", "exec", "create-ait-app", "init", projectDirectory, "--inline", "--pm", "npm"],
+      process.cwd(),
+    );
+    expect(initResult.stdout).toContain("전환했어요");
+
+    const packageJson = JSON.parse(
+      readFileSync(path.join(projectDirectory, "package.json"), "utf8"),
+    );
+    expect(packageJson.createAitApp.source).toBe("existing-vite");
+    expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBeDefined();
+
+    const aitArtifactsBeforeBuild = new Set(findAitArtifacts(projectDirectory));
+    run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
+    expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
+    const newAitArtifacts = findAitArtifacts(projectDirectory).filter(
+      (artifact) => !aitArtifactsBeforeBuild.has(artifact),
+    );
+    expect(newAitArtifacts, "ait build가 새로운 .ait 파일을 만들지 않았어요.").not.toHaveLength(0);
+
+    const devServer = spawn("npm", ["run", "dev"], {
+      cwd: projectDirectory,
+      detached: process.platform !== "win32",
+      env: generatedProjectEnvironment(),
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    running.add(devServer);
+    await waitForDevServer(devServer);
+    expect(devServer.exitCode).toBeNull();
+    await stopProcessTree(devServer);
+    running.delete(devServer);
+  }, 180_000);
 });

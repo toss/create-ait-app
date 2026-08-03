@@ -22,7 +22,7 @@ export interface PackageJson {
     sampleEntryHash?: string | null;
     sampleShellManaged: boolean;
     samples?: SampleId[];
-    source: "create-vite" | "tds-template";
+    source: "create-vite" | "existing-vite" | "tds-template";
     template: string | null;
   };
 }

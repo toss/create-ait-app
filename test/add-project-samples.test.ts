@@ -108,6 +108,41 @@ describe("addProjectSamples", () => {
     expect(inspectSampleProject(directory).installedSampleIds).toEqual(["iap", "iaa"]);
   });
 
+  it("rejects adding samples to a project adopted from an existing Vite app", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-existing-vite-"));
+    temporaryDirectories.push(directory);
+    mkdirSync(path.join(directory, "src"));
+    writeFileSync(path.join(directory, "src", "main.js"), "");
+    writeFileSync(
+      path.join(directory, "package.json"),
+      JSON.stringify({
+        createAitApp: {
+          createViteVersion: null,
+          framework: "vanilla",
+          isTypeScript: false,
+          originalScripts: {
+            build: "vite build",
+            dev: "vite",
+          },
+          sampleEntryHash: null,
+          sampleShellManaged: false,
+          samples: [],
+          source: "existing-vite",
+          template: null,
+        },
+        devDependencies: { vite: "9.1.1" },
+        scripts: {
+          build: "vite build && ait build",
+          dev: "vite",
+        },
+      }),
+    );
+
+    expect(() => addProjectSamples(directory, ["iap"])).toThrow(
+      "기존 Vite 프로젝트에 추가한 앱에는 예제 코드를 자동으로 넣을 수 없어요",
+    );
+  });
+
   it("rejects projects without create-ait-app metadata", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "create-ait-unsupported-"));
     temporaryDirectories.push(directory);

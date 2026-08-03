@@ -1,5 +1,15 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
+import {
+  AIT_CONFIG_BASE_NAME,
+  AIT_RESERVED_CONFIG_EXTENSIONS,
+  AIT_RESERVED_SCRIPT_PATTERN,
+  AIT_RESERVED_SCRIPT_SLOTS,
+  AIT_SCRIPT_SLOT_BUILD_VITE,
+  AIT_SCRIPT_SLOT_DEPLOY_ORIGINAL,
+  AIT_SCRIPT_SLOT_DEV_VITE,
+} from "../apps-in-toss/reserved-project-files.js";
+import { APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME } from "../apps-in-toss/version-policy.js";
 import type { FrameworkKind } from "./framework.js";
 import { readPackageJson, type PackageJson } from "./package-json.js";
 
@@ -92,4 +102,63 @@ export function assertCsrViteProject(targetDirectory: string): ProjectInspection
     originalDevCommand,
     packageJson,
   };
+}
+
+// init(기존 Vite 프로젝트 전환)의 사전 가드예요. assertCsrViteProject와 달리 아무것도
+// 쓰지 않고, create-ait-app이 기존 파일을 덮어써야만 하는 상황을 미리 거부해요.
+export function assertAdoptableProject(targetDirectory: string): void {
+  if (!existsSync(path.join(targetDirectory, "package.json"))) {
+    throw new Error("package.json이 없어요. Vite로 만든 프로젝트 루트에서 다시 실행해 주세요.");
+  }
+
+  const packageJson = readPackageJson(targetDirectory);
+  if (packageJson.createAitApp) {
+    throw new Error(
+      "이미 create-ait-app으로 설정한 프로젝트예요. 예제 코드를 추가하려면 create-ait-app add-sample을 사용해 주세요.",
+    );
+  }
+
+  const dependencies = allDependencies(packageJson);
+  if (dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]) {
+    throw new Error(
+      `이미 ${APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME} 의존성이 있어요. package.json에서 지우고 다시 실행해 주세요.`,
+    );
+  }
+
+  const existingConfigFile = AIT_RESERVED_CONFIG_EXTENSIONS.map(
+    (extension) => `${AIT_CONFIG_BASE_NAME}.${extension}`,
+  ).find((fileName) => existsSync(path.join(targetDirectory, fileName)));
+  if (existingConfigFile) {
+    throw new Error(
+      `${existingConfigFile}이 이미 있어요. 설정을 새로 만들려면 파일을 지우고 다시 실행해 주세요.`,
+    );
+  }
+
+  const scripts = packageJson.scripts ?? {};
+  const reservedScriptEntry = Object.entries(scripts).find(([, value]) =>
+    AIT_RESERVED_SCRIPT_PATTERN.test(value),
+  );
+  if (reservedScriptEntry) {
+    throw new Error(
+      `scripts.${reservedScriptEntry[0]}이 이미 ait 명령을 실행하고 있어요. create-ait-app이 build/deploy를 다시 쓸 때 사용하는 명령이에요. 스크립트 값에서 ait build/ait deploy 호출을 지우고 다시 실행해 주세요.`,
+    );
+  }
+
+  for (const slot of AIT_RESERVED_SCRIPT_SLOTS) {
+    const originalKey =
+      slot === AIT_SCRIPT_SLOT_BUILD_VITE
+        ? "build"
+        : slot === AIT_SCRIPT_SLOT_DEV_VITE
+          ? "dev"
+          : undefined;
+    const conflicts =
+      slot === AIT_SCRIPT_SLOT_DEPLOY_ORIGINAL
+        ? scripts[slot] !== undefined
+        : scripts[slot] !== undefined && scripts[slot] !== scripts[originalKey as string];
+    if (conflicts) {
+      throw new Error(
+        `scripts["${slot}"]: 이 이름은 create-ait-app이 원래 스크립트를 옮겨 둘 자리예요. 이름을 바꾸고 다시 실행해 주세요.`,
+      );
+    }
+  }
 }

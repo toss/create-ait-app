@@ -26,6 +26,8 @@ Node.js 24 이상이 필요해요.
 5. 지원되는 프로젝트라면 IAP·IAA 예제를 추가할지 물어봐요.
 6. Agent Skills를 설치할지 물어봐요.
 
+이미 만든 Vite 프로젝트라면 새로 만들지 말고 `create-ait-app init`으로 전환해 주세요.
+
 ## 1. 프로젝트 만들기
 
 ```bash
@@ -154,6 +156,52 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 진입 파일이 이미 수정되어 있으면 사용자 코드를 덮어쓰지 않고 중단해요. 예제 셸이
 생성된 뒤에는 관리 주석 바깥의 사용자 코드를 유지하면서 새 예제만 추가해요.
 
+## 기존 Vite 프로젝트에 Apps in Toss 추가하기
+
+이미 만든 Vite 프로젝트가 있다면 `init` 서브커맨드로 같은 자리에서 Apps in Toss
+프로젝트로 전환할 수 있어요.
+
+### 지원 조건
+
+- Vite CSR(또는 SSG+hydration) 프로젝트예요. SSR 전용 `build`는 지원하지 않아요.
+- 루트에 `index.html`이 있어요.
+- `package.json`에 `dev`, `build` 스크립트가 있어요.
+- `create-ait-app`으로 아직 초기화하지 않았고, `@apps-in-toss/web-framework`
+  의존성이나 `apps-in-toss.config.*` 파일이 없어요.
+
+대화형으로 실행하면 바뀔 파일을 미리 보여 주고 진행 여부를 확인해요.
+
+```bash
+npx create-ait-app init ./my-vite-app
+```
+
+CI나 스크립트에서는 `--inline`과 `--pm`을 함께 지정해 주세요.
+
+```bash
+npx create-ait-app init ./my-vite-app --inline --pm npm
+```
+
+### 바뀌는 파일
+
+- `package.json` — `dev`는 그대로 두고 `dev:vite`로 복사해요. `build`는 `build:vite`로
+  복사한 뒤, 원본 뒤에 `ait build`를 이어 실행하도록 바꿔요(`<원본 명령> && ait build`).
+  `deploy`만 원래 스크립트를 `deploy:original`로 옮기고 `ait deploy`로 바꿔요 — 세
+  스크립트 중 동작이 실제로 바뀌는 유일한 스크립트예요. `@apps-in-toss/web-framework`
+  의존성을 추가해요.
+- `apps-in-toss.config.ts` — 새로 만들어요.
+- `README.md` — "## Apps in Toss" 절을 추가해요.
+
+기존 파일은 덮어쓰지 않아요. 덮어써야만 하는 상황(이미 초기화된 프로젝트,
+`apps-in-toss.config.*` 파일이 이미 있는 경우 등)은 실행 전에 오류로 안내하고
+멈춰요. 실패해도 대상 디렉터리는 지우지 않아요.
+
+`init`은 `--template`, `--tds`, `--sample`을 지원하지 않아요. 이미 만든 프로젝트의
+Vite 설정을 그대로 사용하고, 예제 코드는 App/main 진입 파일이 create-ait-app이
+만든 것이 아니라서 `add-sample`로도 추가할 수 없어요. 직접 작성해 주세요.
+
+모노레포에서는 `--skip-install`로 설치를 생략하고 워크스페이스 루트에서 직접
+설치해 주세요.
+
 ## Agent Skills 사용하기
 
 프로젝트를 만들 때 Skills 추가를 선택하면
@@ -190,6 +238,13 @@ npx --yes skills@latest add toss/create-ait-app \
 문서를 우선 확인하고, 더 넓은 문맥이 필요할 때는 `llms-full.txt`를 검색해요.
 
 ## CLI 옵션
+
+서브커맨드는 두 가지예요.
+
+- `create-ait-app add-sample [directory] [iap,iaa]` — 이미 만든 create-ait-app
+  프로젝트에 예제 코드를 추가해요.
+- `create-ait-app init [directory]` — 이미 만든 Vite 프로젝트를 Apps in Toss
+  프로젝트로 전환해요. [기존 Vite 프로젝트에 Apps in Toss 추가하기](#기존-vite-프로젝트에-apps-in-toss-추가하기)를 참고해 주세요.
 
 | 옵션                | 설명                                                                     |
 | ------------------- | ------------------------------------------------------------------------ |

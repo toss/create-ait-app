@@ -16,6 +16,7 @@ import {
   printHelp,
   type CliArgs,
 } from "./args.js";
+import { runInit } from "./init.js";
 import { assertChoice, choosePackageManager, chooseSkills } from "./prompts.js";
 
 const IGNORED_TARGET_ENTRIES = new Set([".git"]);
@@ -64,6 +65,10 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
   }
   if (args._[0] === "add-sample") {
     await runAddSample(args);
+    return;
+  }
+  if (args._[0] === "init") {
+    await runInit(args);
     return;
   }
   assertNonInteractiveArgs(args);

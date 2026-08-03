@@ -18,6 +18,7 @@ export interface SampleProject {
   isTypeScript: boolean;
   sampleEntryHash: string | null;
   sampleShellManaged: boolean;
+  source: "create-vite" | "existing-vite" | "tds-template";
   template: string | null;
   useTds: boolean;
 }
@@ -63,6 +64,7 @@ export function inspectSampleProject(targetDirectory: string): SampleProject {
     isTypeScript: metadata.isTypeScript ?? isTypeScriptProject(targetDirectory),
     sampleEntryHash: metadata.sampleEntryHash ?? null,
     sampleShellManaged: metadata.sampleShellManaged === true,
+    source: metadata.source,
     template: metadata.template,
     useTds,
   };
@@ -90,6 +92,12 @@ export function addProjectSamples(
       installedSampleIds,
       skippedSampleIds,
     };
+  }
+
+  if (project.source === "existing-vite" && !project.sampleShellManaged) {
+    throw new Error(
+      "기존 Vite 프로젝트에 추가한 앱에는 예제 코드를 자동으로 넣을 수 없어요. App/main 진입 파일을 create-ait-app이 관리하지 않아서예요.",
+    );
   }
 
   if (

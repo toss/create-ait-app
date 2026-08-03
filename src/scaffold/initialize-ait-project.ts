@@ -6,6 +6,14 @@ import {
   type PackageManager,
 } from "../package-manager/package-manager.js";
 import {
+  AIT_BUILD_COMMAND,
+  AIT_CONFIG_FILE_NAME,
+  AIT_DEPLOY_COMMAND,
+  AIT_SCRIPT_SLOT_BUILD_VITE,
+  AIT_SCRIPT_SLOT_DEPLOY_ORIGINAL,
+  AIT_SCRIPT_SLOT_DEV_VITE,
+} from "../apps-in-toss/reserved-project-files.js";
+import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
 } from "../apps-in-toss/version-policy.js";
@@ -22,7 +30,7 @@ function writeAppsInTossConfig({
   targetDirectory: string;
 }): void {
   writeFileSync(
-    path.join(targetDirectory, "apps-in-toss.config.ts"),
+    path.join(targetDirectory, AIT_CONFIG_FILE_NAME),
     `import { defineConfig } from "@apps-in-toss/web-framework/config";
 
 export default defineConfig({
@@ -103,19 +111,19 @@ export function initializeAitProject({
   // scripts.deploy already rewritten to "ait deploy"; fall back to whatever
   // was recorded on a previous run so that metadata isn't dropped.
   const originalDeploy =
-    (currentDeploy != null && currentDeploy !== "ait deploy" ? currentDeploy : undefined) ??
+    (currentDeploy != null && currentDeploy !== AIT_DEPLOY_COMMAND ? currentDeploy : undefined) ??
     packageJson.createAitApp?.originalScripts?.deploy ??
-    packageJson.scripts?.["deploy:original"];
+    packageJson.scripts?.[AIT_SCRIPT_SLOT_DEPLOY_ORIGINAL];
   const preservesOriginalDeploy = originalDeploy != null;
 
   packageJson.scripts = {
     ...packageJson.scripts,
-    build: `${baseProject.inspection.originalBuildCommand} && ait build`,
-    "build:vite": baseProject.inspection.originalBuildCommand,
-    ...(preservesOriginalDeploy ? { "deploy:original": originalDeploy } : {}),
-    deploy: "ait deploy",
+    build: `${baseProject.inspection.originalBuildCommand} && ${AIT_BUILD_COMMAND}`,
+    [AIT_SCRIPT_SLOT_BUILD_VITE]: baseProject.inspection.originalBuildCommand,
+    ...(preservesOriginalDeploy ? { [AIT_SCRIPT_SLOT_DEPLOY_ORIGINAL]: originalDeploy } : {}),
+    deploy: AIT_DEPLOY_COMMAND,
     dev: baseProject.inspection.originalDevCommand,
-    "dev:vite": baseProject.inspection.originalDevCommand,
+    [AIT_SCRIPT_SLOT_DEV_VITE]: baseProject.inspection.originalDevCommand,
   };
   packageJson.createAitApp = {
     createViteVersion: baseProject.source === "create-vite" ? getCreateViteVersion() : null,
@@ -147,6 +155,14 @@ export function initializeAitProject({
   writePackageJson(targetDirectory, packageJson);
 
   updateReadme(targetDirectory, packageName, packageManager);
-  configureNpmInstallCompatibility(targetDirectory, packageManager);
-  configurePnpmInstallCompatibility(targetDirectory, packageManager);
+
+  // init(기존 Vite 프로젝트 전환)에서는 README에 문서화한 대로 apps-in-toss.config.ts,
+  // package.json, README.md만 바꿔요. 이 두 호환성 shim은 그린필드 스캐폴딩 전용으로,
+  // 브라운필드 프로젝트에 .npmrc/pnpm-workspace.yaml 같은 선언되지 않은 파일을
+  // 만들거나(특히 모노레포에서 워크스페이스 루트 인식을 깨뜨릴 수 있어요) 기존
+  // .npmrc를 프로젝트 전역 설치 정책째로 바꾸는 부작용을 막기 위해 건너뛰어요.
+  if (baseProject.source !== "existing-vite") {
+    configureNpmInstallCompatibility(targetDirectory, packageManager);
+    configurePnpmInstallCompatibility(targetDirectory, packageManager);
+  }
 }

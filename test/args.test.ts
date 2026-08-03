@@ -2,6 +2,7 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { parseAddSampleCommand } from "../src/cli/add-sample.js";
 import { assertNonInteractiveArgs, parseArgs, parseSampleIds, printHelp } from "../src/cli/args.js";
+import { parseInitCommand } from "../src/cli/init.js";
 
 describe("parseArgs", () => {
   it("parses typed CLI options", () => {
@@ -73,6 +74,8 @@ describe("parseArgs", () => {
     expect(help).toContain("일반 Vite 프로젝트가 기본이에요");
     expect(help).toContain("사용자에게 TDS 사용을 비권장한다고 안내해 주세요");
     expect(help).toContain("--skills를 생략하면 Agent Skills를 추가하지 않아요.");
+    expect(help).toContain("create-ait-app init [directory] [options]");
+    expect(help).toContain("init을 비대화형으로 실행할 때는 --inline --pm");
     log.mockRestore();
   });
 });
@@ -93,6 +96,53 @@ describe("parseAddSampleCommand", () => {
     expect(() => parseAddSampleCommand(parseArgs(["add-sample", "./first", "./second"]))).toThrow(
       "알 수 없는 인수",
     );
+  });
+});
+
+describe("parseInitCommand", () => {
+  it("defaults to the current directory", () => {
+    expect(parseInitCommand(parseArgs(["init"]))).toEqual({
+      targetDirectory: path.resolve("."),
+    });
+  });
+
+  it("accepts an explicit target directory", () => {
+    expect(parseInitCommand(parseArgs(["init", "./my-app"]))).toEqual({
+      targetDirectory: path.resolve("./my-app"),
+    });
+  });
+
+  it("rejects multiple positional arguments", () => {
+    expect(() => parseInitCommand(parseArgs(["init", "./first", "./second"]))).toThrow(
+      "알 수 없는 인수",
+    );
+  });
+
+  it("rejects --template", () => {
+    expect(() =>
+      parseInitCommand(parseArgs(["init", "./my-app", "--template", "react-ts"])),
+    ).toThrow("--template을 지원하지 않아요");
+  });
+
+  it("rejects --tds", () => {
+    expect(() => parseInitCommand(parseArgs(["init", "./my-app", "--tds"]))).toThrow(
+      "--tds를 지원하지 않아요",
+    );
+  });
+
+  it("rejects --sample", () => {
+    expect(() => parseInitCommand(parseArgs(["init", "./my-app", "--sample", "iap"]))).toThrow(
+      "--sample을 지원하지 않아요",
+    );
+  });
+
+  it("requires --pm when run with --inline", () => {
+    expect(() => parseInitCommand(parseArgs(["init", "./my-app", "--inline"]))).toThrow(
+      "--pm <npm|yarn|pnpm>",
+    );
+    expect(() =>
+      parseInitCommand(parseArgs(["init", "./my-app", "--inline", "--pm", "npm"])),
+    ).not.toThrow();
   });
 });
 

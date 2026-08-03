@@ -11,7 +11,7 @@ import { resolveViteTemplate, scaffoldWithCreateVite } from "../vite/create-vite
 export interface BaseProject {
   framework: FrameworkKind;
   inspection: ProjectInspection;
-  source: "create-vite" | "tds-template";
+  source: "create-vite" | "existing-vite" | "tds-template";
   template: string | null;
 }
 
