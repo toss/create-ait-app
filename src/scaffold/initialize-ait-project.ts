@@ -97,10 +97,22 @@ export function initializeAitProject({
     ...packageJson.dependencies,
     [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   };
+
+  const currentDeploy = packageJson.scripts?.deploy;
+  // Re-running this function on an already-initialized project sees
+  // scripts.deploy already rewritten to "ait deploy"; fall back to whatever
+  // was recorded on a previous run so that metadata isn't dropped.
+  const originalDeploy =
+    (currentDeploy != null && currentDeploy !== "ait deploy" ? currentDeploy : undefined) ??
+    packageJson.createAitApp?.originalScripts?.deploy ??
+    packageJson.scripts?.["deploy:original"];
+  const preservesOriginalDeploy = originalDeploy != null;
+
   packageJson.scripts = {
     ...packageJson.scripts,
     build: `${baseProject.inspection.originalBuildCommand} && ait build`,
     "build:vite": baseProject.inspection.originalBuildCommand,
+    ...(preservesOriginalDeploy ? { "deploy:original": originalDeploy } : {}),
     deploy: "ait deploy",
     dev: baseProject.inspection.originalDevCommand,
     "dev:vite": baseProject.inspection.originalDevCommand,
@@ -111,6 +123,7 @@ export function initializeAitProject({
     isTypeScript: baseProject.inspection.isTypeScript,
     originalScripts: {
       build: baseProject.inspection.originalBuildCommand,
+      ...(preservesOriginalDeploy ? { deploy: originalDeploy } : {}),
       dev: baseProject.inspection.originalDevCommand,
     },
     sampleEntryHash:
@@ -126,12 +139,13 @@ export function initializeAitProject({
     source: baseProject.source,
     template: baseProject.template,
   };
-  writePackageJson(targetDirectory, packageJson);
 
   writeAppsInTossConfig({
     appName: packageName.split("/").at(-1) ?? packageName,
     targetDirectory,
   });
+  writePackageJson(targetDirectory, packageJson);
+
   updateReadme(targetDirectory, packageName, packageManager);
   configureNpmInstallCompatibility(targetDirectory, packageManager);
   configurePnpmInstallCompatibility(targetDirectory, packageManager);

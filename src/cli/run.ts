@@ -1,11 +1,6 @@
-import { checkbox, confirm, input, select } from "@inquirer/prompts";
+import { checkbox, input } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
-import {
-  detectInvokedPackageManager,
-  PACKAGE_MANAGERS,
-  type PackageManager,
-} from "../package-manager/package-manager.js";
 import { applyProjectSamples } from "../scaffold/apply-project-samples.js";
 import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-project.js";
 import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
@@ -21,47 +16,12 @@ import {
   printHelp,
   type CliArgs,
 } from "./args.js";
+import { assertChoice, choosePackageManager, chooseSkills } from "./prompts.js";
 
 const IGNORED_TARGET_ENTRIES = new Set([".git"]);
 
 export function hasProjectFiles(targetDirectory: string): boolean {
   return readdirSync(targetDirectory).some((entry) => !IGNORED_TARGET_ENTRIES.has(entry));
-}
-
-function assertChoice<T extends string>(
-  value: string | undefined,
-  choices: readonly T[],
-  label: string,
-): T | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (!choices.includes(value as T)) {
-    throw new Error(`${label}: ${value} (${choices.join(", ")} 중 선택)`);
-  }
-  return value as T;
-}
-
-async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
-  const explicit = assertChoice(args.pm, PACKAGE_MANAGERS, "지원하지 않는 패키지 매니저예요");
-  if (explicit) return explicit;
-
-  const detected = detectInvokedPackageManager();
-  if (detected) return detected;
-
-  return select({
-    choices: PACKAGE_MANAGERS.map((value) => ({ name: value, value })),
-    message: "사용할 패키지 매니저를 골라 주세요:",
-  });
-}
-
-async function chooseSkills(args: CliArgs): Promise<boolean> {
-  if (args.skills) return true;
-  if (args.inline) return false;
-  return confirm({
-    default: false,
-    message: "Agent Skills를 추가할까요?",
-  });
 }
 
 async function chooseSamples(

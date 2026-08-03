@@ -104,6 +104,109 @@ describe("finalizeProject", () => {
       'webBundleDir: "dist"',
     );
     expect(existsSync(path.join(directory, "README.md"))).toBe(true);
+    expect(packageJson.scripts.deploy).toBe("ait deploy");
+    expect(packageJson.scripts["deploy:original"]).toBeUndefined();
+    expect(packageJson.createAitApp.originalScripts.deploy).toBeUndefined();
+  });
+
+  it("preserves an existing deploy script instead of overwriting it", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-deploy-"));
+    try {
+      mkdirSync(path.join(directory, "src"));
+      writeFileSync(path.join(directory, "index.html"), "");
+      writeFileSync(path.join(directory, "src", "main.js"), "");
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({
+          devDependencies: { vite: "9.0.0" },
+          name: "fixture",
+          scripts: { build: "vite build", deploy: "gh-pages -d dist", dev: "vite --host" },
+        }),
+      );
+
+      const baseProject: BaseProject = {
+        framework: "vanilla",
+        inspection: {
+          framework: "vanilla",
+          isTypeScript: false,
+          originalBuildCommand: "vite build",
+          originalDevCommand: "vite --host",
+          packageJson: {},
+        },
+        source: "create-vite",
+        template: "vanilla",
+      };
+
+      finalizeProject({
+        baseProject,
+        packageManager: "npm",
+        packageName: "my-app",
+        sampleIds: [],
+        skipInstall: true,
+        targetDirectory: directory,
+        useTds: false,
+      });
+
+      const packageJson = JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8"));
+      expect(packageJson.scripts.deploy).toBe("ait deploy");
+      expect(packageJson.scripts["deploy:original"]).toBe("gh-pages -d dist");
+      expect(packageJson.createAitApp.originalScripts.deploy).toBe("gh-pages -d dist");
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("keeps the recorded original deploy script on re-initialization", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-deploy-rerun-"));
+    try {
+      mkdirSync(path.join(directory, "src"));
+      writeFileSync(path.join(directory, "index.html"), "");
+      writeFileSync(path.join(directory, "src", "main.js"), "");
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({
+          devDependencies: { vite: "9.0.0" },
+          name: "fixture",
+          scripts: { build: "vite build", deploy: "gh-pages -d dist", dev: "vite --host" },
+        }),
+      );
+
+      const baseProject: BaseProject = {
+        framework: "vanilla",
+        inspection: {
+          framework: "vanilla",
+          isTypeScript: false,
+          originalBuildCommand: "vite build",
+          originalDevCommand: "vite --host",
+          packageJson: {},
+        },
+        source: "create-vite",
+        template: "vanilla",
+      };
+
+      const finalize = () =>
+        finalizeProject({
+          baseProject,
+          packageManager: "npm",
+          packageName: "my-app",
+          sampleIds: [],
+          skipInstall: true,
+          targetDirectory: directory,
+          useTds: false,
+        });
+
+      finalize();
+      // Re-run against the now-initialized project (scripts.deploy is already
+      // "ait deploy"); the previously recorded original must not be dropped.
+      finalize();
+
+      const packageJson = JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8"));
+      expect(packageJson.scripts.deploy).toBe("ait deploy");
+      expect(packageJson.scripts["deploy:original"]).toBe("gh-pages -d dist");
+      expect(packageJson.createAitApp.originalScripts.deploy).toBe("gh-pages -d dist");
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
   });
 
   it("copies TDS sample assets from the React 18 template", () => {

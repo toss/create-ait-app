@@ -95,13 +95,58 @@ export function configurePnpmInstallCompatibility(
     return;
   }
 
+  const workspacePath = path.join(targetDirectory, "pnpm-workspace.yaml");
+
   // pnpm 11 rejects unreviewed dependency build scripts by default. protobufjs
   // is a transitive dependency of the pinned Apps in Toss framework and its
   // published postinstall is intentionally trusted by generated projects.
-  writeFileSync(
-    path.join(targetDirectory, "pnpm-workspace.yaml"),
-    "allowBuilds:\n  protobufjs: true\n",
+  if (!existsSync(workspacePath)) {
+    writeFileSync(workspacePath, "allowBuilds:\n  protobufjs: true\n");
+    return;
+  }
+
+  const current = readFileSync(workspacePath, "utf8");
+  if (/^\s*protobufjs\s*:/m.test(current)) {
+    return;
+  }
+
+  if (!/^allowBuilds\s*:/m.test(current)) {
+    writeFileSync(
+      workspacePath,
+      `${current.trimEnd()}${current.trim() ? "\n" : ""}allowBuilds:\n  protobufjs: true\n`,
+    );
+    return;
+  }
+
+  // An `allowBuilds` block already exists but doesn't mention protobufjs.
+  // We don't parse YAML, so we can't safely merge a nested key into an
+  // unknown existing block — ask the user to add it instead of guessing.
+  console.warn(
+    `\n⚠️ ${path.relative(process.cwd(), workspacePath)}에 이미 allowBuilds 설정이 있어 protobufjs 항목을 자동으로 추가하지 못했어요. allowBuilds.protobufjs: true를 직접 추가해 주세요.`,
   );
+}
+
+export function detectProjectPackageManager(targetDirectory: string): PackageManager | null {
+  const packageJsonPath = path.join(targetDirectory, "package.json");
+  if (existsSync(packageJsonPath)) {
+    try {
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+        packageManager?: string;
+      };
+      const name = packageJson.packageManager?.split("@")[0];
+      if (PACKAGE_MANAGERS.includes(name as PackageManager)) {
+        return name as PackageManager;
+      }
+    } catch {
+      // Brownfield target: package.json may be unreadable or malformed.
+      // Fall through to lockfile-based detection instead of throwing.
+    }
+  }
+
+  if (existsSync(path.join(targetDirectory, "pnpm-lock.yaml"))) return "pnpm";
+  if (existsSync(path.join(targetDirectory, "yarn.lock"))) return "yarn";
+  if (existsSync(path.join(targetDirectory, "package-lock.json"))) return "npm";
+  return null;
 }
 
 export function installDependencies(targetDirectory: string, packageManager: PackageManager): void {

@@ -3,6 +3,7 @@ import {
   configureNpmInstallCompatibility,
   configurePnpmInstallCompatibility,
   detectInvokedPackageManager,
+  detectProjectPackageManager,
   installDependencies,
   packageManagerFromExecPath,
   packageManagerFromUserAgent,
@@ -127,6 +128,129 @@ describe("pnpm install compatibility", () => {
     try {
       configurePnpmInstallCompatibility(directory, "yarn");
       expect(existsSync(path.join(directory, "pnpm-workspace.yaml"))).toBe(false);
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("merges the allowBuilds entry into an existing pnpm-workspace.yaml", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      const existingWorkspace = "packages:\n  - packages/*\n";
+      writeFileSync(path.join(directory, "pnpm-workspace.yaml"), existingWorkspace);
+      configurePnpmInstallCompatibility(directory, "pnpm");
+      expect(readFileSync(path.join(directory, "pnpm-workspace.yaml"), "utf8")).toBe(
+        `${existingWorkspace}allowBuilds:\n  protobufjs: true\n`,
+      );
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("leaves an existing protobufjs allowBuilds entry untouched", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      const existingWorkspace = "allowBuilds:\n  protobufjs: false\n";
+      writeFileSync(path.join(directory, "pnpm-workspace.yaml"), existingWorkspace);
+      configurePnpmInstallCompatibility(directory, "pnpm");
+      expect(readFileSync(path.join(directory, "pnpm-workspace.yaml"), "utf8")).toBe(
+        existingWorkspace,
+      );
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("warns instead of overwriting an unrelated existing allowBuilds block", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const existingWorkspace = "allowBuilds:\n  some-other-package: true\n";
+      writeFileSync(path.join(directory, "pnpm-workspace.yaml"), existingWorkspace);
+      configurePnpmInstallCompatibility(directory, "pnpm");
+      expect(readFileSync(path.join(directory, "pnpm-workspace.yaml"), "utf8")).toBe(
+        existingWorkspace,
+      );
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      warnSpy.mockRestore();
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+});
+
+describe("detectProjectPackageManager", () => {
+  it("returns null when nothing indicates a package manager", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      expect(detectProjectPackageManager(directory)).toBeNull();
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("reads the packageManager field before falling back to lockfiles", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({ packageManager: "pnpm@9.0.0" }),
+      );
+      writeFileSync(path.join(directory, "yarn.lock"), "");
+      expect(detectProjectPackageManager(directory)).toBe("pnpm");
+
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({ packageManager: "yarn@4.1.0" }),
+      );
+      expect(detectProjectPackageManager(directory)).toBe("yarn");
+
+      writeFileSync(
+        path.join(directory, "package.json"),
+        JSON.stringify({ packageManager: "npm@10.5.0" }),
+      );
+      expect(detectProjectPackageManager(directory)).toBe("npm");
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("falls back to lockfiles when the packageManager field is absent", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      writeFileSync(path.join(directory, "package.json"), JSON.stringify({}));
+
+      writeFileSync(path.join(directory, "pnpm-lock.yaml"), "");
+      expect(detectProjectPackageManager(directory)).toBe("pnpm");
+      rmSync(path.join(directory, "pnpm-lock.yaml"));
+
+      writeFileSync(path.join(directory, "yarn.lock"), "");
+      expect(detectProjectPackageManager(directory)).toBe("yarn");
+      rmSync(path.join(directory, "yarn.lock"));
+
+      writeFileSync(path.join(directory, "package-lock.json"), "");
+      expect(detectProjectPackageManager(directory)).toBe("npm");
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("falls back to lockfiles when package.json is malformed", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      writeFileSync(path.join(directory, "package.json"), "{ not valid json");
+      writeFileSync(path.join(directory, "pnpm-lock.yaml"), "");
+      expect(detectProjectPackageManager(directory)).toBe("pnpm");
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  it("returns null when package.json is malformed and no lockfile exists", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-pm-"));
+    try {
+      writeFileSync(path.join(directory, "package.json"), "{ not valid json");
+      expect(detectProjectPackageManager(directory)).toBeNull();
     } finally {
       rmSync(directory, { force: true, recursive: true });
     }

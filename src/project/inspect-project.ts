@@ -56,7 +56,7 @@ export function isSsrOnlyViteBuildCommand(command: string): boolean {
 
 export function assertCsrViteProject(targetDirectory: string): ProjectInspection {
   if (!existsSync(path.join(targetDirectory, "package.json"))) {
-    throw new Error("create-vite 결과에 package.json이 없어요.");
+    throw new Error("package.json을 찾을 수 없어요.");
   }
   if (!existsSync(path.join(targetDirectory, "index.html"))) {
     throw new Error(
