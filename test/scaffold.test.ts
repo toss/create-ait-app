@@ -4,8 +4,10 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL,
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   isPrereleaseWebFrameworkChannel,
+  resolveWebFrameworkSpecifier,
 } from "../src/apps-in-toss/version-policy.js";
 import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
 import { adoptExistingProject } from "../src/scaffold/adopt-existing-project.js";
@@ -21,6 +23,23 @@ describe("Apps in Toss web framework version policy", () => {
     expect(isPrereleaseWebFrameworkChannel("beta")).toBe(true);
     expect(isPrereleaseWebFrameworkChannel("rc")).toBe(true);
     expect(isPrereleaseWebFrameworkChannel("latest")).toBe(false);
+  });
+
+  it("resolves the latest channel to this repository's pinned devDependency version", () => {
+    // 구현이 쓰는 것과 같은 JSON import를 재사용하지 않고, 독립적으로 다시 파싱해서
+    // 잘못된 키를 참조하거나 버전을 하드코딩하는 등의 구현 회귀를 잡아낼 수 있게 해요.
+    const repoRoot = path.resolve(import.meta.dirname, "..");
+    const repoPackageJson = JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8"));
+    const pinnedVersion = repoPackageJson.devDependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME];
+
+    const resolved = resolveWebFrameworkSpecifier("latest");
+    expect(resolved).toBe(pinnedVersion);
+    expect(resolved).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it("resolves beta/rc channels to their dist-tag string as-is", () => {
+    expect(resolveWebFrameworkSpecifier("beta")).toBe("beta");
+    expect(resolveWebFrameworkSpecifier("rc")).toBe("rc");
   });
 });
 
@@ -98,6 +117,17 @@ describe("finalizeProject", () => {
     expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
       APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
     );
+    if (isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL)) {
+      // beta/rc 채널은 dist-tag 문자열 그대로여야 해요.
+      expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
+        APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL,
+      );
+    } else {
+      // latest 채널은 dist-tag가 아니라 정확 버전으로 고정되어야 해요.
+      expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toMatch(
+        /^\d+\.\d+\.\d+$/,
+      );
+    }
     expect(packageJson.createAitApp.createViteVersion).toMatch(/^\d+\.\d+\.\d+$/);
     expect(packageJson.createAitApp.sampleEntryHash).toMatch(/^[a-f0-9]{64}$/);
     expect(packageJson.createAitApp.sampleShellManaged).toBe(false);

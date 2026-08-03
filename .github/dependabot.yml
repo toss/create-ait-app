@@ -8,9 +8,11 @@ updates:
       cronjob: "0 9 * * *"
       timezone: Asia/Seoul
     allow:
+      - dependency-name: "@apps-in-toss/web-framework"
       - dependency-name: create-vite
       - dependency-name: skills
     cooldown:
+      default-days: 3
       exclude:
         - create-vite
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 3

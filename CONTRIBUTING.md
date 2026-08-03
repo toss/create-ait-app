@@ -68,9 +68,16 @@ SSG+hydration은 모두 대상이에요.
 - 원래 Vite 스크립트는 생성 프로젝트의 `dev:vite`, `build:vite`로도 보존해요.
   `build`는 Vite 빌드 뒤 `ait build`를 실행하고, `deploy`는 `ait deploy`를 실행해요.
 - 생성 프로젝트의 `@apps-in-toss/web-framework` 버전은
-  `src/apps-in-toss/version-policy.ts`의 `APPS_IN_TOSS_WEB_FRAMEWORK_VERSION`만 SSoT로
-  사용해요. `beta`, `rc`, `latest` 사이에서 전환할 때는 이 값 하나만 바꿔요.
-- `templates/projects/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
+  `src/apps-in-toss/version-policy.ts`의 `APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL`만
+  SSoT로 사용해요. `beta`, `rc`, `latest` 사이에서 전환할 때는 이 값 하나만 바꿔요.
+  `beta`/`rc`는 dist-tag를 그대로 따르지만, 공급망 방어를 위해 `latest`는 dist-tag
+  대신 이 저장소 `package.json`의 `devDependencies`에 고정된 정확 버전을 써요. 그
+  고정 버전은 `dependabot.yml`이 범프 PR로 관리해요. 다만 이 값은 빌드 타임에
+  create-ait-app 번들로 그대로 인라인되므로, 범프 PR을 머지하는 것만으로는 사용자에게
+  반영되지 않고 create-ait-app을 새 버전으로 릴리스해야 반영돼요.
+- `templates/projects/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요. 이 템플릿의
+  `@toss/tds-*` 의존성은 여전히 dist-tag `latest`로 유동적이고, CI의 스캐폴딩 e2e
+  매트릭스에 포함된 `tds` 케이스가 매 PR·push마다 이 조합을 검증해요.
 - 생성 결과에 복사하는 파일 원본은 `templates/`에서 관리해요. 완성형 프로젝트 뼈대는
   `templates/projects/`, 선택형 예제 조각은 `templates/samples/`에 두고 지원되는
   React/Vanilla 계열에만 적용해요.

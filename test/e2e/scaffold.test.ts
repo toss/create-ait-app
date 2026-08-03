@@ -5,8 +5,9 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
-  APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER,
+  APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL,
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+  isPrereleaseWebFrameworkChannel,
 } from "../../src/apps-in-toss/version-policy.js";
 import { getSupportedViteTemplates, scaffoldWithCreateVite } from "../../src/vite/create-vite.js";
 
@@ -19,30 +20,6 @@ const templates =
     : requested.split(",").filter(Boolean);
 const running = new Set<ChildProcess>();
 const temporaryDirectories = new Set<string>();
-
-function resolvePublishedWebFrameworkVersion(): string {
-  const result = spawnSync(
-    "npm",
-    ["view", APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER, "version", "--json"],
-    {
-      encoding: "utf8",
-      env: generatedProjectEnvironment(),
-    },
-  );
-  if (result.status !== 0) {
-    throw new Error(
-      [result.stdout, result.stderr, `${APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER} 조회에 실패했어요.`]
-        .filter(Boolean)
-        .join("\n"),
-    );
-  }
-
-  const version: unknown = JSON.parse(result.stdout);
-  if (typeof version !== "string") {
-    throw new Error(`${APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER} 버전을 확인할 수 없어요.`);
-  }
-  return version;
-}
 
 function findAitArtifacts(projectDirectory: string): string[] {
   const artifacts: string[] = [];
@@ -170,8 +147,6 @@ afterEach(async () => {
 }, 120_000);
 
 describe.skipIf(!enabled)("scaffolding compatibility", () => {
-  const publishedWebFrameworkVersion = enabled ? resolvePublishedWebFrameworkVersion() : null;
-
   it.each(templates)(
     "%s: scaffold, build Vite and Apps in Toss, and start dev server",
     async (template) => {
@@ -239,7 +214,12 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
           "utf8",
         ),
       );
-      expect(installedWebFrameworkPackageJson.version).toBe(publishedWebFrameworkVersion);
+      if (isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL)) {
+        // beta/rc 채널은 dist-tag가 가리키는 최신 프리릴리즈 버전이 설치돼요.
+        expect(installedWebFrameworkPackageJson.version).toMatch(/^\d+\.\d+\.\d+-/);
+      } else {
+        expect(installedWebFrameworkPackageJson.version).toBe(APPS_IN_TOSS_WEB_FRAMEWORK_VERSION);
+      }
       if (sampleIds.length > 0) {
         expect(packageJson.createAitApp.samples).toEqual(sampleIds);
       }
