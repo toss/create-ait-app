@@ -146,7 +146,9 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
 
   try {
     const baseProject = createBaseProject({
+      packageManager,
       packageName,
+      quiet: args.inline,
       targetDirectory,
       template,
       useTds,

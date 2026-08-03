@@ -1,5 +1,6 @@
 import { renameSync } from "node:fs";
 import path from "node:path";
+import type { PackageManager } from "../package-manager/package-manager.js";
 import type { FrameworkKind } from "../project/framework.js";
 import { assertCsrViteProject, type ProjectInspection } from "../project/inspect-project.js";
 import { readPackageJson, writePackageJson } from "../project/package-json.js";
@@ -61,12 +62,16 @@ function createTdsProject(targetDirectory: string, packageName: string): BasePro
 }
 
 export function createBaseProject({
+  packageManager,
   packageName,
+  quiet,
   targetDirectory,
   template,
   useTds,
 }: {
+  packageManager?: PackageManager;
   packageName: string;
+  quiet?: boolean;
   targetDirectory: string;
   template?: string;
   useTds: boolean;
@@ -75,7 +80,7 @@ export function createBaseProject({
     return createTdsProject(targetDirectory, packageName);
   }
 
-  scaffoldWithCreateVite(targetDirectory, template);
+  scaffoldWithCreateVite(targetDirectory, template, { packageManager, quiet });
   const inspection = assertCsrViteProject(targetDirectory);
   return {
     framework: inspection.framework,

@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import {
+  detectInvokedPackageManager,
+  type PackageManager,
+} from "../package-manager/package-manager.js";
 import type { FrameworkKind } from "../project/framework.js";
 import { isSsrOnlyViteBuildCommand } from "../project/inspect-project.js";
 import { readPackageJson } from "../project/package-json.js";
@@ -142,18 +146,57 @@ export function getSupportedViteTemplates(): string[] {
   });
 }
 
-export function scaffoldWithCreateVite(targetDirectory: string, template?: string): void {
+// require.resolve("create-vite") can point inside a Yarn PnP virtual (zip) path.
+// Loading it from a freshly spawned node process needs that same PnP hook, which
+// Yarn normally injects via NODE_OPTIONS — so we re-derive it as explicit argv
+// before stripping NODE_OPTIONS itself from the child's environment below.
+export function pnpBootstrapArgs(nodeOptions: string | undefined): string[] {
+  if (!nodeOptions) return [];
+  const args: string[] = [];
+  const requireMatch = nodeOptions.match(/--require[= ](\S+\.pnp\.cjs)/);
+  if (requireMatch) args.push("--require", requireMatch[1]);
+  const loaderMatch = nodeOptions.match(/--experimental-loader[= ](\S+\.pnp\.loader\.mjs)/);
+  if (loaderMatch) args.push("--experimental-loader", loaderMatch[1]);
+  return args;
+}
+
+export function scaffoldWithCreateVite(
+  targetDirectory: string,
+  template?: string,
+  options?: { packageManager?: PackageManager; quiet?: boolean },
+): void {
   const createViteEntry = require.resolve("create-vite");
   const resolvedTemplate = resolveViteTemplate(template);
   mkdirSync(path.dirname(targetDirectory), { recursive: true });
-  const args = [createViteEntry, path.basename(targetDirectory), "--no-immediate"];
+  const args = [
+    ...pnpBootstrapArgs(process.env.NODE_OPTIONS),
+    createViteEntry,
+    path.basename(targetDirectory),
+    "--no-immediate",
+  ];
   if (resolvedTemplate) {
     args.push("--template", resolvedTemplate, "--no-interactive");
   }
+
+  // create-vite reads npm_config_user_agent to decide which package manager's
+  // install/dev commands to print in its guidance, and (for yarn) whether to
+  // treat it as legacy yarn 1.x. When the invoking tool already matches the
+  // selected package manager, the real user agent (with its real version) is
+  // more accurate than a synthesized one — only synthesize when they differ,
+  // or when no invoking package manager could be detected at all.
+  const invokedPackageManager = detectInvokedPackageManager();
+  const selectedPackageManager = options?.packageManager;
+  const shouldSynthesizeUserAgent =
+    selectedPackageManager != null && selectedPackageManager !== invokedPackageManager;
 
   runCommand({
     args,
     command: process.execPath,
     cwd: path.dirname(targetDirectory),
+    env: shouldSynthesizeUserAgent
+      ? { npm_config_user_agent: `${selectedPackageManager}/0.0.0` }
+      : undefined,
+    quiet: options?.quiet,
+    unsetEnv: ["NODE_OPTIONS"],
   });
 }

@@ -88,7 +88,7 @@ function run(
   args: string[],
   cwd: string,
   environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" },
-): void {
+): { stderr: string; stdout: string } {
   const result = spawnSync(command, args, {
     cwd,
     encoding: "utf8",
@@ -101,6 +101,7 @@ function run(
         .join("\n"),
     );
   }
+  return { stderr: result.stderr, stdout: result.stdout };
 }
 
 async function waitForDevServer(processHandle: ChildProcess, timeoutMs = 60_000): Promise<void> {
@@ -199,7 +200,12 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         cliArguments.push("--sample", sampleIds[0]);
       }
 
-      run("corepack", cliArguments, process.cwd());
+      const scaffoldResult = run("corepack", cliArguments, process.cwd());
+      if (template !== "tds") {
+        expect(scaffoldResult.stdout).not.toContain("Done. Now run:");
+        expect(scaffoldResult.stdout).not.toContain("Scaffolding project in");
+      }
+      expect(scaffoldResult.stdout).toContain("프로젝트가 생성됐어요");
       if (sampleIds.length > 1) {
         run(
           "corepack",
