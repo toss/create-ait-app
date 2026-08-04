@@ -48,7 +48,7 @@ export async function runAddSample(args: CliArgs): Promise<void> {
       (sampleId) => !project.installedSampleIds.includes(sampleId),
     );
     if (availableSampleIds.length === 0) {
-      console.log("\n✅ 추가할 수 있는 예제 코드가 없어요. 이미 모두 추가되어 있어요.");
+      console.log("\n✅ 예제 코드를 이미 모두 추가했어요.");
       return;
     }
     if (args.inline) {
@@ -66,7 +66,7 @@ export async function runAddSample(args: CliArgs): Promise<void> {
 
   const result = addProjectSamples(command.targetDirectory, sampleIds);
   if (result.skippedSampleIds.length > 0) {
-    console.log(`\nℹ️ 이미 추가된 예제는 건너뛰어요: ${result.skippedSampleIds.join(", ")}`);
+    console.log(`\nℹ️ 이미 추가한 예제는 건너뛰어요: ${result.skippedSampleIds.join(", ")}`);
   }
   if (result.addedSampleIds.length === 0) {
     console.log("\n✅ 새로 추가할 예제 코드가 없어요.");
@@ -74,8 +74,8 @@ export async function runAddSample(args: CliArgs): Promise<void> {
   }
 
   console.log(`
-✅ 예제 코드가 추가됐어요.
+✅ 예제 코드를 추가했어요.
 
-  추가된 예제: ${result.addedSampleIds.join(", ")}
+  추가한 예제: ${result.addedSampleIds.join(", ")}
 `);
 }

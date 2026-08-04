@@ -63,7 +63,7 @@ export function runAitInit({
   } catch (error) {
     console.warn(
       [
-        `⚠️ ait init 실행에 실패했어요: ${error instanceof Error ? error.message : String(error)}`,
+        `⚠️ ait init 실행에 실패했어요. ${error instanceof Error ? error.message : String(error)}`,
         `프로젝트 디렉터리에서 직접 실행해 주세요: ${formatAitInitCommand(packageManager, appName)}`,
       ].join("\n"),
     );

@@ -165,7 +165,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     const isCurrentDirectory = targetDirectory === process.cwd();
     const cdLine = isCurrentDirectory ? "" : `\n  cd ${quoteForShell(projectName)}`;
     console.log(`
-✅ 프로젝트가 생성됐어요.
+✅ 프로젝트를 만들었어요.
 ${cdLine}
   ${devCommand}
 `);
