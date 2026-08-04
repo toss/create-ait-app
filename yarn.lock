@@ -1533,14 +1533,14 @@ __metadata:
     "@inquirer/prompts": "npm:8.5.2"
     "@types/cross-spawn": "npm:6.0.6"
     "@types/node": "npm:26.1.1"
-    create-vite: "npm:9.1.1"
+    create-vite: "npm:9.1.2"
     cross-spawn: "npm:7.0.6"
     oxfmt: "npm:0.60.0"
     oxlint: "npm:1.75.0"
     publint: "npm:0.3.16"
     release-it: "npm:20.2.1"
     semver: "npm:7.8.5"
-    skills: "npm:1.5.19"
+    skills: "npm:1.5.21"
     tsdown: "npm:0.22.14"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -1549,13 +1549,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"create-vite@npm:9.1.1":
-  version: 9.1.1
-  resolution: "create-vite@npm:9.1.1"
+"create-vite@npm:9.1.2":
+  version: 9.1.2
+  resolution: "create-vite@npm:9.1.2"
   bin:
     create-vite: index.js
     cva: index.js
-  checksum: 10c0/03070f2bb3a537eaaf2d7b51aa86f9566377ab1ca7f9ef998b6ab6b8ab18ff8e53b42ea10bc1ab6b1ad520603f4021aa61d526a9548ba464acefe2f25769b58d
+  checksum: 10c0/b2539c9832631ec85ed548d859bf42a5359a0c3cfec15f60d4ff9259b5340edbf9737b25a44fbdead88e795f373b7b47f335abf53d0819eb96709cf88d35505c
   languageName: node
   linkType: hard
 
@@ -3070,15 +3070,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"skills@npm:1.5.19":
-  version: 1.5.19
-  resolution: "skills@npm:1.5.19"
+"skills@npm:1.5.21":
+  version: 1.5.21
+  resolution: "skills@npm:1.5.21"
   dependencies:
+    tar: "npm:^7.5.20"
     yaml: "npm:^2.8.3"
   bin:
     add-skill: bin/cli.mjs
     skills: bin/cli.mjs
-  checksum: 10c0/3cd453ca4381bf4259c548e7c7d0324f641dba768dc500338ebd8abb439d359189a6ee865de1974b43f1e3747821dda5accc1303e137815772078d7bd7a1094f
+  checksum: 10c0/f0d8d703debacf2a0b974c7edeb31e2ebc9db8e237a6940f8b1a784a1d86f64cd5d317de50914211d88d99e8f0e6f27135902030be1f0efc9e96a4313bc7436f
   languageName: node
   linkType: hard
 
@@ -3161,6 +3162,19 @@ __metadata:
   dependencies:
     ansi-regex: "npm:^6.2.2"
   checksum: 10c0/544d13b7582f8254811ea97db202f519e189e59d35740c46095897e254e4f1aa9fe1524a83ad6bc5ad67d4dd6c0281d2e0219ed62b880a6238a16a17d375f221
+  languageName: node
+  linkType: hard
+
+"tar@npm:^7.5.20":
+  version: 7.5.22
+  resolution: "tar@npm:7.5.22"
+  dependencies:
+    "@isaacs/fs-minipass": "npm:^4.0.0"
+    chownr: "npm:^3.0.0"
+    minipass: "npm:^7.1.2"
+    minizlib: "npm:^3.1.0"
+    yallist: "npm:^5.0.0"
+  checksum: 10c0/1311f6be85a8157ac4c9147bae43e13923d2a1aae15e4aa1bd5239e4e03d2cf53cfe103dde7f35832fbb4c938b042856bc8e9a0afd29abd05e2d1608788c4fea
   languageName: node
   linkType: hard
 

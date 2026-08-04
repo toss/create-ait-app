@@ -29,9 +29,6 @@
     ".": "./dist/cli.mjs",
     "./package.json": "./package.json"
   },
-  "publishConfig": {
-    "tag": "next"
-  },
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -44,9 +41,9 @@
   },
   "dependencies": {
     "@inquirer/prompts": "8.5.2",
-    "create-vite": "9.1.1",
+    "create-vite": "9.1.2",
     "cross-spawn": "7.0.6",
-    "skills": "1.5.19"
+    "skills": "1.5.21"
   },
   "devDependencies": {
     "@types/cross-spawn": "6.0.6",

@@ -245,6 +245,9 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
           ).toBe(true);
         }
       }
+      expect(readFileSync(path.join(projectDirectory, ".gitignore"), "utf8")).toContain(
+        "node_modules",
+      );
       if (template === "react-ts" || template === "tds") {
         expect(
           existsSync(path.join(projectDirectory, ".agents", "skills", "apps-in-toss", "SKILL.md")),

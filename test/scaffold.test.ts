@@ -30,6 +30,24 @@ describe("toNpmPackageName", () => {
   });
 });
 
+describe("createBaseProject", () => {
+  it("renames the TDS template _gitignore so the project ships a .gitignore", () => {
+    const directory = path.join(mkdtempSync(path.join(tmpdir(), "create-ait-tds-ignore-")), "app");
+    try {
+      createBaseProject({
+        packageName: "tds-app",
+        targetDirectory: directory,
+        useTds: true,
+      });
+
+      expect(existsSync(path.join(directory, "_gitignore"))).toBe(false);
+      expect(readFileSync(path.join(directory, ".gitignore"), "utf8")).toContain("node_modules");
+    } finally {
+      rmSync(path.dirname(directory), { force: true, recursive: true });
+    }
+  });
+});
+
 describe("finalizeProject", () => {
   it("overlays Apps in Toss while preserving Vite commands", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "create-ait-overlay-"));

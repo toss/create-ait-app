@@ -32,9 +32,32 @@ Node.js 24 이상이 필요해요.
 npx create-ait-app my-app
 ```
 
-순서대로 필요한 선택지를 물어봐요.
+`git init`을 먼저 실행했거나 빈 저장소를 clone했다면 현재 디렉터리에도 만들 수 있어요.
+`.git` 외에 다른 파일이 있으면 기존 파일을 보호하기 위해 생성을 중단해요.
 
-1. 실행한 패키지 매니저를 감지해 사용하고, 감지할 수 없으면 직접 골라요.
+```bash
+npx create-ait-app .
+```
+
+실행한 패키지 매니저를 감지해 프로젝트에도 그대로 사용해요. `npx`로 실행하면 npm,
+`yarn create`는 Yarn, `pnpm create`는 pnpm으로 만들어요. 감지에 성공하면 패키지
+매니저를 따로 묻지 않으므로, 다른 패키지 매니저를 쓰고 싶다면 해당 패키지 매니저로
+실행하거나 `--pm`으로 지정해 주세요.
+
+```bash
+# Yarn으로 만들기
+yarn create ait-app my-app
+
+# pnpm으로 만들기
+pnpm create ait-app my-app
+
+# npx로 실행하되 pnpm 프로젝트로 만들기
+npx create-ait-app my-app --pm pnpm
+```
+
+이어서 순서대로 필요한 선택지를 물어봐요.
+
+1. 패키지 매니저를 감지할 수 없을 때만 직접 골라요.
 2. Vite 프리셋을 골라요.
 3. 지원되는 프로젝트에서는 IAP·IAA 예제 코드를 추가할 수 있어요.
 4. Agent Skills를 추가할 수 있어요. 대상 에이전트는 공식 Skills CLI가 자동으로 감지해요.
