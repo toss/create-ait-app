@@ -14,6 +14,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
+  APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL,
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   isPrereleaseWebFrameworkChannel,
 } from "../src/apps-in-toss/version-policy.js";
@@ -80,6 +81,8 @@ describe("npm install compatibility", () => {
       configureNpmInstallCompatibility(directory, "npm");
       expect(existsSync(path.join(directory, ".npmrc"))).toBe(false);
 
+      // 현재 릴리즈 채널이 실제로 심는 버전 + TDS 조합이에요. latest 채널이면
+      // 정확 버전이라 프리릴리즈가 아니고, beta/rc 채널이면 프리릴리즈예요.
       writeFileSync(
         path.join(directory, "package.json"),
         JSON.stringify({
@@ -90,7 +93,7 @@ describe("npm install compatibility", () => {
         }),
       );
       expect(requiresLegacyNpmPeerDeps(directory)).toBe(
-        isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_VERSION),
+        isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL),
       );
 
       writeFileSync(

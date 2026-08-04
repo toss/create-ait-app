@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
-  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+  APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL,
   isPrereleaseWebFrameworkChannel,
 } from "../apps-in-toss/version-policy.js";
 import { readPackageJson } from "../project/package-json.js";
@@ -52,8 +52,8 @@ export function requiresLegacyNpmPeerDeps(targetDirectory: string): boolean {
   const webFrameworkVersion = packageJson.dependencies?.[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME];
   const usesTds = packageJson.dependencies?.["@toss/tds-mobile-ait"] != null;
   const usesPrereleaseWebFramework =
-    (webFrameworkVersion === APPS_IN_TOSS_WEB_FRAMEWORK_VERSION &&
-      isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_VERSION)) ||
+    (webFrameworkVersion === APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL &&
+      isPrereleaseWebFrameworkChannel(APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL)) ||
     /-\w/.test(webFrameworkVersion ?? "");
 
   // create-vite 9.1.1 pairs Qwik 1.x (peer: Vite <8) with Vite 8.

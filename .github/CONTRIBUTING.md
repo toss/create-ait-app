@@ -68,7 +68,7 @@ AIT_E2E_TEMPLATES=all yarn test:e2e
 ### 생성 결과와 CLI 동작
 
 - 생성한 프로젝트의 `build`는 Vite 빌드 뒤 `ait build`를 실행하고 `deploy`는 `ait deploy`를 실행해요.
-- 생성 프로젝트의 `@apps-in-toss/web-framework` 버전은 `src/apps-in-toss/version-policy.ts`의 `APPS_IN_TOSS_WEB_FRAMEWORK_VERSION`만 SSoT로 사용해요. `beta`와 `rc`, `latest` 사이에서 전환할 때는 이 값 하나만 바꿔요.
+- 생성 프로젝트의 `@apps-in-toss/web-framework` 릴리즈 채널 전환은 `src/apps-in-toss/version-policy.ts`의 `APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL`(`latest`/`beta`/`rc`)만 바꿔요. `beta`와 `rc`는 dist-tag를 그대로 따르지만, `latest`가 실제로 주입하는 정확 버전은 `.github/version-pins/package.json`의 `@apps-in-toss/web-framework` 핀이 단일 소스예요. 이 디렉터리는 락파일이 없어서 dependabot이 매니페스트만 갱신하는 범프 PR을 만들고, 루트 `yarn.lock`은 건드리지 않아요.
 - `--inline`은 프로젝트 경로와 `--pm`이 있고 `--template` 또는 `--tds` 중 하나가 있을 때만 실행해요. 필수값이 빠졌을 때 대화형 프롬프트로 넘어가지 말고 즉시 오류를 내야 해요.
 
 ## create-vite 업데이트하기

@@ -13,3 +13,11 @@ updates:
       exclude:
         - create-vite
     open-pull-requests-limit: 1
+  - package-ecosystem: npm
+    directory: /.github/version-pins
+    schedule:
+      interval: daily
+      timezone: Asia/Seoul
+    cooldown:
+      default-days: 2
+    open-pull-requests-limit: 1
