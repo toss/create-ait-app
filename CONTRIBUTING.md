@@ -75,9 +75,7 @@ SSG+hydration은 모두 대상이에요.
   고정 버전은 `dependabot.yml`이 범프 PR로 관리해요. 다만 이 값은 빌드 타임에
   create-ait-app 번들로 그대로 인라인되므로, 범프 PR을 머지하는 것만으로는 사용자에게
   반영되지 않고 create-ait-app을 새 버전으로 릴리스해야 반영돼요.
-- `templates/projects/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요. 이 템플릿의
-  `@toss/tds-*` 의존성은 여전히 dist-tag `latest`로 유동적이고, CI의 스캐폴딩 e2e
-  매트릭스에 포함된 `tds` 케이스가 매 PR·push마다 이 조합을 검증해요.
+- `templates/projects/react-ts-tds/`는 React 18이 필요한 TDS 전용 예외예요.
 - 생성 결과에 복사하는 파일 원본은 `templates/`에서 관리해요. 완성형 프로젝트 뼈대는
   `templates/projects/`, 선택형 예제 조각은 `templates/samples/`에 두고 지원되는
   React/Vanilla 계열에만 적용해요.

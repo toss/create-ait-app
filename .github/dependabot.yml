@@ -12,7 +12,7 @@ updates:
       - dependency-name: create-vite
       - dependency-name: skills
     cooldown:
-      default-days: 3
+      default-days: 2
       exclude:
         - create-vite
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
