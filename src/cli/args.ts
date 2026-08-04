@@ -9,7 +9,6 @@ export interface CliArgs {
   listTemplates: boolean;
   pm?: PackageManager | string;
   sample: string[];
-  skills: boolean;
   skipInstall: boolean;
   tds: boolean;
   template?: string;
@@ -20,7 +19,6 @@ const BOOLEAN_FLAGS = new Set([
   "--help",
   "--inline",
   "--list-templates",
-  "--skills",
   "--skip-install",
   "--tds",
 ]);
@@ -32,7 +30,6 @@ export function parseArgs(argv: string[]): CliArgs {
     inline: false,
     listTemplates: false,
     sample: [],
-    skills: false,
     skipInstall: false,
     tds: false,
   };
@@ -119,7 +116,6 @@ export function printHelp(): void {
   --pm <name>        패키지 매니저를 골라요 (npm, yarn, pnpm)
   --template <name>  create-vite 프리셋을 골라요
   --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요 (대화형으로 묻지 않아요)
-  --skills           최신 공식 문서를 조회하는 Agent Skills를 추가해요
   --sample <name>    예제 코드를 추가해요 (iap, iaa / 복수: iap,iaa)
   --skip-install     의존성 설치를 생략해요
   --help             도움말을 보여 줘요
@@ -139,15 +135,12 @@ export function printHelp(): void {
   선택 기능:
     --sample은 React, Vanilla, TDS 프로젝트에서만 사용할 수 있어요.
     --sample을 생략하면 예제를 추가하지 않아요.
-    --skills를 지정하면 공식 Skills CLI가 에이전트를 자동 감지해요.
-    일반 프로젝트에는 apps-in-toss, TDS에는 apps-in-toss와 tds-mobile을 설치해요.
-    --skills를 생략하면 Agent Skills를 추가하지 않아요.
     --skip-install을 생략하면 의존성을 설치해요.
     dev 서버는 자동으로 시작하지 않아요. 생성이 끝난 뒤 안내된 명령으로 직접 시작해요.
 
   예시:
     create-ait-app my-app --inline --pm npm --template react-ts
-    create-ait-app my-app --inline --pm pnpm --tds --sample iap,iaa --skills
+    create-ait-app my-app --inline --pm pnpm --tds --sample iap,iaa
 
   add-sample을 비대화형으로 실행할 때는 --inline --sample <iap|iaa>를 지정해요.
 

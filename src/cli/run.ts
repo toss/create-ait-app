@@ -1,4 +1,4 @@
-import { checkbox, confirm, input, select } from "@inquirer/prompts";
+import { checkbox, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import {
@@ -11,7 +11,6 @@ import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-pro
 import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
 import { installProjectDependencies } from "../scaffold/install-project-dependencies.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
-import { installProjectSkills } from "../skills/install-skills.js";
 import { getSupportedViteTemplates, VITE_TEMPLATE_ALIASES } from "../vite/create-vite.js";
 import { runAddSample } from "./add-sample.js";
 import {
@@ -52,15 +51,6 @@ async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
   return select({
     choices: PACKAGE_MANAGERS.map((value) => ({ name: value, value })),
     message: "사용할 패키지 매니저를 골라 주세요:",
-  });
-}
-
-async function chooseSkills(args: CliArgs): Promise<boolean> {
-  if (args.skills) return true;
-  if (args.inline) return false;
-  return confirm({
-    default: false,
-    message: "Agent Skills를 추가할까요?",
   });
 }
 
@@ -160,7 +150,6 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     });
 
     const sampleIds = await chooseSamples(args, baseProject.framework, useTds);
-    const installSkills = await chooseSkills(args);
 
     applyProjectSamples({
       baseProject,
@@ -173,10 +162,6 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
       skipInstall: args.skipInstall,
       targetDirectory,
     });
-
-    if (installSkills) {
-      installProjectSkills({ targetDirectory, useTds });
-    }
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;
     console.log(`

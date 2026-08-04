@@ -192,9 +192,6 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       } else {
         cliArguments.push("--template", template);
       }
-      if (template === "react-ts" || template === "tds") {
-        cliArguments.push("--skills");
-      }
       if (sampleIds[0]) {
         cliArguments.push("--sample", sampleIds[0]);
       }
@@ -240,14 +237,6 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       expect(readFileSync(path.join(projectDirectory, ".gitignore"), "utf8")).toContain(
         "node_modules",
       );
-      if (template === "react-ts" || template === "tds") {
-        expect(
-          existsSync(path.join(projectDirectory, ".agents", "skills", "apps-in-toss", "SKILL.md")),
-        ).toBe(true);
-        expect(
-          existsSync(path.join(projectDirectory, ".agents", "skills", "tds-mobile", "SKILL.md")),
-        ).toBe(template === "tds");
-      }
       const aitArtifactsBeforeBuild = new Set(findAitArtifacts(projectDirectory));
       run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
       expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);

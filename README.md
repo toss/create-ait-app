@@ -11,10 +11,10 @@ Node.js 24 이상이 필요해요.
 비대화형으로 완료해요.
 
 > `npx --yes create-ait-app --help`를 먼저 실행해 주세요. 도움말을 기준으로 프로젝트
-> 경로, 패키지 매니저, 프로젝트 유형과 프리셋, 예제 코드, Agent Skills 설치 여부를
-> 선택지와 결과가 보이도록 저에게 물어봐 주세요. 제 답을 받으면 프로젝트 경로,
+> 경로, 패키지 매니저, 프로젝트 유형과 프리셋, 예제 코드를 선택지와 결과가 보이도록
+> 저에게 물어봐 주세요. 제 답을 받으면 프로젝트 경로,
 > `--inline`, `--pm`, 그리고 `--template` 또는 `--tds`를 반드시 포함하고, 선택한
-> `--sample`과 `--skills`를 추가해 전체 명령을 비대화형으로 끝까지 실행해 주세요.
+> `--sample`을 추가해 전체 명령을 비대화형으로 끝까지 실행해 주세요.
 
 에이전트는 예를 들어 다음 내용을 물어봐요.
 
@@ -24,7 +24,6 @@ Node.js 24 이상이 필요해요.
 3. 사용자가 TDS를 원할 때만 도움말의 권장사항을 안내하고 TDS 사용 여부를 확인해요.
 4. npm, Yarn, pnpm 중 사용할 패키지 매니저를 물어봐요.
 5. 지원되는 프로젝트라면 IAP·IAA 예제를 추가할지 물어봐요.
-6. Agent Skills를 설치할지 물어봐요.
 
 ## 1. 프로젝트 만들기
 
@@ -60,7 +59,6 @@ npx create-ait-app my-app --pm pnpm
 1. 패키지 매니저를 감지할 수 없을 때만 직접 골라요.
 2. Vite 프리셋을 골라요.
 3. 지원되는 프로젝트에서는 IAP·IAA 예제 코드를 추가할 수 있어요.
-4. Agent Skills를 추가할 수 있어요. 대상 에이전트는 공식 Skills CLI가 자동으로 감지해요.
 
 선택이 끝나면 Apps in Toss 설정과 의존성을 준비해요.
 
@@ -94,13 +92,12 @@ npx create-ait-app my-app --inline --pm npm --template react-ts
 # Vue + TypeScript
 npx create-ait-app my-app --inline --pm yarn --template vue-ts
 
-# React 18 + TDS, IAP·IAA 예제, Agent Skills
+# React 18 + TDS, IAP·IAA 예제
 npx create-ait-app my-app \
   --inline \
   --pm yarn \
   --tds \
-  --sample iap,iaa \
-  --skills
+  --sample iap,iaa
 ```
 
 `--inline`은 필요한 값을 추측하지 않아요. 프로젝트 경로, `--pm`, 그리고
@@ -154,41 +151,6 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 진입 파일이 이미 수정되어 있으면 사용자 코드를 덮어쓰지 않고 중단해요. 예제 셸이
 생성된 뒤에는 관리 주석 바깥의 사용자 코드를 유지하면서 새 예제만 추가해요.
 
-## Agent Skills 사용하기
-
-프로젝트를 만들 때 Skills 추가를 선택하면
-[vercel-labs/skills](https://github.com/vercel-labs/skills) CLI를 실행해요. 대상
-에이전트와 표준 설치 경로는 공식 CLI가 자동으로 감지해요.
-
-- Skills를 선택한 일반 프로젝트에는 `apps-in-toss`를 설치해요.
-- Skills를 선택한 TDS 프로젝트에는 `apps-in-toss`와 `tds-mobile`을 설치해요.
-
-프롬프트 없이 만들 때는 `--skills`를 지정해 주세요.
-
-```bash
-npx create-ait-app my-app --inline --pm npm --template react-ts --skills
-```
-
-이미 만든 프로젝트에 나중에 추가하고 싶다면 프로젝트 루트에서 같은 CLI를 실행하면
-돼요. `--agent`를 스캐폴더가 제한하지 않으므로 공식 CLI가 새 에이전트를 지원하면
-별도 변경 없이 사용할 수 있어요.
-
-```bash
-# Apps in Toss
-npx --yes skills@latest add toss/create-ait-app \
-  --skill apps-in-toss \
-  --copy
-
-# Apps in Toss + TDS
-npx --yes skills@latest add toss/create-ait-app \
-  --skill apps-in-toss \
-  --skill tds-mobile \
-  --copy
-```
-
-설치된 Skills는 작업할 때 최신 Apps in Toss 문서 인덱스를 읽어요. 필요한 개별
-문서를 우선 확인하고, 더 넓은 문맥이 필요할 때는 `llms-full.txt`를 검색해요.
-
 ## CLI 옵션
 
 | 옵션                | 설명                                                                     |
@@ -199,7 +161,6 @@ npx --yes skills@latest add toss/create-ait-app \
 | `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`               |
 | `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요. 대화형으로 묻지 않아요. |
 | `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요.         |
-| `--skills`          | 최신 공식 문서를 조회하는 Agent Skills를 추가해요.                       |
 | `--skip-install`    | 프로젝트 생성 뒤 의존성 설치를 생략해요.                                 |
 | `--help`            | 도움말을 출력해요.                                                       |
 

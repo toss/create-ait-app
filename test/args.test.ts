@@ -13,7 +13,6 @@ describe("parseArgs", () => {
         "yarn",
         "--template",
         "vue-ts",
-        "--skills",
         "--sample",
         "iap,iaa",
         "--skip-install",
@@ -25,7 +24,6 @@ describe("parseArgs", () => {
       listTemplates: false,
       pm: "yarn",
       sample: ["iap", "iaa"],
-      skills: true,
       skipInstall: true,
       tds: false,
       template: "vue-ts",
@@ -72,7 +70,6 @@ describe("parseArgs", () => {
     expect(help).toContain("대화형으로 묻지 않아요");
     expect(help).toContain("일반 Vite 프로젝트가 기본이에요");
     expect(help).toContain("사용자에게 TDS 사용을 비권장한다고 안내해 주세요");
-    expect(help).toContain("--skills를 생략하면 Agent Skills를 추가하지 않아요.");
     log.mockRestore();
   });
 });
