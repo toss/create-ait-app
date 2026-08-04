@@ -9,19 +9,12 @@ export interface CliArgs {
   listTemplates: boolean;
   pm?: PackageManager | string;
   sample: string[];
-  skipInstall: boolean;
   tds: boolean;
   template?: string;
 }
 
 const VALUE_FLAGS = new Set(["--pm", "--sample", "--template"]);
-const BOOLEAN_FLAGS = new Set([
-  "--help",
-  "--inline",
-  "--list-templates",
-  "--skip-install",
-  "--tds",
-]);
+const BOOLEAN_FLAGS = new Set(["--help", "--inline", "--list-templates", "--tds"]);
 
 export function parseArgs(argv: string[]): CliArgs {
   const args: CliArgs = {
@@ -30,7 +23,6 @@ export function parseArgs(argv: string[]): CliArgs {
     inline: false,
     listTemplates: false,
     sample: [],
-    skipInstall: false,
     tds: false,
   };
 
@@ -56,9 +48,7 @@ export function parseArgs(argv: string[]): CliArgs {
 
     if (BOOLEAN_FLAGS.has(token)) {
       const key = token.slice(2).replaceAll("-", "");
-      if (key === "skipinstall") {
-        args.skipInstall = true;
-      } else if (key === "listtemplates") {
+      if (key === "listtemplates") {
         args.listTemplates = true;
       } else {
         (args as unknown as Record<string, boolean>)[key] = true;
@@ -117,7 +107,6 @@ export function printHelp(): void {
   --template <name>  create-vite 프리셋을 골라요
   --tds              React 18 + TypeScript + TDS 전용 템플릿을 사용해요 (대화형으로 묻지 않아요)
   --sample <name>    예제 코드를 추가해요 (iap, iaa / 복수: iap,iaa)
-  --skip-install     의존성 설치를 생략해요
   --help             도움말을 보여 줘요
 
 에이전트·CI 비대화형 실행:
@@ -135,7 +124,6 @@ export function printHelp(): void {
   선택 기능:
     --sample은 React, Vanilla, TDS 프로젝트에서만 사용할 수 있어요.
     --sample을 생략하면 예제를 추가하지 않아요.
-    --skip-install을 생략하면 의존성을 설치해요.
     dev 서버는 자동으로 시작하지 않아요. 생성이 끝난 뒤 안내된 명령으로 직접 시작해요.
 
   예시:

@@ -13,5 +13,6 @@
   },
   "[javascript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
+  },
+  "js/ts.tsdk.path": ".yarn/sdks/typescript/lib"
 }

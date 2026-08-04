@@ -60,7 +60,8 @@ npx create-ait-app my-app --pm pnpm
 2. Vite 프리셋을 골라요.
 3. 지원되는 프로젝트에서는 IAP·IAA 예제 코드를 추가할 수 있어요.
 
-선택이 끝나면 Apps in Toss 설정과 의존성을 준비해요.
+선택이 끝나면 Apps in Toss 설정과 의존성을 준비하고, 설치된 웹 프레임워크의
+`ait init`을 실행해 devtools 설치와 번들러 플러그인 설정까지 마쳐요.
 
 ## 2. 개발 시작하기
 
@@ -161,7 +162,6 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 | `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`               |
 | `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요. 대화형으로 묻지 않아요. |
 | `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요.         |
-| `--skip-install`    | 프로젝트 생성 뒤 의존성 설치를 생략해요.                                 |
 | `--help`            | 도움말을 출력해요.                                                       |
 
 ## 관련 링크

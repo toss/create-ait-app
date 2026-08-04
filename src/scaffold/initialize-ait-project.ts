@@ -10,31 +10,6 @@ import {
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
 } from "../apps-in-toss/version-policy.js";
 import { readPackageJson, writePackageJson } from "../project/package-json.js";
-import type { BaseProject } from "./create-base-project.js";
-import { pickPrimaryColor } from "./primary-color.js";
-
-function writeAppsInTossConfig({
-  appName,
-  targetDirectory,
-}: {
-  appName: string;
-  targetDirectory: string;
-}): void {
-  writeFileSync(
-    path.join(targetDirectory, "apps-in-toss.config.ts"),
-    `import { defineConfig } from "@apps-in-toss/web-framework/config";
-
-export default defineConfig({
-  appName: ${JSON.stringify(appName)},
-  brand: {
-    primaryColor: ${JSON.stringify(pickPrimaryColor())},
-  },
-  permissions: [],
-  webBundleDir: "dist",
-});
-`,
-  );
-}
 
 function updateReadme(
   targetDirectory: string,
@@ -79,13 +54,14 @@ ${deployCommand}
   }
 }
 
+// 스크립트 조작(`&& ait build` 연결, deploy 추가)과 apps-in-toss.config.ts
+// 생성은 설치 뒤에 실행하는 `ait init`이 담당해요. 여기서는 init을 실행할 수
+// 있게 만드는 준비(web-framework 의존성)와 스캐폴딩 고유의 일만 해요.
 export function initializeAitProject({
-  baseProject,
   packageManager,
   packageName,
   targetDirectory,
 }: {
-  baseProject: BaseProject;
   packageManager: PackageManager;
   packageName: string;
   targetDirectory: string;
@@ -96,20 +72,8 @@ export function initializeAitProject({
     ...packageJson.dependencies,
     [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   };
-  packageJson.scripts = {
-    ...packageJson.scripts,
-    build: `${baseProject.inspection.originalBuildCommand} && ait build`,
-    "build:vite": baseProject.inspection.originalBuildCommand,
-    deploy: "ait deploy",
-    dev: baseProject.inspection.originalDevCommand,
-    "dev:vite": baseProject.inspection.originalDevCommand,
-  };
   writePackageJson(targetDirectory, packageJson);
 
-  writeAppsInTossConfig({
-    appName: packageName.split("/").at(-1) ?? packageName,
-    targetDirectory,
-  });
   updateReadme(targetDirectory, packageName, packageManager);
   configureNpmInstallCompatibility(targetDirectory, packageManager);
   configurePnpmInstallCompatibility(targetDirectory, packageManager);

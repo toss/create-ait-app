@@ -6,10 +6,8 @@ import {
   PACKAGE_MANAGERS,
   type PackageManager,
 } from "../package-manager/package-manager.js";
-import { applyProjectSamples } from "../scaffold/apply-project-samples.js";
 import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-project.js";
-import { initializeAitProject } from "../scaffold/initialize-ait-project.js";
-import { installProjectDependencies } from "../scaffold/install-project-dependencies.js";
+import { finalizeProject } from "../scaffold/finalize-project.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
 import { getSupportedViteTemplates, VITE_TEMPLATE_ALIASES } from "../vite/create-vite.js";
 import { runAddSample } from "./add-sample.js";
@@ -142,25 +140,15 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
       useTds,
     });
 
-    initializeAitProject({
+    const sampleIds = await chooseSamples(args, baseProject.framework, useTds);
+
+    finalizeProject({
       baseProject,
       packageManager,
       packageName,
-      targetDirectory,
-    });
-
-    const sampleIds = await chooseSamples(args, baseProject.framework, useTds);
-
-    applyProjectSamples({
-      baseProject,
       sampleIds,
       targetDirectory,
       useTds,
-    });
-    installProjectDependencies({
-      packageManager,
-      skipInstall: args.skipInstall,
-      targetDirectory,
     });
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;

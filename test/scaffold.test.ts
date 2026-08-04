@@ -8,12 +8,9 @@ import {
   isPrereleaseWebFrameworkChannel,
 } from "../src/apps-in-toss/version-policy.js";
 import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
-import {
-  createBaseProject,
-  toNpmPackageName,
-  type BaseProject,
-} from "../src/scaffold/create-base-project.js";
-import { finalizeProject } from "../src/scaffold/finalize-project.js";
+import { createBaseProject, toNpmPackageName } from "../src/scaffold/create-base-project.js";
+import { applyProjectSamples } from "../src/scaffold/apply-project-samples.js";
+import { initializeAitProject } from "../src/scaffold/initialize-ait-project.js";
 
 describe("Apps in Toss web framework version policy", () => {
   it("supports beta, rc, and latest release channels", () => {
@@ -48,7 +45,7 @@ describe("createBaseProject", () => {
   });
 });
 
-describe("finalizeProject", () => {
+describe("initializeAitProject", () => {
   it("overlays Apps in Toss while preserving Vite commands", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "create-ait-overlay-"));
     mkdirSync(path.join(directory, "src"));
@@ -64,43 +61,23 @@ describe("finalizeProject", () => {
       }),
     );
 
-    const baseProject: BaseProject = {
-      framework: "vanilla",
-      inspection: {
-        framework: "vanilla",
-        isTypeScript: false,
-        originalBuildCommand: "vite build",
-        originalDevCommand: "vite --host",
-        packageJson: {},
-      },
-      source: "create-vite",
-      template: "vanilla",
-    };
-
-    finalizeProject({
-      baseProject,
+    initializeAitProject({
       packageManager: "npm",
       packageName: "my-app",
-      sampleIds: [],
-      skipInstall: true,
       targetDirectory: directory,
-      useTds: false,
     });
 
     const packageJson = JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8"));
-    expect(packageJson.scripts).toMatchObject({
-      build: "vite build && ait build",
-      "build:vite": "vite build",
+    // 스크립트는 건드리지 않아요. `&& ait build` 연결, deploy 스크립트,
+    // apps-in-toss.config.ts 생성은 설치 뒤 실행되는 ait init이 담당해요.
+    expect(packageJson.scripts).toEqual({
+      build: "vite build",
       dev: "vite --host",
-      "dev:vite": "vite --host",
     });
     expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
       APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
     );
     expect(packageJson.createAitApp).toBeUndefined();
-    expect(readFileSync(path.join(directory, "apps-in-toss.config.ts"), "utf8")).toContain(
-      'webBundleDir: "dist"',
-    );
     expect(existsSync(path.join(directory, "README.md"))).toBe(true);
   });
 
@@ -113,12 +90,14 @@ describe("finalizeProject", () => {
         useTds: true,
       });
 
-      finalizeProject({
-        baseProject,
+      initializeAitProject({
         packageManager: "npm",
         packageName: "tds-app",
+        targetDirectory: directory,
+      });
+      applyProjectSamples({
+        baseProject,
         sampleIds: [],
-        skipInstall: true,
         targetDirectory: directory,
         useTds: true,
       });
@@ -154,12 +133,14 @@ describe("finalizeProject", () => {
         useTds: true,
       });
 
-      finalizeProject({
-        baseProject,
+      initializeAitProject({
         packageManager: "npm",
         packageName: "tds-app",
+        targetDirectory: directory,
+      });
+      applyProjectSamples({
+        baseProject,
         sampleIds: [],
-        skipInstall: true,
         targetDirectory: directory,
         useTds: true,
       });

@@ -15,7 +15,6 @@ describe("parseArgs", () => {
         "vue-ts",
         "--sample",
         "iap,iaa",
-        "--skip-install",
       ]),
     ).toEqual({
       _: ["my-app"],
@@ -24,7 +23,6 @@ describe("parseArgs", () => {
       listTemplates: false,
       pm: "yarn",
       sample: ["iap", "iaa"],
-      skipInstall: true,
       tds: false,
       template: "vue-ts",
     });
@@ -32,6 +30,8 @@ describe("parseArgs", () => {
 
   it("rejects unknown options", () => {
     expect(() => parseArgs(["--wat"])).toThrow("알 수 없는 옵션");
+    // 의존성 설치와 ait init은 항상 실행해요. --skip-install은 지원하지 않아요.
+    expect(() => parseArgs(["--skip-install"])).toThrow("알 수 없는 옵션");
   });
 
   it("supports machine-readable template discovery", () => {
