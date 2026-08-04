@@ -13,6 +13,8 @@
     "typescript",
     "vite"
   ],
+  "homepage": "https://github.com/toss/create-ait-app#readme",
+  "bugs": "https://github.com/toss/create-ait-app/issues",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -1,0 +1,59 @@
+name: 버그 리포트
+description: create-ait-app이 기대와 다르게 동작할 때 알려주세요
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        재현 명령과 실행 환경이 있어야 원인을 좁힐 수 있어요. 아래 항목을 채워 주세요.
+
+  - type: input
+    id: command
+    attributes:
+      label: 재현 명령
+      description: 문제가 발생한 명령을 그대로 붙여넣어 주세요.
+      placeholder: npx create-ait-app my-app --inline --pm npm --template react-ts
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대한 동작
+      description: 어떻게 동작할 거라고 생각했는지 알려주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 동작
+      description: 실제로 무슨 일이 일어났는지 알려주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 오류 메시지
+      description: 터미널 출력을 그대로 붙여넣어 주세요. 자동으로 코드 블록이 되니 백틱은 필요 없어요.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: 실행 환경
+      description: 운영체제, Node.js 버전, 사용한 패키지 매니저와 버전을 적어 주세요.
+      placeholder: macOS 15.3 / Node.js 24.4.0 / npm 11.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: create-ait-app 버전
+      placeholder: "0.2.3"
+    validations:
+      required: true
