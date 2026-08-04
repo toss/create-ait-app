@@ -54,7 +54,10 @@ export function runAitInit({
       // 패키지 매니저를 감지해요. yarn 스크립트 안에서 실행되는 경우처럼 바깥
       // 환경의 값이 새어들지 않도록 선택된 패키지 매니저를 명시해요.
       env: { npm_config_user_agent: `${packageManager}/create-ait-app` },
-      unsetEnv: ["NODE_OPTIONS"],
+      // `npm exec --package=./create-ait-app.tgz` 같은 방식으로 실행하면
+      // npm_config_package가 자식 npm exec에도 전달돼요. 생성된 프로젝트에서
+      // 상대경로 tarball을 다시 찾지 않도록 바깥 exec 설정을 제거해요.
+      unsetEnv: ["NODE_OPTIONS", "npm_config_package"],
     });
     return true;
   } catch (error) {

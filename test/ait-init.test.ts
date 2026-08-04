@@ -1,9 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   aitInitCommand,
   formatAitInitCommand,
+  runAitInit,
   toAitAppName,
 } from "../src/apps-in-toss/ait-init.js";
+import { runCommand } from "../src/system/command.js";
+
+vi.mock("../src/system/command.js", () => ({
+  runCommand: vi.fn(),
+}));
 
 describe("toAitAppName", () => {
   it("keeps kebab-case names as-is", () => {
@@ -42,5 +48,25 @@ describe("formatAitInitCommand", () => {
     expect(formatAitInitCommand("pnpm", "my-app")).toBe(
       "pnpm exec ait init --app-name my-app --skip-input",
     );
+  });
+});
+
+describe("runAitInit", () => {
+  it("does not leak an outer npm exec package into the nested npm exec", () => {
+    expect(
+      runAitInit({
+        appName: "my-app",
+        packageManager: "npm",
+        targetDirectory: "/tmp/my-app",
+      }),
+    ).toBe(true);
+
+    expect(runCommand).toHaveBeenCalledWith({
+      args: ["exec", "--", "ait", "init", "--app-name", "my-app", "--skip-input"],
+      command: "npm",
+      cwd: "/tmp/my-app",
+      env: { npm_config_user_agent: "npm/create-ait-app" },
+      unsetEnv: ["NODE_OPTIONS", "npm_config_package"],
+    });
   });
 });
