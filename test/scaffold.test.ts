@@ -79,9 +79,7 @@ describe("finalizeProject", () => {
     expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
       APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
     );
-    expect(packageJson.createAitApp.createViteVersion).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(packageJson.createAitApp.sampleEntryHash).toMatch(/^[a-f0-9]{64}$/);
-    expect(packageJson.createAitApp.sampleShellManaged).toBe(false);
+    expect(packageJson.createAitApp).toBeUndefined();
     expect(readFileSync(path.join(directory, "apps-in-toss.config.ts"), "utf8")).toContain(
       'webBundleDir: "dist"',
     );
@@ -120,10 +118,10 @@ describe("finalizeProject", () => {
       expect(readFileSync(appPath, "utf8")).toContain("사용자가 수정한 앱");
       expect(readFileSync(appPath, "utf8")).toContain('import { useState } from "react";');
       expect(readFileSync(appPath, "utf8")).not.toContain("{{SAMPLE_");
+      expect(readFileSync(appPath, "utf8")).toContain("create-ait-app:sample-imports:start");
       expect(
-        JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp
-          .sampleShellManaged,
-      ).toBe(true);
+        JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp,
+      ).toBeUndefined();
     } finally {
       rmSync(path.dirname(directory), { force: true, recursive: true });
     }

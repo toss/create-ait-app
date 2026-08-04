@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
@@ -68,24 +67,6 @@ export function getBundledViteSampleEntryContent({
     relativePath,
   );
   return existsSync(entryPath) ? readFileSync(entryPath, "utf8") : null;
-}
-
-export function getViteSampleEntryHash({
-  framework,
-  isTypeScript,
-  targetDirectory,
-}: {
-  framework: FrameworkKind;
-  isTypeScript: boolean;
-  targetDirectory: string;
-}): string | null {
-  const relativePath = getSampleEntryRelativePath(framework, isTypeScript);
-  if (!relativePath) return null;
-
-  const targetPath = path.join(targetDirectory, relativePath);
-  if (!existsSync(targetPath)) return null;
-
-  return createHash("sha256").update(readFileSync(targetPath)).digest("hex");
 }
 
 export function isUnmodifiedBundledViteSampleEntry({

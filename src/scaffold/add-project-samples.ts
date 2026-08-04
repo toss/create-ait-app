@@ -1,7 +1,8 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { isTypeScriptProject } from "../project/inspect-project.js";
-import { readPackageJson, writePackageJson } from "../project/package-json.js";
+import { APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME } from "../apps-in-toss/version-policy.js";
+import { detectFramework, isTypeScriptProject } from "../project/inspect-project.js";
+import { readPackageJson, writePackageJson, type PackageJson } from "../project/package-json.js";
 import {
   applyTdsSamples,
   applyViteSamples,
@@ -10,15 +11,14 @@ import {
   type SampleId,
 } from "../samples/apply-samples.js";
 import type { FrameworkKind } from "../project/framework.js";
-import { getViteSampleEntryHash, isUnmodifiedBundledViteSampleEntry } from "../vite/create-vite.js";
+import { SAMPLE_IMPORT_MARKERS, SAMPLE_ROUTE_MARKERS } from "../samples/managed-sample-shell.js";
+import { isUnmodifiedBundledViteSampleEntry } from "../vite/create-vite.js";
 
 export interface SampleProject {
   framework: FrameworkKind;
   installedSampleIds: SampleId[];
   isTypeScript: boolean;
-  sampleEntryHash: string | null;
   sampleShellManaged: boolean;
-  template: string | null;
   useTds: boolean;
 }
 
@@ -26,6 +26,71 @@ export interface AddProjectSamplesResult {
   addedSampleIds: SampleId[];
   installedSampleIds: SampleId[];
   skippedSampleIds: SampleId[];
+}
+
+const TDS_PACKAGE_NAMES = ["@toss/tds-mobile-ait", "@toss/tds-mobile"];
+
+const SAMPLE_ENTRY_CANDIDATES: Partial<
+  Record<FrameworkKind, { isTypeScript: boolean; relativePath: string }[]>
+> = {
+  react: [
+    { isTypeScript: true, relativePath: path.join("src", "App.tsx") },
+    { isTypeScript: false, relativePath: path.join("src", "App.jsx") },
+  ],
+  vanilla: [
+    { isTypeScript: true, relativePath: path.join("src", "main.ts") },
+    { isTypeScript: false, relativePath: path.join("src", "main.js") },
+  ],
+};
+
+function allDependencies(packageJson: PackageJson): Record<string, string> {
+  return {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  };
+}
+
+function isAitProject(targetDirectory: string, packageJson: PackageJson): boolean {
+  return (
+    Boolean(allDependencies(packageJson)[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]) ||
+    existsSync(path.join(targetDirectory, "apps-in-toss.config.ts"))
+  );
+}
+
+function hasManagedSampleShell(entryPath: string): boolean {
+  const content = readFileSync(entryPath, "utf8");
+  return [SAMPLE_IMPORT_MARKERS.start, SAMPLE_ROUTE_MARKERS.start].some((marker) =>
+    content.includes(marker),
+  );
+}
+
+function findSampleEntry(
+  targetDirectory: string,
+  framework: FrameworkKind,
+): { entryPath: string; isTypeScript: boolean; sampleShellManaged: boolean } | null {
+  const existing = (SAMPLE_ENTRY_CANDIDATES[framework] ?? [])
+    .map((candidate) => ({
+      entryPath: path.join(targetDirectory, candidate.relativePath),
+      isTypeScript: candidate.isTypeScript,
+    }))
+    .filter((candidate) => existsSync(candidate.entryPath))
+    .map((candidate) => ({
+      ...candidate,
+      sampleShellManaged: hasManagedSampleShell(candidate.entryPath),
+    }));
+
+  // TS/JS 엔트리가 둘 다 있으면 예제 관리 마커가 있는 쪽이 실제 엔트리다.
+  return existing.find((candidate) => candidate.sampleShellManaged) ?? existing[0] ?? null;
+}
+
+function removeLegacyCreateAitAppMetadata(targetDirectory: string): void {
+  const packageJson = readPackageJson(targetDirectory);
+  if (!("createAitApp" in packageJson)) {
+    return;
+  }
+
+  const { createAitApp: _legacyMetadata, ...rest } = packageJson;
+  writePackageJson(targetDirectory, rest);
 }
 
 function detectInstalledSampleIds(targetDirectory: string): SampleId[] {
@@ -47,23 +112,23 @@ export function inspectSampleProject(targetDirectory: string): SampleProject {
   }
 
   const packageJson = readPackageJson(targetDirectory);
-  const metadata = packageJson.createAitApp;
-  if (!metadata) {
-    throw new Error("create-ait-app으로 만든 프로젝트에서만 예제 코드를 추가할 수 있어요.");
+  if (!isAitProject(targetDirectory, packageJson)) {
+    throw new Error("Apps in Toss 프로젝트에서만 예제 코드를 추가할 수 있어요.");
   }
 
-  const useTds = metadata.source === "tds-template";
-  if (!supportsSamples(metadata.framework, useTds)) {
+  const dependencies = allDependencies(packageJson);
+  const useTds = TDS_PACKAGE_NAMES.some((packageName) => Boolean(dependencies[packageName]));
+  const framework = detectFramework(packageJson);
+  if (!supportsSamples(framework, useTds)) {
     throw new Error("React, Vanilla, TDS 프로젝트에만 예제 코드를 추가할 수 있어요.");
   }
 
+  const entry = findSampleEntry(targetDirectory, framework);
   return {
-    framework: metadata.framework,
-    installedSampleIds: metadata.samples ?? detectInstalledSampleIds(targetDirectory),
-    isTypeScript: metadata.isTypeScript ?? isTypeScriptProject(targetDirectory),
-    sampleEntryHash: metadata.sampleEntryHash ?? null,
-    sampleShellManaged: metadata.sampleShellManaged === true,
-    template: metadata.template,
+    framework,
+    installedSampleIds: detectInstalledSampleIds(targetDirectory),
+    isTypeScript: entry?.isTypeScript ?? isTypeScriptProject(targetDirectory),
+    sampleShellManaged: entry?.sampleShellManaged ?? false,
     useTds,
   };
 }
@@ -85,6 +150,7 @@ export function addProjectSamples(
   );
 
   if (addedSampleIds.length === 0) {
+    removeLegacyCreateAitAppMetadata(targetDirectory);
     return {
       addedSampleIds,
       installedSampleIds,
@@ -92,22 +158,24 @@ export function addProjectSamples(
     };
   }
 
+  // create-ait-app이 만든 TDS 프로젝트는 항상 관리 마커가 있는 App.tsx로 생성된다.
+  // 마커가 없다는 건 직접 구성한 프로젝트라는 뜻이므로, App.tsx를 템플릿으로
+  // 덮어쓰지 않도록 거절한다.
+  if (project.useTds && !project.sampleShellManaged) {
+    throw new Error(
+      "App 파일에 예제 코드 관리 구간이 없어 안전하게 추가할 수 없어요. create-ait-app으로 만든 TDS 프로젝트에서만 예제 코드를 추가할 수 있어요.",
+    );
+  }
+
   if (
     !project.useTds &&
     !project.sampleShellManaged &&
-    (project.sampleEntryHash
-      ? project.sampleEntryHash !==
-        getViteSampleEntryHash({
-          framework: project.framework,
-          isTypeScript: project.isTypeScript,
-          targetDirectory,
-        })
-      : !isUnmodifiedBundledViteSampleEntry({
-          framework: project.framework,
-          isTypeScript: project.isTypeScript,
-          targetDirectory,
-          template: project.template,
-        }))
+    !isUnmodifiedBundledViteSampleEntry({
+      framework: project.framework,
+      isTypeScript: project.isTypeScript,
+      targetDirectory,
+      template: null,
+    })
   ) {
     throw new Error(
       "App/main 파일이 Vite 초기 상태에서 수정되어 첫 예제 코드를 안전하게 추가할 수 없어요.",
@@ -128,13 +196,7 @@ export function addProjectSamples(
     });
   }
 
-  const packageJson = readPackageJson(targetDirectory);
-  if (packageJson.createAitApp) {
-    packageJson.createAitApp.sampleShellManaged = true;
-    packageJson.createAitApp.samples = installedSampleIds;
-    writePackageJson(targetDirectory, packageJson);
-  }
-
+  removeLegacyCreateAitAppMetadata(targetDirectory);
   return {
     addedSampleIds,
     installedSampleIds,

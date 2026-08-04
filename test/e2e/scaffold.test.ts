@@ -234,8 +234,16 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         ),
       );
       expect(installedWebFrameworkPackageJson.version).toBe(publishedWebFrameworkVersion);
+      expect(packageJson.createAitApp).toBeUndefined();
       if (sampleIds.length > 0) {
-        expect(packageJson.createAitApp.samples).toEqual(sampleIds);
+        const pageFiles = readdirSync(path.join(projectDirectory, "src", "pages"));
+        for (const sampleId of sampleIds) {
+          const pageName = sampleId === "iap" ? "InAppPurchasePage" : "InAppAdsPage";
+          expect(
+            pageFiles.some((fileName) => fileName.startsWith(`${pageName}.`)),
+            `${pageName} 예제 페이지가 없어요.`,
+          ).toBe(true);
+        }
       }
       if (template === "react-ts" || template === "tds") {
         expect(

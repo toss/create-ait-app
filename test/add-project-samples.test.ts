@@ -3,10 +3,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { addProjectSamples, inspectSampleProject } from "../src/scaffold/add-project-samples.js";
-import {
-  getBundledViteSampleEntryContent,
-  getViteSampleEntryHash,
-} from "../src/vite/create-vite.js";
+import { APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME } from "../src/apps-in-toss/version-policy.js";
+import { getBundledViteSampleEntryContent } from "../src/vite/create-vite.js";
 
 const temporaryDirectories: string[] = [];
 
@@ -25,11 +23,6 @@ function createVanillaProject(isTypeScript = true): string {
     throw new Error(`create-vite ${template} fixture를 찾을 수 없어요.`);
   }
   writeFileSync(path.join(directory, "src", mainFile), initialMain);
-  const sampleEntryHash = getViteSampleEntryHash({
-    framework: "vanilla",
-    isTypeScript,
-    targetDirectory: directory,
-  });
   writeFileSync(path.join(directory, "src", "style.css"), "");
   if (isTypeScript) {
     writeFileSync(path.join(directory, "tsconfig.json"), "{}");
@@ -37,19 +30,8 @@ function createVanillaProject(isTypeScript = true): string {
   writeFileSync(
     path.join(directory, "package.json"),
     JSON.stringify({
-      createAitApp: {
-        createViteVersion: "9.1.1",
-        framework: "vanilla",
-        isTypeScript,
-        originalScripts: {
-          build: "tsc && vite build",
-          dev: "vite",
-        },
-        sampleEntryHash,
-        sampleShellManaged: false,
-        samples: [],
-        source: "create-vite",
-        template,
+      dependencies: {
+        [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: "1.0.0",
       },
       devDependencies: {
         vite: "9.1.1",
@@ -106,14 +88,56 @@ describe("addProjectSamples", () => {
       "escapeHtml(rewardedState.lastReward.unitType)",
     );
     expect(inspectSampleProject(directory).installedSampleIds).toEqual(["iap", "iaa"]);
+    expect(
+      JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp,
+    ).toBeUndefined();
   });
 
-  it("rejects projects without create-ait-app metadata", () => {
+  it("rejects projects that are not Apps in Toss projects", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "create-ait-unsupported-"));
     temporaryDirectories.push(directory);
     writeFileSync(path.join(directory, "package.json"), "{}");
 
-    expect(() => addProjectSamples(directory, ["iap"])).toThrow("create-ait-app으로 만든 프로젝트");
+    expect(() => addProjectSamples(directory, ["iap"])).toThrow("Apps in Toss 프로젝트");
+  });
+
+  it("removes the legacy createAitApp metadata written by older CLI versions", () => {
+    const directory = createVanillaProject();
+    const packageJsonPath = path.join(directory, "package.json");
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    packageJson.createAitApp = {
+      framework: "vanilla",
+      sampleShellManaged: false,
+      samples: [],
+      source: "create-vite",
+    };
+    writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+
+    addProjectSamples(directory, ["iap"]);
+
+    expect(JSON.parse(readFileSync(packageJsonPath, "utf8")).createAitApp).toBeUndefined();
+  });
+
+  it("rejects a TDS project whose App file has no managed sample markers", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "create-ait-tds-unmanaged-"));
+    temporaryDirectories.push(directory);
+    mkdirSync(path.join(directory, "src"));
+    writeFileSync(
+      path.join(directory, "src", "App.tsx"),
+      "export default function App() {\n  return <div>직접 만든 앱</div>;\n}\n",
+    );
+    writeFileSync(
+      path.join(directory, "package.json"),
+      JSON.stringify({
+        dependencies: {
+          [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: "1.0.0",
+          "@toss/tds-mobile-ait": "1.0.0",
+          react: "18.0.0",
+        },
+      }),
+    );
+
+    expect(() => addProjectSamples(directory, ["iap"])).toThrow("예제 코드 관리 구간이 없어");
   });
 
   it("refuses to overwrite a sample shell when its management markers are missing", () => {
@@ -149,6 +173,8 @@ describe("addProjectSamples", () => {
     const directory = createVanillaProject(false);
     addProjectSamples(directory, ["iap"]);
     writeFileSync(path.join(directory, "src", "helper.ts"), "export const helper = true;\n");
+    // 마커 없는 main.ts가 생겨도 관리 마커가 있는 main.js를 엔트리로 유지한다.
+    writeFileSync(path.join(directory, "src", "main.ts"), "export {};\n");
 
     expect(inspectSampleProject(directory).isTypeScript).toBe(false);
     expect(() => addProjectSamples(directory, ["iaa"])).not.toThrow();
