@@ -162,6 +162,7 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 | `--template <name>` | Vite 프리셋을 지정해요. 예: `vue-ts`, `svelte`, `solid-ts`               |
 | `--tds`             | React 18 + TypeScript + TDS 프로젝트를 만들어요. 대화형으로 묻지 않아요. |
 | `--sample <name>`   | `iap`, `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요.         |
+| `--version`, `-v`   | 설치된 버전을 출력해요.                                                  |
 | `--help`            | 도움말을 출력해요.                                                       |
 
 ## 관련 링크

@@ -3,11 +3,12 @@ import path from "node:path";
 
 export interface PackageJson {
   [key: string]: unknown;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
   name?: string;
   packageManager?: string;
   scripts?: Record<string, string>;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
+  version?: string;
 }
 
 export function readPackageJson(targetDirectory: string): PackageJson {

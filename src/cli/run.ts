@@ -9,10 +9,12 @@ import {
 import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-project.js";
 import { finalizeProject } from "../scaffold/finalize-project.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
+import { quoteForShell } from "../system/shell-quote.js";
 import { getSupportedViteTemplates, VITE_TEMPLATE_ALIASES } from "../vite/create-vite.js";
 import { runAddSample } from "./add-sample.js";
 import {
   assertNonInteractiveArgs,
+  getPackageVersion,
   parseArgs,
   parseSampleIds,
   printHelp,
@@ -25,7 +27,7 @@ export function hasProjectFiles(targetDirectory: string): boolean {
   return readdirSync(targetDirectory).some((entry) => !IGNORED_TARGET_ENTRIES.has(entry));
 }
 
-function assertChoice<T extends string>(
+export function assertChoice<T extends string>(
   value: string | undefined,
   choices: readonly T[],
   label: string,
@@ -34,7 +36,11 @@ function assertChoice<T extends string>(
     return undefined;
   }
   if (!choices.includes(value as T)) {
-    throw new Error(`${label}: ${value} (${choices.join(", ")} 중 선택)`);
+    const lowerCased = value.toLowerCase();
+    const hint = choices.includes(lowerCased as T)
+      ? ` (혹시 소문자 "${lowerCased}"를 의도하셨나요?)`
+      : "";
+    throw new Error(`${label}: ${value} (${choices.join(", ")} 중 선택)${hint}`);
   }
   return value as T;
 }
@@ -82,6 +88,10 @@ async function chooseSamples(
 
 export async function run(argv: string[] = process.argv.slice(2)): Promise<void> {
   const args = parseArgs(argv);
+  if (args.version) {
+    console.log(getPackageVersion());
+    return;
+  }
   if (args.listTemplates) {
     process.stdout.write(JSON.stringify([...getSupportedViteTemplates(), "tds"]));
     return;
@@ -152,10 +162,11 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     });
 
     const devCommand = packageManager === "npm" ? "npm run dev" : `${packageManager} dev`;
+    const isCurrentDirectory = targetDirectory === process.cwd();
+    const cdLine = isCurrentDirectory ? "" : `\n  cd ${quoteForShell(projectName)}`;
     console.log(`
 ✅ 프로젝트가 생성됐어요.
-
-  cd ${projectName}
+${cdLine}
   ${devCommand}
 `);
   } catch (error) {

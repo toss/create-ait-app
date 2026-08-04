@@ -1,7 +1,13 @@
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { parseAddSampleCommand } from "../src/cli/add-sample.js";
-import { assertNonInteractiveArgs, parseArgs, parseSampleIds, printHelp } from "../src/cli/args.js";
+import {
+  assertNonInteractiveArgs,
+  getPackageVersion,
+  parseArgs,
+  parseSampleIds,
+  printHelp,
+} from "../src/cli/args.js";
 
 describe("parseArgs", () => {
   it("parses typed CLI options", () => {
@@ -25,6 +31,7 @@ describe("parseArgs", () => {
       sample: ["iap", "iaa"],
       tds: false,
       template: "vue-ts",
+      version: false,
     });
   });
 
@@ -32,6 +39,21 @@ describe("parseArgs", () => {
     expect(() => parseArgs(["--wat"])).toThrow("알 수 없는 옵션");
     // 의존성 설치와 ait init은 항상 실행해요. --skip-install은 지원하지 않아요.
     expect(() => parseArgs(["--skip-install"])).toThrow("알 수 없는 옵션");
+  });
+
+  it("rejects single-dash tokens instead of treating them as positional", () => {
+    expect(() => parseArgs(["-wat"])).toThrow("알 수 없는 옵션이에요: -wat");
+    expect(() => parseArgs(["my-app", "-t", "react-ts"])).toThrow("알 수 없는 옵션이에요: -t");
+  });
+
+  it("treats -v as an alias for --version", () => {
+    expect(parseArgs(["-v"]).version).toBe(true);
+    expect(parseArgs(["--version"]).version).toBe(true);
+  });
+
+  it("rejects a value-flag value that starts with a dash", () => {
+    expect(() => parseArgs(["--pm", "--template"])).toThrow("--pm 옵션에 값이 필요해요");
+    expect(() => parseArgs(["--template", "-react-ts"])).toThrow("--template 옵션에 값이 필요해요");
   });
 
   it("supports machine-readable template discovery", () => {
@@ -62,15 +84,21 @@ describe("parseArgs", () => {
     printHelp();
 
     const help = String(log.mock.calls[0]?.[0]);
-    expect(help).toContain("에이전트·CI 비대화형 실행");
-    expect(help).toContain("프로젝트 경로, --inline, --pm");
+    expect(help).toContain("[directory]");
+    expect(help).toContain("비대화형(CI/자동화) 실행 시 필요한 값");
+    expect(help).toContain("directory, --inline, --pm");
     expect(help).toContain("--template 또는 --tds");
     expect(help).toContain("react-ts");
     expect(help).toContain("--tds");
-    expect(help).toContain("대화형으로 묻지 않아요");
-    expect(help).toContain("일반 Vite 프로젝트가 기본이에요");
-    expect(help).toContain("사용자에게 TDS 사용을 비권장한다고 안내해 주세요");
+    expect(help).toContain("대화형으로 다시 묻지");
+    expect(help).toContain("--version, -v");
     log.mockRestore();
+  });
+});
+
+describe("getPackageVersion", () => {
+  it("returns the semver from the package's own package.json", () => {
+    expect(getPackageVersion()).toMatch(/^\d+\.\d+\.\d+/);
   });
 });
 
