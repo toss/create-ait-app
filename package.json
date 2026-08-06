@@ -15,7 +15,7 @@
   ],
   "homepage": "https://github.com/toss/create-ait-app#readme",
   "bugs": "https://github.com/toss/create-ait-app/issues",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/toss/create-ait-app.git"

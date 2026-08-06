@@ -1,7 +1,7 @@
 # create-ait-app
 
 [![npm version](https://img.shields.io/npm/v/create-ait-app.svg)](https://www.npmjs.com/package/create-ait-app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 [![CI](https://github.com/toss/create-ait-app/actions/workflows/ci.yml/badge.svg)](https://github.com/toss/create-ait-app/actions/workflows/ci.yml)
 
 Apps in Toss 웹앱을 시작할 수 있도록 Vite 프로젝트를 만들고 필요한 설정을 추가해 주는 CLI예요.
@@ -159,7 +159,7 @@ npx create-ait-app my-app \
 | `--template <name>` | Vite 프리셋을 지정해요. `vue-ts`나 `svelte`처럼 써요.                          |
 | `--tds`             | React 18과 TypeScript, TDS를 쓰는 프로젝트를 만들어요. 대화형으로 묻지 않아요. |
 | `--sample <name>`   | `iap`와 `iaa` 예제를 추가해요. 쉼표로 여러 개를 지정할 수 있어요.              |
-| `--version`, `-v` | 설치된 버전을 출력해요. |
+| `--version`, `-v`   | 설치된 버전을 출력해요.                                                        |
 | `--help`            | 도움말을 출력해요.                                                             |
 
 ## 관련 링크
