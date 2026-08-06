@@ -1,0 +1,88 @@
+name: 락파일 동기화
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "동기화할 브랜치 (생략하면 워크플로를 실행한 브랜치)"
+        required: false
+        type: string
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    paths:
+      - package.json
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: lockfile-sync-${{ github.event.pull_request.head.ref || inputs.branch || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: yarn.lock 동기화
+    # 포크 PR에는 쓰기 토큰이 없어 푸시할 수 없으므로 같은 저장소 브랜치에서만 실행해요.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TARGET_BRANCH: ${{ github.event.pull_request.head.ref || inputs.branch || github.ref_name }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 락파일 재생성
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: "false"
+        run: yarn install
+
+      - name: 변경 확인
+        id: diff
+        run: |
+          if [ -n "$(git status --porcelain | grep -v "yarn.lock" || true)" ]; then
+            echo "::error::yarn.lock 외의 파일이 변경돼 동기화를 중단해요."
+            git status --porcelain
+            exit 1
+          fi
+          if git diff --quiet -- yarn.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "yarn.lock이 이미 package.json과 동기화돼 있어요."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git --no-pager diff --stat -- yarn.lock
+          fi
+
+      - name: 동기화 결과 재검증
+        if: steps.diff.outputs.changed == 'true'
+        run: yarn install --immutable
+
+      - name: 커밋 및 푸시
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add yarn.lock
+          git commit -m "chore: yarn.lock을 package.json과 동기화합니다"
+          git push origin "HEAD:${TARGET_BRANCH}"
+
+      - name: CI 재실행
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        # GITHUB_TOKEN 푸시는 pull_request/push 워크플로를 트리거하지 않아서 직접 재실행해요.
+        run: gh workflow run ci.yml --ref "${TARGET_BRANCH}"
