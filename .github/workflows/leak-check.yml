@@ -1,0 +1,83 @@
+name: 위험 문자열 검사
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      pattern:
+        description: "테스트용 추가 패턴 (ERE) — secret 패턴에 더해 함께 검사해요"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: 위험 문자열 검사
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # 패턴 자체가 내부 정보라 저장소 secret으로 관리해요. 갱신: gh secret set LEAK_CHECK_PATTERN
+      SECRET_PATTERN: ${{ secrets.LEAK_CHECK_PATTERN }}
+      INPUT_PATTERN: ${{ inputs.pattern }}
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: 검사 가능 여부 확인
+        run: |
+          if [ -z "$SECRET_PATTERN" ] && [ -z "$INPUT_PATTERN" ]; then
+            echo "::notice::LEAK_CHECK_PATTERN secret이 없어 검사를 건너뛰어요 (포크 PR에서는 정상이에요)."
+          fi
+
+      - name: 추적 파일 검사
+        # 일치한 '내용'은 유출 방지를 위해 절대 출력하지 않고 파일 이름만 출력해요.
+        run: |
+          fail=0
+          for pattern in "$SECRET_PATTERN" "$INPUT_PATTERN"; do
+            [ -z "$pattern" ] && continue
+            matches="$(git grep -I -l -E "$pattern" || true)"
+            if [ -n "$matches" ]; then
+              echo "::error::금지된 패턴과 일치하는 파일이 있어요 (일치한 내용은 출력하지 않아요):"
+              echo "$matches"
+              fail=1
+            fi
+          done
+          exit "$fail"
+
+      - name: PR 메타데이터 검사
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          fail=0
+          for pattern in "$SECRET_PATTERN" "$INPUT_PATTERN"; do
+            [ -z "$pattern" ] && continue
+            if printf '%s' "$PR_TITLE" | grep -qE "$pattern"; then
+              echo "::error::PR 제목에서 금지된 패턴이 감지됐어요."
+              fail=1
+            fi
+            if printf '%s' "$PR_BODY" | grep -qE "$pattern"; then
+              echo "::error::PR 본문에서 금지된 패턴이 감지됐어요."
+              fail=1
+            fi
+            if printf '%s' "$PR_BRANCH" | grep -qE "$pattern"; then
+              echo "::error::브랜치 이름에서 금지된 패턴이 감지됐어요."
+              fail=1
+            fi
+            if git log --format=%B "${BASE_SHA}..${HEAD_SHA}" | grep -qE "$pattern"; then
+              echo "::error::커밋 메시지에서 금지된 패턴이 감지됐어요."
+              fail=1
+            fi
+          done
+          exit "$fail"

@@ -70,6 +70,20 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: yarn install --immutable
 
+      - name: 위험 문자열 검사
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          SECRET_PATTERN: ${{ secrets.LEAK_CHECK_PATTERN }}
+        run: |
+          if [ -z "$SECRET_PATTERN" ]; then
+            echo "::notice::LEAK_CHECK_PATTERN secret이 없어 검사를 건너뛰어요."
+            exit 0
+          fi
+          if grep -qE "$SECRET_PATTERN" yarn.lock; then
+            echo "::error::재생성된 yarn.lock에서 금지된 패턴이 감지돼 커밋하지 않아요."
+            exit 1
+          fi
+
       - name: 커밋 및 푸시
         if: steps.diff.outputs.changed == 'true'
         run: |
