@@ -3,9 +3,9 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { resolveWebFrameworkVersion } from "../../src/apps-in-toss/resolve-web-framework-version.js";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
-  APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER,
   APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
 } from "../../src/apps-in-toss/version-policy.js";
 import { getSupportedViteTemplates } from "../../src/vite/create-vite.js";
@@ -20,28 +20,11 @@ const templates =
 const running = new Set<ChildProcess>();
 const temporaryDirectories = new Set<string>();
 
+// scaffold가 실제로 쓰는 것과 같은 해석 함수를 그대로 써서, "설치된 버전"과
+// "package.json에 기록된 caret 범위"가 서로 다른 방식으로 계산되어 우연히
+// 어긋나는 일이 없게 해요(toss/create-ait-app#33).
 function resolvePublishedWebFrameworkVersion(): string {
-  const result = spawnSync(
-    "npm",
-    ["view", APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER, "version", "--json"],
-    {
-      encoding: "utf8",
-      env: generatedProjectEnvironment(),
-    },
-  );
-  if (result.status !== 0) {
-    throw new Error(
-      [result.stdout, result.stderr, `${APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER} 조회에 실패했어요.`]
-        .filter(Boolean)
-        .join("\n"),
-    );
-  }
-
-  const version: unknown = JSON.parse(result.stdout);
-  if (typeof version !== "string") {
-    throw new Error(`${APPS_IN_TOSS_WEB_FRAMEWORK_SPECIFIER} 버전을 확인할 수 없어요.`);
-  }
-  return version;
+  return resolveWebFrameworkVersion(APPS_IN_TOSS_WEB_FRAMEWORK_VERSION);
 }
 
 function findAitArtifacts(projectDirectory: string): string[] {
@@ -216,8 +199,10 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       const packageJson = JSON.parse(
         readFileSync(path.join(projectDirectory, "package.json"), "utf8"),
       );
+      // "latest" dist-tag 리터럴이 아니라, scaffold 시점에 해석한 caret
+      // 범위가 기록돼요(toss/create-ait-app#33).
       expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
-        APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+        `^${publishedWebFrameworkVersion}`,
       );
       const installedWebFrameworkPackageJson = JSON.parse(
         readFileSync(

@@ -5,10 +5,8 @@ import {
   configurePnpmInstallCompatibility,
   type PackageManager,
 } from "../package-manager/package-manager.js";
-import {
-  APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
-  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
-} from "../apps-in-toss/version-policy.js";
+import { resolveWebFrameworkDependencySpecifier } from "../apps-in-toss/resolve-web-framework-version.js";
+import { APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME } from "../apps-in-toss/version-policy.js";
 import { readPackageJson, writePackageJson } from "../project/package-json.js";
 
 function updateReadme(
@@ -70,7 +68,7 @@ export function initializeAitProject({
   packageJson.name = packageName;
   packageJson.dependencies = {
     ...packageJson.dependencies,
-    [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
+    [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: resolveWebFrameworkDependencySpecifier(),
   };
   writePackageJson(targetDirectory, packageJson);
 

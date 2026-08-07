@@ -1,16 +1,23 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
-  APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
   isPrereleaseWebFrameworkChannel,
 } from "../src/apps-in-toss/version-policy.js";
 import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
 import { createBaseProject, toNpmPackageName } from "../src/scaffold/create-base-project.js";
 import { applyProjectSamples } from "../src/scaffold/apply-project-samples.js";
 import { initializeAitProject } from "../src/scaffold/initialize-ait-project.js";
+
+// initializeAitProject가 web-framework 버전을 해석할 때 실제 네트워크(npm
+// view)를 타지 않도록, 안정 버전 목록을 고정으로 돌려줘요. 2.x 하나와 3.x
+// 여럿을 섞어서 "latest" 채널이 dist-tag가 아니라 메이저 일치 스캔으로
+// 해석된다는 걸 함께 검증해요.
+vi.mock("../src/system/command.js", () => ({
+  runCommandCapture: vi.fn(() => JSON.stringify(["2.10.8", "3.0.0-beta.1", "3.0.1", "3.0.2"])),
+}));
 
 describe("Apps in Toss web framework version policy", () => {
   it("supports beta, rc, and latest release channels", () => {
@@ -74,9 +81,9 @@ describe("initializeAitProject", () => {
       build: "vite build",
       dev: "vite --host",
     });
-    expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe(
-      APPS_IN_TOSS_WEB_FRAMEWORK_VERSION,
-    );
+    // "latest" dist-tag 리터럴이 아니라, 목(mock)된 발행 버전 중 지원
+    // 메이저의 최신 안정 버전을 caret 범위로 고정해요(toss/create-ait-app#33).
+    expect(packageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]).toBe("^3.0.2");
     expect(packageJson.createAitApp).toBeUndefined();
     expect(existsSync(path.join(directory, "README.md"))).toBe(true);
   });

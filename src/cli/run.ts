@@ -1,6 +1,7 @@
 import { checkbox, input, select } from "@inquirer/prompts";
-import { existsSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
+import { assertConsoleAppName, toAitAppName } from "../apps-in-toss/ait-init.js";
 import {
   detectInvokedPackageManager,
   PACKAGE_MANAGERS,
@@ -137,6 +138,9 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
 
   const template = useTds ? "react-ts" : explicitTemplate;
   const packageName = toNpmPackageName(path.basename(projectName));
+  // 콘솔 등록 단계에서야 거부되면 재빌드·재업로드를 반복해야 해서, 실제로
+  // ait init에 전달될 appName을 파일 생성 전에 미리 검증해요.
+  assertConsoleAppName(toAitAppName(packageName));
 
   console.log(
     useTds ? "\n🚀 TDS 프로젝트를 만들고 있어요.\n" : "\n🚀 앱 프로젝트를 만들고 있어요.\n",
@@ -170,9 +174,40 @@ ${cdLine}
   ${devCommand}
 `);
   } catch (error) {
+    // 실패해도 이미 만든 파일은 지우지 않아요. install 실패 같은 문제는
+    // 대부분 복구 가능하고, 디렉터리를 통째로 지우면 복구 절차를 적용할
+    // 대상 자체가 사라져요(toss/create-ait-app#34).
     if (!targetExisted && existsSync(targetDirectory)) {
-      rmSync(targetDirectory, { force: true, recursive: true });
+      console.warn(buildScaffoldFailureGuidance({ packageManager, projectName, targetDirectory }));
     }
     throw error;
   }
+}
+
+export function buildScaffoldFailureGuidance({
+  packageManager,
+  projectName,
+  targetDirectory,
+}: {
+  packageManager: PackageManager;
+  projectName: string;
+  targetDirectory: string;
+}): string {
+  const lines = [
+    `⚠️ 오류가 발생했지만 만든 파일은 지우지 않았어요: ${targetDirectory}`,
+    "원인을 확인한 뒤 아래에서 이어서 진행할 수 있어요:",
+    `  cd ${quoteForShell(projectName)}`,
+    `  ${packageManager} install`,
+  ];
+
+  if (packageManager === "pnpm") {
+    lines.push(
+      "",
+      "pnpm을 쓰는 경우 흔한 원인 중 하나는 pnpm 11이 승인되지 않은 빌드 스크립트를",
+      "차단하는 ERR_PNPM_IGNORED_BUILDS예요. 이 오류라면 에러 메시지에 나열된 패키지를",
+      "pnpm-workspace.yaml의 allowBuilds: 아래에 추가한 뒤 위 install을 다시 실행해 주세요.",
+    );
+  }
+
+  return lines.join("\n");
 }
