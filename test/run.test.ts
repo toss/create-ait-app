@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { assertChoice, hasProjectFiles } from "../src/cli/run.js";
+import { assertChoice, buildScaffoldFailureGuidance, hasProjectFiles } from "../src/cli/run.js";
 
 const temporaryDirectories = new Set<string>();
 
@@ -57,5 +57,42 @@ describe("assertChoice", () => {
     expect(() =>
       assertChoice("SVELTE-TS", ["react-ts", "vue-ts"], "지원하지 않는 프리셋이에요"),
     ).toThrow(/지원하지 않는 프리셋이에요: SVELTE-TS \(react-ts, vue-ts 중 선택\)$/);
+  });
+});
+
+describe("buildScaffoldFailureGuidance", () => {
+  it("tells the user the directory was preserved and how to resume", () => {
+    const guidance = buildScaffoldFailureGuidance({
+      packageManager: "npm",
+      projectName: "my-app",
+      targetDirectory: "/tmp/my-app",
+    });
+
+    expect(guidance).toContain("지우지 않았어요: /tmp/my-app");
+    expect(guidance).toContain("cd my-app");
+    expect(guidance).toContain("npm install");
+    expect(guidance).not.toContain("ERR_PNPM_IGNORED_BUILDS");
+  });
+
+  it("adds the pnpm ignored-builds hint only for pnpm", () => {
+    const guidance = buildScaffoldFailureGuidance({
+      packageManager: "pnpm",
+      projectName: "my-app",
+      targetDirectory: "/tmp/my-app",
+    });
+
+    expect(guidance).toContain("pnpm install");
+    expect(guidance).toContain("ERR_PNPM_IGNORED_BUILDS");
+    expect(guidance).toContain("allowBuilds:");
+  });
+
+  it("omits the cd line when the target directory is the current directory", () => {
+    const guidance = buildScaffoldFailureGuidance({
+      packageManager: "npm",
+      projectName: ".",
+      targetDirectory: process.cwd(),
+    });
+
+    expect(guidance).not.toContain("cd ");
   });
 });
