@@ -13,6 +13,54 @@ export function toAitAppName(packageName: string): string {
   return base.replace(/[._]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "my-app";
 }
 
+const CONSOLE_APP_NAME_MAX_LENGTH = 63;
+const CONSOLE_APP_NAME_PATTERN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+// "apps-in-toss"도 "toss"를 부분 문자열로 포함하므로 이 정규식 하나로 함께
+// 걸러요. 다른 규칙 위반(대문자 등) 때문에 이 검사까지 가지 않고 조용히
+// 넘어가는 일이 없도록 대소문자 구분 없이 검사해요.
+const CONSOLE_APP_NAME_RESERVED_SUBSTRING = /toss/i;
+
+// 앱인토스 콘솔의 appName 규칙(영문 소문자·숫자·하이픈, 63자 이하, 하이픈으로
+// 시작/끝 금지, "toss" 포함 금지)을 위반하는 지점을 모두 모아서 돌려줘요.
+// scaffold 시점에 미리 걸러야 콘솔 등록 단계에서야 거부돼 재빌드·재업로드를
+// 반복하는 비용을 피할 수 있어요(toss/create-ait-app#35).
+export function validateConsoleAppName(appName: string): string[] {
+  const issues: string[] = [];
+
+  if (appName.length === 0) {
+    issues.push("앱 이름이 비어 있어요.");
+    return issues;
+  }
+  if (appName.length > CONSOLE_APP_NAME_MAX_LENGTH) {
+    issues.push(
+      `${String(CONSOLE_APP_NAME_MAX_LENGTH)}자를 넘을 수 없어요 (현재 ${String(appName.length)}자).`,
+    );
+  }
+  if (!CONSOLE_APP_NAME_PATTERN.test(appName)) {
+    issues.push("영문 소문자·숫자·하이픈만 사용할 수 있고, 하이픈으로 시작하거나 끝날 수 없어요.");
+  }
+  if (CONSOLE_APP_NAME_RESERVED_SUBSTRING.test(appName)) {
+    issues.push('"toss"를 포함할 수 없어요 ("apps-in-toss"도 "toss"를 포함해서 걸려요).');
+  }
+
+  return issues;
+}
+
+// 위반이 있으면 콘솔 등록 시점에 나올 법한 안내를 미리 던져요. 호출자는
+// scaffold로 파일을 만들기 전, 가능한 한 이른 시점에 불러야 해요.
+export function assertConsoleAppName(appName: string): void {
+  const issues = validateConsoleAppName(appName);
+  if (issues.length === 0) return;
+
+  throw new Error(
+    [
+      `"${appName}"은(는) 앱인토스 콘솔 appName 규칙을 위반해요:`,
+      ...issues.map((issue) => `  - ${issue}`),
+      "다른 이름으로 다시 시도해 주세요.",
+    ].join("\n"),
+  );
+}
+
 // 설치된 web-framework가 노출하는 로컬 `ait` 바이너리를 패키지 매니저 exec으로
 // 실행해요. Yarn PnP처럼 node_modules/.bin이 없는 환경도 커버해요.
 export function aitInitCommand(packageManager: PackageManager, appName: string): AitInitCommand {
