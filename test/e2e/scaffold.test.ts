@@ -65,7 +65,7 @@ function run(
   args: string[],
   cwd: string,
   environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" },
-): void {
+): string {
   const result = spawnSync(command, args, {
     cwd,
     encoding: "utf8",
@@ -78,6 +78,7 @@ function run(
         .join("\n"),
     );
   }
+  return result.stdout;
 }
 
 async function waitForDevServer(processHandle: ChildProcess, timeoutMs = 60_000): Promise<void> {
@@ -171,7 +172,14 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         cliArguments.push("--sample", sampleIds[0]);
       }
 
-      run("corepack", cliArguments, process.cwd());
+      const scaffoldOutput = run("corepack", cliArguments, process.cwd());
+      if (template !== "tds") {
+        // --inline은 create-vite를 quiet로 스폰해야 해요 — create-vite 자체의
+        // "Done. Now run:" 안내가 새어나오면 안 되고, 우리 CLI의 완료 배너만
+        // 보여야 해요(toss/create-ait-app 이슈: create-vite passthrough 위생).
+        expect(scaffoldOutput).not.toContain("Done. Now run:");
+        expect(scaffoldOutput).toContain("프로젝트를 만들었어요");
+      }
       if (sampleIds.length > 1) {
         run(
           "corepack",
