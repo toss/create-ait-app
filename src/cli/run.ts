@@ -7,7 +7,7 @@ import {
   PACKAGE_MANAGERS,
   type PackageManager,
 } from "../package-manager/package-manager.js";
-import { createBaseProject, toNpmPackageName } from "../scaffold/create-base-project.js";
+import { createBaseProject, normalizeProjectName } from "../scaffold/create-base-project.js";
 import { finalizeProject } from "../scaffold/finalize-project.js";
 import { supportsSamples, type SampleId } from "../samples/apply-samples.js";
 import { quoteForShell } from "../system/shell-quote.js";
@@ -44,6 +44,35 @@ export function assertChoice<T extends string>(
     throw new Error(`${label}: ${value} (${choices.join(", ")} 중 선택)${hint}`);
   }
   return value as T;
+}
+
+// projectName의 basename을 npm 패키지 이름으로 정규화할 수 없으면(비-ASCII
+// 전용 이름 등) 파일 생성 전에 미리 막아요. path.resolve를 거치는 이유는
+// `create-ait-app .`처럼 현재 디렉터리를 스캐폴드할 때 "."이 아니라 실제
+// 폴더 이름을 기준으로 삼기 위해서예요(toss/create-ait-app#38).
+export function deriveScaffoldPackageName(projectName: string): {
+  basename: string;
+  packageName: string;
+} {
+  const basename = path.basename(path.resolve(projectName));
+  return { basename, packageName: normalizeProjectName(basename) };
+}
+
+export function assertDerivablePackageName(basename: string, packageName: string): void {
+  if (packageName) return;
+  throw new Error(
+    `"${basename}" 이름에서 사용할 수 있는 프로젝트 이름을 만들 수 없어요. 영문 소문자, 숫자, 하이픈(-)을 포함하도록 디렉터리 이름을 바꾼 뒤 다시 시도해 주세요.`,
+  );
+}
+
+// 소문자화만 일어난 경우(MyApp → myapp)는 조용히 넘어가고, 문자가 실제로
+// 제거·치환된 경우에만 어떤 이름을 쓰는지 알려줘요.
+export function buildPackageNameAdjustmentNotice(
+  basename: string,
+  packageName: string,
+): string | null {
+  if (packageName === basename.toLowerCase()) return null;
+  return `ℹ️ "${basename}" 대신 "${packageName}"을(를) 프로젝트 이름으로 사용해요.`;
 }
 
 async function choosePackageManager(args: CliArgs): Promise<PackageManager> {
@@ -139,7 +168,12 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
     : assertChoice(args.template, supportedTemplates, "지원하지 않는 Vite 프리셋이에요");
 
   const template = useTds ? "react-ts" : explicitTemplate;
-  const packageName = toNpmPackageName(path.basename(projectName));
+  const { basename, packageName } = deriveScaffoldPackageName(projectName);
+  assertDerivablePackageName(basename, packageName);
+  const adjustmentNotice = buildPackageNameAdjustmentNotice(basename, packageName);
+  if (adjustmentNotice) {
+    console.log(adjustmentNotice);
+  }
   // 콘솔 등록 단계에서야 거부되면 재빌드·재업로드를 반복해야 해서, 실제로
   // ait init에 전달될 appName을 파일 생성 전에 미리 검증해요.
   assertConsoleAppName(toAitAppName(packageName));

@@ -2,7 +2,15 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { assertChoice, buildScaffoldFailureGuidance, hasProjectFiles } from "../src/cli/run.js";
+import { toAitAppName } from "../src/apps-in-toss/ait-init.js";
+import {
+  assertChoice,
+  assertDerivablePackageName,
+  buildPackageNameAdjustmentNotice,
+  buildScaffoldFailureGuidance,
+  deriveScaffoldPackageName,
+  hasProjectFiles,
+} from "../src/cli/run.js";
 
 const temporaryDirectories = new Set<string>();
 
@@ -94,5 +102,78 @@ describe("buildScaffoldFailureGuidance", () => {
     });
 
     expect(guidance).not.toContain("cd ");
+  });
+});
+
+describe("deriveScaffoldPackageName", () => {
+  it("derives the name from a plain project directory argument", () => {
+    expect(deriveScaffoldPackageName("My App")).toMatchObject({
+      basename: "My App",
+      packageName: "my-app",
+    });
+  });
+
+  it("derives the name from the resolved current-directory basename for '.' (toss/create-ait-app#38)", () => {
+    const directory = createTemporaryDirectory();
+    const projectDirectory = path.join(directory, "Hello App");
+    mkdirSync(projectDirectory);
+    const originalCwd = process.cwd();
+    process.chdir(projectDirectory);
+    try {
+      expect(deriveScaffoldPackageName(".")).toMatchObject({
+        basename: "Hello App",
+        packageName: "hello-app",
+      });
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
+});
+
+describe("assertDerivablePackageName", () => {
+  it("passes through when a package name was derived", () => {
+    expect(() => assertDerivablePackageName("My App", "my-app")).not.toThrow();
+  });
+
+  it("rejects an empty package name with guidance on allowed characters", () => {
+    expect(() => assertDerivablePackageName("안녕하세요", "")).toThrow(
+      /안녕하세요.*영문 소문자, 숫자, 하이픈/s,
+    );
+  });
+});
+
+describe("buildPackageNameAdjustmentNotice", () => {
+  it("stays silent for plain lowercasing", () => {
+    expect(buildPackageNameAdjustmentNotice("MyApp", "myapp")).toBeNull();
+  });
+
+  it("announces the adjusted name when more than lowercasing happened", () => {
+    const notice = buildPackageNameAdjustmentNotice("My App!", "my-app");
+    expect(notice).toContain("My App!");
+    expect(notice).toContain("my-app");
+  });
+
+  it("announces the adjustment for an underscored folder name (kebab-case normalization)", () => {
+    const { basename, packageName } = deriveScaffoldPackageName("my_app");
+    expect(packageName).toBe("my-app");
+    const notice = buildPackageNameAdjustmentNotice(basename, packageName);
+    expect(notice).toContain("my_app");
+    expect(notice).toContain("my-app");
+  });
+
+  it("announces the adjustment for a dotted folder name (kebab-case normalization)", () => {
+    const { basename, packageName } = deriveScaffoldPackageName("my.app");
+    expect(packageName).toBe("my-app");
+    const notice = buildPackageNameAdjustmentNotice(basename, packageName);
+    expect(notice).toContain("my.app");
+    expect(notice).toContain("my-app");
+  });
+});
+
+describe("toAitAppName is a no-op on already-kebab package names", () => {
+  it("holds for every packageName this build can derive, since normalizeProjectName already produces kebab-case (appName 1:1)", () => {
+    for (const packageName of ["my-app", "hello-app", "app", "my-app-2"]) {
+      expect(toAitAppName(packageName)).toBe(packageName);
+    }
   });
 });

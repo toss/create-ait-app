@@ -10,7 +10,7 @@ import {
   resolveWebFrameworkSpecifier,
 } from "../src/apps-in-toss/version-policy.js";
 import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
-import { createBaseProject, toNpmPackageName } from "../src/scaffold/create-base-project.js";
+import { createBaseProject, normalizeProjectName } from "../src/scaffold/create-base-project.js";
 import { applyProjectSamples } from "../src/scaffold/apply-project-samples.js";
 import { initializeAitProject } from "../src/scaffold/initialize-ait-project.js";
 
@@ -42,10 +42,31 @@ describe("Apps in Toss web framework version policy", () => {
   });
 });
 
-describe("toNpmPackageName", () => {
-  it("normalizes names and scopes", () => {
-    expect(toNpmPackageName("My App!")).toBe("my-app");
-    expect(toNpmPackageName("@Scope/My App")).toBe("@scope/my-app");
+describe("normalizeProjectName", () => {
+  it("returns an empty string when nothing kebab-normalizable remains", () => {
+    expect(normalizeProjectName("안녕하세요")).toBe("");
+    expect(normalizeProjectName("...")).toBe("");
+    expect(normalizeProjectName("")).toBe("");
+  });
+
+  it("keeps the ASCII-normalizable portion of a mixed name", () => {
+    expect(normalizeProjectName("안녕-app")).toBe("app");
+  });
+
+  it("only lowercases a name that is already otherwise valid", () => {
+    expect(normalizeProjectName("MyApp")).toBe("myapp");
+  });
+
+  it("normalizes spaces and punctuation into hyphens", () => {
+    expect(normalizeProjectName("My App!")).toBe("my-app");
+  });
+
+  // packageName은 그대로 ait init --app-name에 전달되어 콘솔 appName이 되므로,
+  // npm이 패키지 이름으로는 허용하는 "."과 "_"도 여기서 하이픈으로 접어서
+  // packageName === appName을 항상 보장해요.
+  it("folds dots and underscores into hyphens instead of merely lowercasing", () => {
+    expect(normalizeProjectName("my.app")).toBe("my-app");
+    expect(normalizeProjectName("my_app")).toBe("my-app");
   });
 });
 
