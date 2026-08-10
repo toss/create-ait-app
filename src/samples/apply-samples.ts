@@ -215,6 +215,17 @@ render();
   writeFileSync(mainPath, content);
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// 플레이스홀더가 차지하던 줄 전체(들여쓰기 + 줄바꿈 포함)를 지워서, 마커도
+// 빈 줄도 남기지 않아요.
+function removePlaceholderLine(content: string, placeholder: string): string {
+  const pattern = new RegExp(`^[ \\t]*${escapeRegExp(placeholder)}[ \\t]*\\r?\\n`, "m");
+  return content.replace(pattern, "");
+}
+
 function renderTdsSampleShell(sampleIds: SampleId[]): string {
   const templateAppPath = path.join(
     templatesDirectory,
@@ -223,23 +234,37 @@ function renderTdsSampleShell(sampleIds: SampleId[]): string {
     "src",
     "App.tsx",
   );
+  const content = readFileSync(templateAppPath, "utf8");
+
+  // 선택한 예제가 없으면 관리 마커 자체를 남기지 않아요 — 나중에 add-sample로
+  // 예제를 추가할 때는 이 렌더링 결과와의 바이트 단위 일치로 "손대지 않은
+  // 상태"를 판단해요(isUnmodifiedBundledTdsSampleEntry 참고).
+  if (sampleIds.length === 0) {
+    return ["{{SAMPLE_IMPORTS}}", "{{PAGE_STATE_AND_ROUTES}}", "{{SAMPLE_BUTTONS}}"].reduce(
+      removePlaceholderLine,
+      content,
+    );
+  }
+
   const definitions = reactDefinitions(true, true);
   const imports = sampleIds.map((id) => definitions[id].import).join("\n");
   const routes = sampleIds.map((id) => definitions[id].route).join("\n");
   const buttons = sampleIds.map((id) => `        ${definitions[id].button}`).join("\n");
-  let content = readFileSync(templateAppPath, "utf8");
 
-  content = content
+  return content
     .replace(
       "{{SAMPLE_IMPORTS}}",
       `${SAMPLE_IMPORT_MARKERS.start}
-${imports}${sampleIds.length > 0 ? '\nimport { useState } from "react";' : ""}
+${imports}
+import { useState } from "react";
 ${SAMPLE_IMPORT_MARKERS.end}`,
     )
     .replace(
       "{{PAGE_STATE_AND_ROUTES}}",
       `${SAMPLE_ROUTE_MARKERS.start}
-${sampleIds.length > 0 ? "  const [page, setPage] = useState<string | null>(null);\n\n" : ""}${routes}
+  const [page, setPage] = useState<string | null>(null);
+
+${routes}
   ${SAMPLE_ROUTE_MARKERS.end}`,
     )
     .replace(
@@ -248,8 +273,17 @@ ${sampleIds.length > 0 ? "  const [page, setPage] = useState<string | null>(null
 ${buttons}
         ${REACT_SAMPLE_BUTTON_MARKERS.end}`,
     );
+}
 
-  return content;
+// TDS App.tsx가 create-ait-app이 스캐폴드한 그대로(예제 미선택 상태)인지
+// 확인해요. Vite 쪽 isUnmodifiedBundledViteSampleEntry와 같은 패턴으로,
+// 저장된 해시 없이 번들 템플릿을 그 자리에서 다시 렌더링해 바이트 단위로
+// 비교해요.
+export function isUnmodifiedBundledTdsSampleEntry(targetDirectory: string): boolean {
+  const appPath = path.join(targetDirectory, "src", "App.tsx");
+  if (!existsSync(appPath)) return false;
+
+  return readFileSync(appPath, "utf8") === renderTdsSampleShell([]);
 }
 
 export function applyTdsSamples(

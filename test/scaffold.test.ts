@@ -13,6 +13,7 @@ import { addProjectSamples } from "../src/scaffold/add-project-samples.js";
 import { createBaseProject, toNpmPackageName } from "../src/scaffold/create-base-project.js";
 import { applyProjectSamples } from "../src/scaffold/apply-project-samples.js";
 import { initializeAitProject } from "../src/scaffold/initialize-ait-project.js";
+import { isUnmodifiedBundledTdsSampleEntry } from "../src/samples/apply-samples.js";
 
 describe("Apps in Toss web framework version policy", () => {
   it("supports beta, rc, and latest release channels", () => {
@@ -135,12 +136,15 @@ describe("initializeAitProject", () => {
         useTds: true,
       });
 
+      // 마커 없이 스캐폴드된, 손대지 않은(pristine) 상태에서 첫 예제를 추가할 수
+      // 있어야 해요(I2 하위호환).
+      addProjectSamples(directory, ["iap"]);
+
       const appPath = path.join(directory, "src", "App.tsx");
       writeFileSync(
         appPath,
         readFileSync(appPath, "utf8").replace("반가워요", "사용자가 수정한 앱"),
       );
-      addProjectSamples(directory, ["iap"]);
       addProjectSamples(directory, ["iaa"]);
 
       expect(existsSync(path.join(directory, "src", "hooks", "useInAppAds.tsx"))).toBe(true);
@@ -152,6 +156,65 @@ describe("initializeAitProject", () => {
       expect(
         JSON.parse(readFileSync(path.join(directory, "package.json"), "utf8")).createAitApp,
       ).toBeUndefined();
+    } finally {
+      rmSync(path.dirname(directory), { force: true, recursive: true });
+    }
+  });
+
+  it("renders TDS App.tsx without sample markers when no sample is selected (I2)", () => {
+    const directory = path.join(mkdtempSync(path.join(tmpdir(), "create-ait-tds-empty-")), "app");
+    try {
+      const baseProject = createBaseProject({
+        packageName: "tds-app",
+        targetDirectory: directory,
+        useTds: true,
+      });
+      applyProjectSamples({
+        baseProject,
+        sampleIds: [],
+        targetDirectory: directory,
+        useTds: true,
+      });
+
+      const appPath = path.join(directory, "src", "App.tsx");
+      const content = readFileSync(appPath, "utf8");
+
+      expect(content).not.toContain("create-ait-app:sample-imports");
+      expect(content).not.toContain("create-ait-app:sample-routes");
+      expect(content).not.toContain("create-ait-app:sample-buttons");
+      expect(content).not.toContain("{{SAMPLE_");
+      expect(content).not.toContain("{{PAGE_STATE_AND_ROUTES}}");
+      // 플레이스홀더 줄 자체가 삭제되어 빈 줄이 늘어나지 않아야 해요.
+      expect(content.split("\n\n\n").length).toBe(1);
+      expect(content).toContain("function App() {\n  return (");
+      // 렌더링 결과가 add-sample의 pristine 판정 기준과 정확히 일치해야 해요.
+      expect(isUnmodifiedBundledTdsSampleEntry(directory)).toBe(true);
+    } finally {
+      rmSync(path.dirname(directory), { force: true, recursive: true });
+    }
+  });
+
+  it("keeps sample markers and code when a sample is selected at scaffold time (I2)", () => {
+    const directory = path.join(mkdtempSync(path.join(tmpdir(), "create-ait-tds-samp-")), "app");
+    try {
+      const baseProject = createBaseProject({
+        packageName: "tds-app",
+        targetDirectory: directory,
+        useTds: true,
+      });
+      applyProjectSamples({
+        baseProject,
+        sampleIds: ["iap"],
+        targetDirectory: directory,
+        useTds: true,
+      });
+
+      const content = readFileSync(path.join(directory, "src", "App.tsx"), "utf8");
+      expect(content).toContain("create-ait-app:sample-imports:start");
+      expect(content).toContain("create-ait-app:sample-routes:start");
+      expect(content).toContain("create-ait-app:sample-buttons:start");
+      expect(content).toContain("InAppPurchasePage");
+      expect(isUnmodifiedBundledTdsSampleEntry(directory)).toBe(false);
     } finally {
       rmSync(path.dirname(directory), { force: true, recursive: true });
     }

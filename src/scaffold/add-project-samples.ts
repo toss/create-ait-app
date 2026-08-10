@@ -6,6 +6,7 @@ import { readPackageJson, writePackageJson, type PackageJson } from "../project/
 import {
   applyTdsSamples,
   applyViteSamples,
+  isUnmodifiedBundledTdsSampleEntry,
   SAMPLE_IDS,
   supportsSamples,
   type SampleId,
@@ -158,12 +159,18 @@ export function addProjectSamples(
     };
   }
 
-  // create-ait-app이 만든 TDS 프로젝트는 항상 관리 마커가 있는 App.tsx로 생성된다.
-  // 마커가 없다는 건 직접 구성한 프로젝트라는 뜻이므로, App.tsx를 템플릿으로
-  // 덮어쓰지 않도록 거절한다.
-  if (project.useTds && !project.sampleShellManaged) {
+  // 예제 없이 스캐폴드된 TDS 프로젝트는 App.tsx에 관리 마커가 없다(I2). 마커가
+  // 없더라도 create-ait-app이 만든 그대로(App.tsx가 손대지 않은 상태)라면
+  // 템플릿을 다시 렌더링해서 안전하게 첫 예제를 추가할 수 있다. 마커도 없고
+  // 손댄 흔적도 있다면(직접 구성한 프로젝트이거나 스캐폴드 후 수정한 경우)
+  // App.tsx를 템플릿으로 덮어쓰지 않도록 거절한다.
+  if (
+    project.useTds &&
+    !project.sampleShellManaged &&
+    !isUnmodifiedBundledTdsSampleEntry(targetDirectory)
+  ) {
     throw new Error(
-      "App 파일에 예제 코드 관리 구간이 없어 안전하게 추가할 수 없어요. create-ait-app으로 만든 TDS 프로젝트에서만 예제 코드를 추가할 수 있어요.",
+      "App 파일이 create-ait-app이 만든 초기 상태에서 수정되어 있거나 예제 코드 관리 구간이 없어서 안전하게 추가할 수 없어요. create-ait-app으로 만든 TDS 프로젝트에서만 예제 코드를 추가할 수 있어요.",
     );
   }
 

@@ -3,10 +3,35 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { addProjectSamples, inspectSampleProject } from "../src/scaffold/add-project-samples.js";
+import { applyProjectSamples } from "../src/scaffold/apply-project-samples.js";
+import { createBaseProject } from "../src/scaffold/create-base-project.js";
+import { initializeAitProject } from "../src/scaffold/initialize-ait-project.js";
 import { APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME } from "../src/apps-in-toss/version-policy.js";
 import { getBundledViteSampleEntryContent } from "../src/vite/create-vite.js";
 
 const temporaryDirectories: string[] = [];
+
+function createTdsProject(): string {
+  const directory = mkdtempSync(path.join(tmpdir(), "create-ait-add-sample-tds-"));
+  temporaryDirectories.push(directory);
+  const baseProject = createBaseProject({
+    packageName: "tds-app",
+    targetDirectory: directory,
+    useTds: true,
+  });
+  initializeAitProject({
+    packageManager: "npm",
+    packageName: "tds-app",
+    targetDirectory: directory,
+  });
+  applyProjectSamples({
+    baseProject,
+    sampleIds: [],
+    targetDirectory: directory,
+    useTds: true,
+  });
+  return directory;
+}
 
 function createVanillaProject(isTypeScript = true): string {
   const directory = mkdtempSync(path.join(tmpdir(), "create-ait-add-sample-"));
@@ -137,7 +162,34 @@ describe("addProjectSamples", () => {
       }),
     );
 
-    expect(() => addProjectSamples(directory, ["iap"])).toThrow("예제 코드 관리 구간이 없어");
+    expect(() => addProjectSamples(directory, ["iap"])).toThrow(
+      "초기 상태에서 수정되어 있거나 예제 코드 관리 구간이 없어",
+    );
+  });
+
+  it("adds the first sample to a marker-less TDS project scaffolded without samples (I2)", () => {
+    const directory = createTdsProject();
+
+    expect(addProjectSamples(directory, ["iap"])).toMatchObject({
+      addedSampleIds: ["iap"],
+      installedSampleIds: ["iap"],
+      skippedSampleIds: [],
+    });
+    expect(existsSync(path.join(directory, "src", "pages", "InAppPurchasePage.tsx"))).toBe(true);
+    expect(readFileSync(path.join(directory, "src", "App.tsx"), "utf8")).toContain(
+      "create-ait-app:sample-imports:start",
+    );
+  });
+
+  it("rejects a marker-less TDS project whose App.tsx was edited before the first add-sample (I2)", () => {
+    const directory = createTdsProject();
+    const appPath = path.join(directory, "src", "App.tsx");
+    writeFileSync(appPath, readFileSync(appPath, "utf8").replace("반가워요", "사용자가 수정한 앱"));
+
+    expect(() => addProjectSamples(directory, ["iap"])).toThrow(
+      "초기 상태에서 수정되어 있거나 예제 코드 관리 구간이 없어",
+    );
+    expect(readFileSync(appPath, "utf8")).toContain("사용자가 수정한 앱");
   });
 
   it("refuses to overwrite a sample shell when its management markers are missing", () => {
