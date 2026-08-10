@@ -16,6 +16,9 @@ jobs:
       contents: write
       pull-requests: read
       id-token: write
+    outputs:
+      published: ${{ steps.should_publish.outputs.publish }}
+      version: ${{ steps.version.outputs.value }}
 
     steps:
       - name: Checkout
@@ -117,3 +120,82 @@ jobs:
             --title "$TAG" \
             --notes-file release-notes.md \
             "${RELEASE_FLAGS[@]}"
+
+  smoke-test:
+    name: 발행 후 스모크 테스트 (${{ matrix.template }})
+    needs: publish
+    if: needs.publish.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: {}
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [react-ts, tds]
+    env:
+      VERSION: ${{ needs.publish.outputs.version }}
+    steps:
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: 레지스트리 전파 대기
+        run: |
+          echo "create-ait-app@${VERSION} 이(가) npm 레지스트리에 반영되기를 기다려요."
+          for i in $(seq 1 30); do
+            if npm view "create-ait-app@${VERSION}" version >/dev/null 2>&1; then
+              echo "레지스트리 반영을 확인했어요. (시도 ${i}회)"
+              exit 0
+            fi
+            echo "아직 반영되지 않았어요. 20초 후 다시 확인해요. (시도 ${i}/30)"
+            sleep 20
+          done
+          echo "::error::10분 동안 create-ait-app@${VERSION}의 레지스트리 반영을 확인하지 못했어요."
+          exit 1
+
+      - name: 발행본으로 스캐폴드
+        run: |
+          if [ "${{ matrix.template }}" = "tds" ]; then
+            npm create ait-app@"${VERSION}" -- smoke-app --inline --pm npm --tds
+          else
+            npm create ait-app@"${VERSION}" -- smoke-app --inline --pm npm --template react-ts
+          fi
+
+      - name: web-framework 버전 고정 검증
+        working-directory: smoke-app
+        run: |
+          ACTUAL=$(node -p "require('./package.json').dependencies['@apps-in-toss/web-framework']")
+          echo "설치된 @apps-in-toss/web-framework 버전 명시자: ${ACTUAL}"
+          if ! echo "$ACTUAL" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::@apps-in-toss/web-framework가 정확 버전으로 고정되지 않았어요: ${ACTUAL}"
+            exit 1
+          fi
+          echo "정확 버전 고정을 확인했어요."
+
+      - name: 빌드
+        working-directory: smoke-app
+        run: |
+          find . -path ./node_modules -prune -o -path ./.git -prune -o -name '*.ait' -print | sort > /tmp/ait-before.txt
+          npm run build
+
+      - name: dist 산출물 확인
+        working-directory: smoke-app
+        run: |
+          if [ ! -f dist/index.html ]; then
+            echo "::error::dist/index.html이 없어요."
+            exit 1
+          fi
+          echo "dist/index.html을 확인했어요."
+
+      - name: .ait 산출물 확인
+        working-directory: smoke-app
+        run: |
+          find . -path ./node_modules -prune -o -path ./.git -prune -o -name '*.ait' -print | sort > /tmp/ait-after.txt
+          NEW_AIT=$(comm -13 /tmp/ait-before.txt /tmp/ait-after.txt)
+          if [ -z "$NEW_AIT" ]; then
+            echo "::error::ait build가 새로운 .ait 산출물을 만들지 않았어요."
+            exit 1
+          fi
+          echo "새로 생성된 .ait 산출물:"
+          echo "$NEW_AIT"
