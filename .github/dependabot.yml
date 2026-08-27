@@ -16,8 +16,11 @@ updates:
   - package-ecosystem: npm
     directory: /.github/version-pins
     schedule:
-      interval: daily
+      interval: cron
+      cronjob: "0 * * * *"
       timezone: Asia/Seoul
     cooldown:
       default-days: 2
+      exclude:
+        - "@apps-in-toss/web-framework"
     open-pull-requests-limit: 1

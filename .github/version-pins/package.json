@@ -4,6 +4,6 @@
   "private": true,
   "description": "생성 프로젝트에 주입하는 버전 핀. Dependabot이 이 디렉터리만 감시해요 (락파일 없음 — 매니페스트만 갱신됨).",
   "dependencies": {
-    "@apps-in-toss/web-framework": "3.0.2"
+    "@apps-in-toss/web-framework": "3.1.1"
   }
 }
