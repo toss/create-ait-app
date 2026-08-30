@@ -70,6 +70,35 @@ function createVanillaProject(isTypeScript = true): string {
   return directory;
 }
 
+function createReactProject(): string {
+  const directory = mkdtempSync(path.join(tmpdir(), "create-ait-add-react-sample-"));
+  temporaryDirectories.push(directory);
+  mkdirSync(path.join(directory, "src"));
+  const initialApp = getBundledViteSampleEntryContent({
+    framework: "react",
+    isTypeScript: true,
+    template: "react-ts",
+  });
+  if (initialApp === null) {
+    throw new Error("create-vite react-ts fixture를 찾을 수 없어요.");
+  }
+  writeFileSync(path.join(directory, "src", "App.tsx"), initialApp);
+  writeFileSync(path.join(directory, "src", "App.css"), ".custom-style { color: tomato; }\n");
+  writeFileSync(
+    path.join(directory, "package.json"),
+    JSON.stringify({
+      dependencies: {
+        [APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME]: "1.0.0",
+        react: "19.0.0",
+      },
+      devDependencies: {
+        vite: "9.2.0",
+      },
+    }),
+  );
+  return directory;
+}
+
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { force: true, recursive: true });
@@ -77,6 +106,23 @@ afterEach(() => {
 });
 
 describe("addProjectSamples", () => {
+  it("restores the shared sample page styles without overwriting React project CSS", () => {
+    const directory = createReactProject();
+
+    addProjectSamples(directory, ["iaa"]);
+
+    const app = readFileSync(path.join(directory, "src", "App.tsx"), "utf8");
+    expect(app).toContain('import "./create-ait-app.css"');
+    expect(app).toContain('className="app-header"');
+    expect(app).toContain('className="app-button app-button-primary"');
+    expect(readFileSync(path.join(directory, "src", "create-ait-app.css"), "utf8")).toContain(
+      ".page-title",
+    );
+    expect(readFileSync(path.join(directory, "src", "App.css"), "utf8")).toBe(
+      ".custom-style { color: tomato; }\n",
+    );
+  });
+
   it("adds new samples while preserving previously installed samples", () => {
     const directory = createVanillaProject();
 
@@ -90,11 +136,14 @@ describe("addProjectSamples", () => {
     const mainPath = path.join(directory, "src", "main.ts");
     writeFileSync(
       mainPath,
-      readFileSync(mainPath, "utf8").replace(
-        "<h1>Apps in Toss</h1>",
-        "<h1>사용자가 수정한 앱</h1>",
-      ),
+      readFileSync(mainPath, "utf8")
+        .replace('import "./create-ait-app.css";\n', "")
+        .replace(
+          '<h1 class="page-title">Apps in Toss</h1>',
+          '<h1 class="page-title">사용자가 수정한 앱</h1>',
+        ),
     );
+    rmSync(path.join(directory, "src", "create-ait-app.css"));
 
     expect(addProjectSamples(directory, ["iap", "iaa"])).toMatchObject({
       addedSampleIds: ["iaa"],
@@ -105,7 +154,11 @@ describe("addProjectSamples", () => {
     const main = readFileSync(mainPath, "utf8");
     expect(main).toContain("mountInAppPurchasePage");
     expect(main).toContain("mountInAppAdsPage");
-    expect(main).toContain("<h1>사용자가 수정한 앱</h1>");
+    expect(main).toContain('import "./create-ait-app.css"');
+    expect(main).toContain('<h1 class="page-title">사용자가 수정한 앱</h1>');
+    expect(readFileSync(path.join(directory, "src", "create-ait-app.css"), "utf8")).toContain(
+      ".app-header",
+    );
     expect(
       readFileSync(path.join(directory, "src", "pages", "InAppPurchasePage.ts"), "utf8"),
     ).toContain("return unsubscribe");
