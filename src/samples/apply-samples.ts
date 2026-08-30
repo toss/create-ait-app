@@ -28,7 +28,7 @@ function reactDefinitions(
   const button = (id: SampleId, label: string): string =>
     useTds
       ? `<Button color="dark" variant="weak" onClick={() => setPage("${id}")}>${label}</Button>`
-      : `<button type="button" onClick={() => setPage("${id}")}>${label}</button>`;
+      : `<button type="button" className="app-button app-button-primary" onClick={() => setPage("${id}")}>${label}</button>`;
 
   return {
     iap: {
@@ -48,7 +48,8 @@ function vanillaDefinitions(isTypeScript: boolean): Record<SampleId, SampleDefin
   const extension = isTypeScript ? ".ts" : ".js";
   return {
     iap: {
-      button: '<button type="button" data-page="iap">인앱 결제 테스트하기</button>',
+      button:
+        '<button type="button" class="app-button app-button-primary" data-page="iap">인앱 결제 테스트하기</button>',
       import: `import { mountInAppPurchasePage } from "./pages/InAppPurchasePage${extension}";`,
       route: `  if (currentPage === "iap") {
     mountInAppPurchasePage(showHome);
@@ -56,7 +57,8 @@ function vanillaDefinitions(isTypeScript: boolean): Record<SampleId, SampleDefin
   }`,
     },
     iaa: {
-      button: '<button type="button" data-page="iaa">인앱 광고 테스트하기</button>',
+      button:
+        '<button type="button" class="app-button app-button-primary" data-page="iaa">인앱 광고 테스트하기</button>',
       import: `import { mountInAppAdsPage } from "./pages/InAppAdsPage${extension}";`,
       route: `  if (currentPage === "iaa") {
     mountInAppAdsPage(showHome);
@@ -86,6 +88,29 @@ function copySampleAssets(
   }
 }
 
+function copyViteSampleShellStyles(targetDirectory: string): void {
+  copyDirectory(path.join(templatesDirectory, "samples", "vite"), targetDirectory, {
+    skipExisting: true,
+  });
+}
+
+function ensureViteSampleShellStyleImport(content: string): string {
+  const styleImport = 'import "./create-ait-app.css";';
+  if (content.includes(styleImport)) {
+    return content;
+  }
+
+  const vanillaStyleImport = 'import "./style.css";';
+  if (content.includes(vanillaStyleImport)) {
+    return content.replace(vanillaStyleImport, `${vanillaStyleImport}\n${styleImport}`);
+  }
+
+  return content.replace(
+    SAMPLE_IMPORT_MARKERS.start,
+    `${styleImport}\n${SAMPLE_IMPORT_MARKERS.start}`,
+  );
+}
+
 function writeReactSampleShell(
   targetDirectory: string,
   isTypeScript: boolean,
@@ -104,6 +129,7 @@ function writeReactSampleShell(
   const state = isTypeScript ? "useState<string | null>(null)" : "useState(null)";
 
   const nextContent = `import { useState } from "react";
+import "./create-ait-app.css";
 ${SAMPLE_IMPORT_MARKERS.start}
 ${imports}
 ${SAMPLE_IMPORT_MARKERS.end}
@@ -116,10 +142,12 @@ ${routes}
   ${SAMPLE_ROUTE_MARKERS.end}
 
   return (
-    <main>
-      <h1>Apps in Toss</h1>
-      <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <main className="app">
+      <header className="app-header">
+        <h1 className="page-title">Apps in Toss</h1>
+        <p className="page-subtitle">원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
+      </header>
+      <div className="app-actions">
         ${REACT_SAMPLE_BUTTON_MARKERS.start}
 ${buttons}
         ${REACT_SAMPLE_BUTTON_MARKERS.end}
@@ -131,13 +159,15 @@ ${buttons}
 export default App;
 `;
 
-  const content = preserveExistingShell
-    ? updateManagedSampleShell(
-        readFileSync(appPath, "utf8"),
-        nextContent,
-        REACT_SAMPLE_BUTTON_MARKERS,
-      )
-    : nextContent;
+  const content = ensureViteSampleShellStyleImport(
+    preserveExistingShell
+      ? updateManagedSampleShell(
+          readFileSync(appPath, "utf8"),
+          nextContent,
+          REACT_SAMPLE_BUTTON_MARKERS,
+        )
+      : nextContent,
+  );
   writeFileSync(appPath, content);
 }
 
@@ -161,6 +191,7 @@ function writeVanillaSampleShell(
 ${imports}
 ${SAMPLE_IMPORT_MARKERS.end}
 import "./style.css";
+import "./create-ait-app.css";
 
 let currentPage = null${isTypeScript ? " as string | null" : ""};
 const app = document.querySelector${isTypeScript ? "<HTMLDivElement>" : ""}("#app");
@@ -184,10 +215,12 @@ ${routes}
   const root = document.getElementById("root");
   if (!root) return;
   root.innerHTML = \`
-    <main>
-      <h1>Apps in Toss</h1>
-      <p>원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
-      <div>
+    <main class="app">
+      <header class="app-header">
+        <h1 class="page-title">Apps in Toss</h1>
+        <p class="page-subtitle">원하는 기능을 샌드박스 앱이나 토스 앱에서 확인해 보세요.</p>
+      </header>
+      <div class="app-actions">
       ${VANILLA_SAMPLE_BUTTON_MARKERS.start}
 ${buttons}
       ${VANILLA_SAMPLE_BUTTON_MARKERS.end}
@@ -205,13 +238,15 @@ ${buttons}
 render();
 `;
 
-  const content = preserveExistingShell
-    ? updateManagedSampleShell(
-        readFileSync(mainPath, "utf8"),
-        nextContent,
-        VANILLA_SAMPLE_BUTTON_MARKERS,
-      )
-    : nextContent;
+  const content = ensureViteSampleShellStyleImport(
+    preserveExistingShell
+      ? updateManagedSampleShell(
+          readFileSync(mainPath, "utf8"),
+          nextContent,
+          VANILLA_SAMPLE_BUTTON_MARKERS,
+        )
+      : nextContent,
+  );
   writeFileSync(mainPath, content);
 }
 
@@ -336,12 +371,14 @@ export function applyViteSamples({
 
   if (framework === "react") {
     const variant = isTypeScript ? "react-ts" : "react";
+    copyViteSampleShellStyles(targetDirectory);
     writeReactSampleShell(targetDirectory, isTypeScript, sampleIds, preserveExistingShell);
     copySampleAssets(targetDirectory, variant, sampleIds);
     return;
   }
 
   const variant = isTypeScript ? "vanilla-ts" : "vanilla";
+  copyViteSampleShellStyles(targetDirectory);
   writeVanillaSampleShell(targetDirectory, isTypeScript, sampleIds, preserveExistingShell);
   copySampleAssets(targetDirectory, variant, sampleIds);
 }
