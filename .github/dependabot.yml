@@ -17,10 +17,12 @@ updates:
     directory: /.github/version-pins
     schedule:
       interval: cron
-      cronjob: "0 * * * *"
+      cronjob: "0 9 * * *"
       timezone: Asia/Seoul
     cooldown:
       default-days: 2
       exclude:
         - "@apps-in-toss/web-framework"
+    allow:
+      - dependency-name: "@apps-in-toss/web-framework"
     open-pull-requests-limit: 1
