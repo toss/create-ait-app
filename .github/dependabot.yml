@@ -23,4 +23,6 @@ updates:
       default-days: 2
       exclude:
         - "@apps-in-toss/web-framework"
+    allow:
+      - dependency-name: "@apps-in-toss/web-framework"
     open-pull-requests-limit: 1
