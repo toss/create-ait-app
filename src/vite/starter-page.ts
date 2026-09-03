@@ -11,6 +11,12 @@ export interface StarterTemplateDefinition {
   stylePath?: string;
 }
 
+interface IsUnmodifiedViteStarterEntryOptions {
+  framework: FrameworkKind;
+  isTypeScript: boolean;
+  targetDirectory: string;
+}
+
 const STARTER_TEMPLATES: Readonly<Record<string, StarterTemplateDefinition>> = {
   lit: { entryPath: "src/my-element.js", stylePath: "src/index.css" },
   "lit-ts": { entryPath: "src/my-element.ts", stylePath: "src/index.css" },
@@ -124,11 +130,7 @@ export function isUnmodifiedViteStarterEntry({
   framework,
   isTypeScript,
   targetDirectory,
-}: {
-  framework: FrameworkKind;
-  isTypeScript: boolean;
-  targetDirectory: string;
-}): boolean {
+}: IsUnmodifiedViteStarterEntryOptions): boolean {
   const template = resolveViteStarterTemplate(framework, isTypeScript);
   if (!template) return false;
 

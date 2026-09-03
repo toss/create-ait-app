@@ -107,7 +107,9 @@ export function getSupportedViteTemplates(): string[] {
   const starterTemplates = new Set(getViteStarterTemplates());
 
   return getBundledViteTemplates().filter((template) => {
-    if (!starterTemplates.has(template)) return false;
+    if (!starterTemplates.has(template)) {
+      return false;
+    }
     const templateDirectory = path.join(createViteRoot, `template-${template}`);
     if (!existsSync(path.join(templateDirectory, "index.html"))) {
       return false;

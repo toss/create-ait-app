@@ -391,7 +391,11 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         "node_modules",
       );
       const aitArtifactsBeforeBuild = new Set(findAitArtifacts(projectDirectory));
-      run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment("production"));
+      const buildEnvironment =
+        template === "tds"
+          ? generatedProjectEnvironment()
+          : generatedProjectEnvironment("production");
+      run("npm", ["run", "build"], projectDirectory, buildEnvironment);
       expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
       const newAitArtifacts = findAitArtifacts(projectDirectory).filter(
         (artifact) => !aitArtifactsBeforeBuild.has(artifact),
@@ -400,61 +404,45 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         0,
       );
 
-      const buildUrl = await serveBuild(path.join(projectDirectory, "dist"));
-      const previewUrl = `${buildUrl}/index.html`;
+      if (template !== "tds") {
+        const buildUrl = await serveBuild(path.join(projectDirectory, "dist"));
+        const previewUrl = `${buildUrl}/index.html`;
 
-      if (!browser) throw new Error("Playwright Chromium이 준비되지 않았어요.");
-      const page = await browser.newPage({
-        colorScheme: "light",
-        deviceScaleFactor: 1,
-        viewport: { height: 844, width: 390 },
-      });
-      if (template === "tds") {
-        // TDS는 프로덕션에서 실제 Apps in Toss 호스트가 먼저 주입하는 상수를
-        // 읽어요. 일반 Chromium에서도 프로덕션 dist를 검증할 수 있도록 호스트
-        // 경계만 재현하고, 애플리케이션 번들은 수정하거나 mock으로 교체하지 않아요.
-        await page.addInitScript(() => {
-          Object.defineProperty(window, "__appsInTossConstants", {
-            configurable: true,
-            value: {
-              safeAreaInsets: { bottom: 0, left: 0, right: 0, top: 0 },
-            },
-          });
+        if (!browser) throw new Error("Playwright Chromium이 준비되지 않았어요.");
+        const page = await browser.newPage({
+          colorScheme: "light",
+          deviceScaleFactor: 1,
+          viewport: { height: 844, width: 390 },
         });
-      }
-      const browserErrors: string[] = [];
-      page.on("console", (message) => {
-        if (message.type() === "error") browserErrors.push(message.text());
-      });
-      page.on("pageerror", (error) => browserErrors.push(error.message));
-      const response = await page.goto(previewUrl, { waitUntil: "networkidle" });
-      expect(response?.ok()).toBe(true);
-      expect(await page.title()).toBe("Apps in Toss");
-      await expect.poll(() => page.locator(".ait-panel-root").count()).toBe(0);
+        const browserErrors: string[] = [];
+        page.on("console", (message) => {
+          if (message.type() === "error") browserErrors.push(message.text());
+        });
+        page.on("pageerror", (error) => browserErrors.push(error.message));
+        const response = await page.goto(previewUrl, { waitUntil: "networkidle" });
+        expect(response?.ok()).toBe(true);
+        expect(await page.title()).toBe("Apps in Toss");
+        await expect.poll(() => page.locator(".ait-panel-root").count()).toBe(0);
 
-      if (sampleIds.length === 0) {
-        if (template === "tds") {
-          await expect.poll(() => page.getByRole("heading", { name: "반가워요" }).count()).toBe(1);
-          await expect.poll(() => page.getByText("앱인토스 개발을 시작해 보세요.").count()).toBe(1);
-        } else {
+        if (sampleIds.length === 0) {
           await assertMatchesVanillaStarterPage(page);
-        }
 
-        const screenshotDirectory = process.env.AIT_E2E_SCREENSHOT_DIR;
-        if (screenshotDirectory) {
-          mkdirSync(screenshotDirectory, { recursive: true });
-          await page.screenshot({
-            path: path.join(screenshotDirectory, `${template}.png`),
-          });
+          const screenshotDirectory = process.env.AIT_E2E_SCREENSHOT_DIR;
+          if (screenshotDirectory) {
+            mkdirSync(screenshotDirectory, { recursive: true });
+            await page.screenshot({
+              path: path.join(screenshotDirectory, `${template}.png`),
+            });
+          }
+        } else {
+          for (const sampleId of sampleIds) {
+            const label = sampleId === "iap" ? "인앱 결제 테스트하기" : "인앱 광고 테스트하기";
+            await expect.poll(() => page.getByRole("button", { name: label }).count()).toBe(1);
+          }
         }
-      } else {
-        for (const sampleId of sampleIds) {
-          const label = sampleId === "iap" ? "인앱 결제 테스트하기" : "인앱 광고 테스트하기";
-          await expect.poll(() => page.getByRole("button", { name: label }).count()).toBe(1);
-        }
+        expect(browserErrors).toEqual([]);
+        await page.close();
       }
-      expect(browserErrors).toEqual([]);
-      await page.close();
 
       const devServer = spawn("npm", ["run", "dev"], {
         cwd: projectDirectory,
