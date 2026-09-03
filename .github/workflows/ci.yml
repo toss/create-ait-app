@@ -105,14 +105,7 @@ jobs:
       - name: 프로젝트 생성, 빌드, 첫 페이지, .ait 산출물, 개발 서버 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
-          AIT_E2E_SCREENSHOT_DIR: artifacts/starter-pages
         run: yarn test:e2e
-
-      - name: 첫 페이지 증적 업로드
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: starter-page-${{ matrix.template }}
-          path: artifacts/starter-pages/${{ matrix.template }}.png
 
   sample-scaffolding-tests:
     name: 예제 우선순위 테스트 (${{ matrix.template }})

@@ -51,10 +51,13 @@ function findAitArtifacts(projectDirectory: string): string[] {
   return artifacts.sort();
 }
 
-function generatedProjectEnvironment(): NodeJS.ProcessEnv {
+function generatedProjectEnvironment(
+  nodeEnvironment?: "development" | "production",
+): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" };
   for (const key of Object.keys(environment)) {
     if (
+      key === "NODE_ENV" ||
       key === "NODE_OPTIONS" ||
       key === "npm_config_user_agent" ||
       key === "npm_execpath" ||
@@ -62,6 +65,9 @@ function generatedProjectEnvironment(): NodeJS.ProcessEnv {
     ) {
       delete environment[key];
     }
+  }
+  if (nodeEnvironment) {
+    environment.NODE_ENV = nodeEnvironment;
   }
   return environment;
 }
@@ -385,7 +391,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         "node_modules",
       );
       const aitArtifactsBeforeBuild = new Set(findAitArtifacts(projectDirectory));
-      run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment());
+      run("npm", ["run", "build"], projectDirectory, generatedProjectEnvironment("production"));
       expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
       const newAitArtifacts = findAitArtifacts(projectDirectory).filter(
         (artifact) => !aitArtifactsBeforeBuild.has(artifact),
@@ -403,6 +409,19 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         deviceScaleFactor: 1,
         viewport: { height: 844, width: 390 },
       });
+      if (template === "tds") {
+        // TDS는 프로덕션에서 실제 Apps in Toss 호스트가 먼저 주입하는 상수를
+        // 읽어요. 일반 Chromium에서도 프로덕션 dist를 검증할 수 있도록 호스트
+        // 경계만 재현하고, 애플리케이션 번들은 수정하거나 mock으로 교체하지 않아요.
+        await page.addInitScript(() => {
+          Object.defineProperty(window, "__appsInTossConstants", {
+            configurable: true,
+            value: {
+              safeAreaInsets: { bottom: 0, left: 0, right: 0, top: 0 },
+            },
+          });
+        });
+      }
       const browserErrors: string[] = [];
       page.on("console", (message) => {
         if (message.type() === "error") browserErrors.push(message.text());
@@ -411,6 +430,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       const response = await page.goto(previewUrl, { waitUntil: "networkidle" });
       expect(response?.ok()).toBe(true);
       expect(await page.title()).toBe("Apps in Toss");
+      await expect.poll(() => page.locator(".ait-panel-root").count()).toBe(0);
 
       if (sampleIds.length === 0) {
         if (template === "tds") {
@@ -439,7 +459,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
       const devServer = spawn("npm", ["run", "dev"], {
         cwd: projectDirectory,
         detached: process.platform !== "win32",
-        env: generatedProjectEnvironment(),
+        env: generatedProjectEnvironment("development"),
         stdio: ["ignore", "pipe", "pipe"],
       });
       running.add(devServer);
