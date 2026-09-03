@@ -209,40 +209,55 @@ async function assertMatchesVanillaStarterPage(page: Page): Promise<void> {
     .toBeGreaterThan(0);
 
   const layout = await page.locator('[data-testid="apps-in-toss-starter"]').evaluate((starter) => {
+    const pageRoot = starter.parentElement;
+    const header = starter.querySelector<HTMLElement>(".app-header");
     const heading = starter.querySelector<HTMLElement>(".page-title");
+    const actions = starter.querySelector<HTMLElement>(".app-actions");
     const button = starter.querySelector<HTMLElement>(".app-button");
+    const logoWrap = starter.querySelector<HTMLElement>(".app-logo-wrap");
     const logo = starter.querySelector<HTMLImageElement>(".logo");
-    if (!heading || !button || !logo) {
-      throw new Error("Vanilla JS 기준 화면의 제목, 버튼 또는 로고가 없어요.");
+    if (!pageRoot || !header || !heading || !actions || !button || !logoWrap || !logo) {
+      throw new Error("Vanilla JS 기준 화면의 레이아웃 요소가 없어요.");
     }
-    const headingBox = heading.getBoundingClientRect();
+    const rootStyle = getComputedStyle(pageRoot);
+    const headerStyle = getComputedStyle(header);
     const headingStyle = getComputedStyle(heading);
+    const actionsStyle = getComputedStyle(actions);
     const buttonBox = button.getBoundingClientRect();
     const buttonStyle = getComputedStyle(button);
+    const logoWrapStyle = getComputedStyle(logoWrap);
     const logoBox = logo.getBoundingClientRect();
     return {
+      actionsGap: actionsStyle.gap,
+      actionsPaddingBottom: actionsStyle.paddingBottom,
+      actionsPaddingTop: actionsStyle.paddingTop,
       buttonBackground: buttonStyle.backgroundColor,
       buttonRadius: buttonStyle.borderRadius,
-      buttonTop: buttonBox.top,
       buttonWidth: buttonBox.width,
+      headerGap: headerStyle.gap,
+      headerPaddingBottom: headerStyle.paddingBottom,
+      headerPaddingTop: headerStyle.paddingTop,
       headingFontSize: headingStyle.fontSize,
       headingFontWeight: headingStyle.fontWeight,
-      headingLeft: headingBox.left,
-      headingTop: headingBox.top,
-      logoBottom: window.innerHeight - logoBox.bottom,
+      logoBottom: logoWrapStyle.bottom,
       logoWidth: logoBox.width,
+      rootPadding: rootStyle.padding,
     };
   });
 
+  expect(layout.rootPadding).toBe("24px");
+  expect(layout.headerGap).toBe("12px");
+  expect(layout.headerPaddingTop).toBe("24px");
+  expect(layout.headerPaddingBottom).toBe("24px");
   expect(layout.headingFontSize).toBe("24px");
   expect(layout.headingFontWeight).toBe("600");
-  expect(layout.headingLeft).toBeCloseTo(24, 0);
-  expect(layout.headingTop).toBeCloseTo(48, 0);
+  expect(layout.actionsGap).toBe("16px");
+  expect(layout.actionsPaddingTop).toBe("24px");
+  expect(layout.actionsPaddingBottom).toBe("24px");
   expect(layout.buttonBackground).toBe("rgb(235, 242, 255)");
   expect(layout.buttonRadius).toBe("16px");
-  expect(layout.buttonTop).toBeCloseTo(158, 0);
   expect(layout.buttonWidth).toBeCloseTo(342, 0);
-  expect(layout.logoBottom).toBeCloseTo(29, 0);
+  expect(layout.logoBottom).toBe("24px");
   expect(layout.logoWidth).toBeCloseTo(160, 0);
 }
 
