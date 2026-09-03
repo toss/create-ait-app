@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - "feat/**"
 
 permissions:
   contents: read
@@ -108,12 +107,8 @@ jobs:
         run: yarn test:e2e
 
   sample-scaffolding-tests:
-    name: 예제 우선순위 테스트 (${{ matrix.template }})
+    name: 예제 우선순위 테스트
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        template: [react, react-ts, vanilla, vanilla-ts, tds]
     steps:
       - name: 저장소 체크아웃
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -134,6 +129,6 @@ jobs:
 
       - name: 예제 템플릿 우선 적용, 빌드, 브라우저 검증
         env:
-          AIT_E2E_TEMPLATES: ${{ matrix.template }}
+          AIT_E2E_TEMPLATES: react,react-ts,vanilla,vanilla-ts,tds
           AIT_E2E_SAMPLES: iap,iaa
         run: yarn test:e2e
