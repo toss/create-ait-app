@@ -99,8 +99,48 @@ jobs:
       - name: 의존성 설치
         run: yarn install --immutable
 
-      - name: 프로젝트 생성, 빌드, .ait 산출물, 개발 서버 검증
+      - name: Playwright Chromium 설치
+        run: yarn playwright install --with-deps chromium
+
+      - name: 프로젝트 생성, 빌드, 첫 페이지, .ait 산출물, 개발 서버 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
-          AIT_E2E_SAMPLES: ${{ (matrix.template == 'react' || matrix.template == 'react-ts' || matrix.template == 'vanilla' || matrix.template == 'vanilla-ts' || matrix.template == 'tds') && 'iap,iaa' || '' }}
+          AIT_E2E_SCREENSHOT_DIR: artifacts/starter-pages
+        run: yarn test:e2e
+
+      - name: 첫 페이지 증적 업로드
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: starter-page-${{ matrix.template }}
+          path: artifacts/starter-pages/${{ matrix.template }}.png
+
+  sample-scaffolding-tests:
+    name: 예제 우선순위 테스트 (${{ matrix.template }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [react, react-ts, vanilla, vanilla-ts, tds]
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: Playwright Chromium 설치
+        run: yarn playwright install --with-deps chromium
+
+      - name: 예제 템플릿 우선 적용, 빌드, 브라우저 검증
+        env:
+          AIT_E2E_TEMPLATES: ${{ matrix.template }}
+          AIT_E2E_SAMPLES: iap,iaa
         run: yarn test:e2e

@@ -1,0 +1,71 @@
+.app {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 0;
+}
+
+.page-title {
+  margin: 0;
+  color: #333d4b;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  margin: 0;
+  color: #4e5968;
+  font-size: 18px;
+}
+
+.app-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.app-button {
+  display: flex;
+  width: 100%;
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.app-button:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
+}
+
+.app-button-primary {
+  color: #2272eb;
+  background-color: #ebf2ff;
+}
+
+.app-button-primary:hover {
+  background-color: #c9e2ff;
+}
+
+.app-logo-wrap {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.logo {
+  width: 160px;
+  height: auto;
+}

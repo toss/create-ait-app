@@ -50,6 +50,7 @@
     "@types/node": "26.1.1",
     "oxfmt": "0.60.0",
     "oxlint": "1.75.0",
+    "playwright": "1.62.1",
     "publint": "0.3.16",
     "release-it": "20.2.1",
     "semver": "7.8.5",

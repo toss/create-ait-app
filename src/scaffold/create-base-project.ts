@@ -7,6 +7,7 @@ import type { PackageManager } from "../package-manager/package-manager.js";
 import { copyDirectory } from "../system/copy-directory.js";
 import { templatesDirectory } from "../system/paths.js";
 import { resolveViteTemplate, scaffoldWithCreateVite } from "../vite/create-vite.js";
+import { applyViteStarterPage, resolveViteStarterTemplate } from "../vite/starter-page.js";
 
 export interface BaseProject {
   framework: FrameworkKind;
@@ -79,12 +80,19 @@ export function createBaseProject({
     return createTdsProject(targetDirectory, packageName);
   }
 
-  scaffoldWithCreateVite(targetDirectory, template, { packageManager, quiet });
+  const resolvedTemplate = resolveViteTemplate(template);
+  scaffoldWithCreateVite(targetDirectory, resolvedTemplate, { packageManager, quiet });
   const inspection = assertCsrViteProject(targetDirectory);
+  const starterTemplate =
+    resolvedTemplate ?? resolveViteStarterTemplate(inspection.framework, inspection.isTypeScript);
+  if (!starterTemplate) {
+    throw new Error("Vite 프리셋을 확인할 수 없어 Apps in Toss 시작 화면을 적용하지 못했어요.");
+  }
+  applyViteStarterPage(targetDirectory, starterTemplate);
   return {
     framework: inspection.framework,
     inspection,
     source: "create-vite",
-    template: resolveViteTemplate(template) ?? null,
+    template: starterTemplate,
   };
 }

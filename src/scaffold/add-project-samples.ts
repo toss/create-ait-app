@@ -14,6 +14,7 @@ import {
 import type { FrameworkKind } from "../project/framework.js";
 import { SAMPLE_IMPORT_MARKERS, SAMPLE_ROUTE_MARKERS } from "../samples/managed-sample-shell.js";
 import { isUnmodifiedBundledViteSampleEntry } from "../vite/create-vite.js";
+import { isUnmodifiedViteStarterEntry } from "../vite/starter-page.js";
 
 export interface SampleProject {
   framework: FrameworkKind;
@@ -177,6 +178,11 @@ export function addProjectSamples(
   if (
     !project.useTds &&
     !project.sampleShellManaged &&
+    !isUnmodifiedViteStarterEntry({
+      framework: project.framework,
+      isTypeScript: project.isTypeScript,
+      targetDirectory,
+    }) &&
     !isUnmodifiedBundledViteSampleEntry({
       framework: project.framework,
       isTypeScript: project.isTypeScript,

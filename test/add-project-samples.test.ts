@@ -8,6 +8,7 @@ import { createBaseProject } from "../src/scaffold/create-base-project.js";
 import { initializeAitProject } from "../src/scaffold/initialize-ait-project.js";
 import { APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME } from "../src/apps-in-toss/version-policy.js";
 import { getBundledViteSampleEntryContent } from "../src/vite/create-vite.js";
+import { applyViteStarterPage } from "../src/vite/starter-page.js";
 
 const temporaryDirectories: string[] = [];
 
@@ -106,6 +107,20 @@ afterEach(() => {
 });
 
 describe("addProjectSamples", () => {
+  it("lets the example shell take priority over an untouched Apps in Toss starter", () => {
+    const directory = createVanillaProject();
+    applyViteStarterPage(directory, "vanilla-ts");
+
+    expect(readFileSync(path.join(directory, "src", "main.ts"), "utf8")).toContain("반가워요");
+
+    addProjectSamples(directory, ["iap"]);
+
+    const main = readFileSync(path.join(directory, "src", "main.ts"), "utf8");
+    expect(main).toContain("InAppPurchasePage");
+    expect(main).toContain("create-ait-app:sample-imports:start");
+    expect(main).not.toContain("반가워요");
+  });
+
   it("restores the shared sample page styles without overwriting React project CSS", () => {
     const directory = createReactProject();
 

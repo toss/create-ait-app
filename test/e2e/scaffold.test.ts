@@ -1,8 +1,11 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { createServer, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { chromium, type Browser, type Page } from "playwright";
 import {
   APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME,
   APPS_IN_TOSS_WEB_FRAMEWORK_RELEASE_CHANNEL,
@@ -10,6 +13,7 @@ import {
   isPrereleaseWebFrameworkChannel,
 } from "../../src/apps-in-toss/version-policy.js";
 import { getSupportedViteTemplates } from "../../src/vite/create-vite.js";
+import { getViteStarterTemplateDefinition } from "../../src/vite/starter-page.js";
 
 const enabled = process.env.AIT_RUN_E2E === "1";
 const requested = process.env.AIT_E2E_TEMPLATES ?? "react-ts";
@@ -19,7 +23,9 @@ const templates =
     ? [...getSupportedViteTemplates(), "tds"]
     : requested.split(",").filter(Boolean);
 const running = new Set<ChildProcess>();
+const staticServers = new Set<Server>();
 const temporaryDirectories = new Set<string>();
+let browser: Browser | null = null;
 
 function findAitArtifacts(projectDirectory: string): string[] {
   const artifacts: string[] = [];
@@ -81,7 +87,11 @@ function run(
   return result.stdout;
 }
 
-async function waitForDevServer(processHandle: ChildProcess, timeoutMs = 60_000): Promise<void> {
+async function waitForServer(
+  processHandle: ChildProcess,
+  url: string,
+  timeoutMs = 60_000,
+): Promise<void> {
   let output = "";
   processHandle.stdout?.on("data", (chunk: Buffer | string) => {
     output += String(chunk);
@@ -96,15 +106,26 @@ async function waitForDevServer(processHandle: ChildProcess, timeoutMs = 60_000)
       throw new Error(`dev server exited with ${String(processHandle.exitCode)}\n${output}`);
     }
     try {
-      const response = await fetch("http://localhost:5173");
+      const response = await fetch(url);
       if (response.ok) return;
     } catch {
       // Server is still starting.
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  throw new Error(`dev server did not become ready within 60 seconds\n${output}`);
+  throw new Error(`server did not become ready within 60 seconds\n${output}`);
 }
+
+beforeAll(async () => {
+  if (enabled) {
+    browser = await chromium.launch();
+  }
+}, 120_000);
+
+afterAll(async () => {
+  await browser?.close();
+  browser = null;
+});
 
 async function stopProcessTree(processHandle: ChildProcess): Promise<void> {
   if (processHandle.exitCode !== null || processHandle.signalCode !== null) return;
@@ -135,11 +156,105 @@ async function stopProcessTree(processHandle: ChildProcess): Promise<void> {
   });
 }
 
+async function serveBuild(directory: string): Promise<string> {
+  const contentTypes: Record<string, string> = {
+    ".css": "text/css",
+    ".html": "text/html",
+    ".js": "text/javascript",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+  };
+  const server = createServer((request, response) => {
+    const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+    const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
+    const filePath = path.resolve(directory, relativePath);
+    if (!filePath.startsWith(`${path.resolve(directory)}${path.sep}`)) {
+      response.writeHead(403).end();
+      return;
+    }
+    try {
+      response.setHeader("Content-Type", contentTypes[path.extname(filePath)] ?? "text/plain");
+      response.end(readFileSync(filePath));
+    } catch {
+      response.writeHead(404).end();
+    }
+  });
+  staticServers.add(server);
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address() as AddressInfo;
+  return `http://127.0.0.1:${address.port}`;
+}
+
+// Vanilla JS로 만든 첫 페이지가 기준 계약이에요. 모든 create-vite 프리셋의
+// dist/index.html은 프레임워크별 렌더링 구현이 달라도 이 테스트를 그대로
+// 통과해야 해요.
+async function assertMatchesVanillaStarterPage(page: Page): Promise<void> {
+  await expect.poll(() => page.getByRole("heading", { name: "반가워요" }).count()).toBe(1);
+  await expect.poll(() => page.getByText("앱인토스 개발을 시작해 보세요.").count()).toBe(1);
+  await expect
+    .poll(() => page.getByRole("link", { name: "개발자센터" }).getAttribute("href"))
+    .toBe("https://developers-apps-in-toss.toss.im");
+  await expect
+    .poll(() => page.getByRole("link", { name: "개발자 커뮤니티" }).getAttribute("href"))
+    .toBe("https://techchat-apps-in-toss.toss.im");
+  await expect
+    .poll(() =>
+      page
+        .getByRole("img", { name: "Apps in Toss" })
+        .evaluate((image: HTMLImageElement) => (image.complete ? image.naturalWidth : 0)),
+    )
+    .toBeGreaterThan(0);
+
+  const layout = await page.locator('[data-testid="apps-in-toss-starter"]').evaluate((starter) => {
+    const heading = starter.querySelector<HTMLElement>(".page-title");
+    const button = starter.querySelector<HTMLElement>(".app-button");
+    const logo = starter.querySelector<HTMLImageElement>(".logo");
+    if (!heading || !button || !logo) {
+      throw new Error("Vanilla JS 기준 화면의 제목, 버튼 또는 로고가 없어요.");
+    }
+    const headingBox = heading.getBoundingClientRect();
+    const headingStyle = getComputedStyle(heading);
+    const buttonBox = button.getBoundingClientRect();
+    const buttonStyle = getComputedStyle(button);
+    const logoBox = logo.getBoundingClientRect();
+    return {
+      buttonBackground: buttonStyle.backgroundColor,
+      buttonRadius: buttonStyle.borderRadius,
+      buttonTop: buttonBox.top,
+      buttonWidth: buttonBox.width,
+      headingFontSize: headingStyle.fontSize,
+      headingFontWeight: headingStyle.fontWeight,
+      headingLeft: headingBox.left,
+      headingTop: headingBox.top,
+      logoBottom: window.innerHeight - logoBox.bottom,
+      logoWidth: logoBox.width,
+    };
+  });
+
+  expect(layout.headingFontSize).toBe("24px");
+  expect(layout.headingFontWeight).toBe("600");
+  expect(layout.headingLeft).toBeCloseTo(24, 0);
+  expect(layout.headingTop).toBeCloseTo(48, 0);
+  expect(layout.buttonBackground).toBe("rgb(235, 242, 255)");
+  expect(layout.buttonRadius).toBe("16px");
+  expect(layout.buttonTop).toBeCloseTo(158, 0);
+  expect(layout.buttonWidth).toBeCloseTo(342, 0);
+  expect(layout.logoBottom).toBeCloseTo(29, 0);
+  expect(layout.logoWidth).toBeCloseTo(160, 0);
+}
+
 afterEach(async () => {
   for (const processHandle of running) {
     await stopProcessTree(processHandle);
   }
   running.clear();
+  for (const server of staticServers) {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+  staticServers.clear();
   for (const directory of temporaryDirectories) {
     rmSync(directory, { force: true, recursive: true });
   }
@@ -148,7 +263,7 @@ afterEach(async () => {
 
 describe.skipIf(!enabled)("scaffolding compatibility", () => {
   it.each(templates)(
-    "%s: scaffold, build Vite and Apps in Toss, and start dev server",
+    "%s: scaffold, build, verify dist/index.html, and start dev server",
     async (template) => {
       const parent = mkdtempSync(path.join(tmpdir(), `create-ait-scaffolding-${template}-`));
       temporaryDirectories.add(parent);
@@ -230,6 +345,27 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
           ).toBe(true);
         }
       }
+      if (template !== "tds") {
+        const starter = getViteStarterTemplateDefinition(template);
+        const entry = readFileSync(path.join(projectDirectory, starter.entryPath), "utf8");
+        if (sampleIds.length === 0) {
+          expect(entry).toContain('data-testid="apps-in-toss-starter"');
+          expect(entry).toContain("반가워요");
+        } else {
+          expect(entry).toContain("create-ait-app:sample-imports:start");
+          expect(entry).not.toContain('data-testid="apps-in-toss-starter"');
+        }
+        for (const stylePath of [
+          starter.stylePath,
+          starter.globalStylePath,
+          starter.pageStylePath,
+        ].filter((value): value is string => Boolean(value))) {
+          expect(existsSync(path.join(projectDirectory, stylePath))).toBe(true);
+        }
+      }
+      expect(readFileSync(path.join(projectDirectory, "index.html"), "utf8")).toContain(
+        '<html lang="ko">',
+      );
       expect(readFileSync(path.join(projectDirectory, ".gitignore"), "utf8")).toContain(
         "node_modules",
       );
@@ -243,6 +379,48 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         0,
       );
 
+      const buildUrl = await serveBuild(path.join(projectDirectory, "dist"));
+      const previewUrl = `${buildUrl}/index.html`;
+
+      if (!browser) throw new Error("Playwright Chromium이 준비되지 않았어요.");
+      const page = await browser.newPage({
+        colorScheme: "light",
+        deviceScaleFactor: 1,
+        viewport: { height: 844, width: 390 },
+      });
+      const browserErrors: string[] = [];
+      page.on("console", (message) => {
+        if (message.type() === "error") browserErrors.push(message.text());
+      });
+      page.on("pageerror", (error) => browserErrors.push(error.message));
+      const response = await page.goto(previewUrl, { waitUntil: "networkidle" });
+      expect(response?.ok()).toBe(true);
+      expect(await page.title()).toBe("Apps in Toss");
+
+      if (sampleIds.length === 0) {
+        if (template === "tds") {
+          await expect.poll(() => page.getByRole("heading", { name: "반가워요" }).count()).toBe(1);
+          await expect.poll(() => page.getByText("앱인토스 개발을 시작해 보세요.").count()).toBe(1);
+        } else {
+          await assertMatchesVanillaStarterPage(page);
+        }
+
+        const screenshotDirectory = process.env.AIT_E2E_SCREENSHOT_DIR;
+        if (screenshotDirectory) {
+          mkdirSync(screenshotDirectory, { recursive: true });
+          await page.screenshot({
+            path: path.join(screenshotDirectory, `${template}.png`),
+          });
+        }
+      } else {
+        for (const sampleId of sampleIds) {
+          const label = sampleId === "iap" ? "인앱 결제 테스트하기" : "인앱 광고 테스트하기";
+          await expect.poll(() => page.getByRole("button", { name: label }).count()).toBe(1);
+        }
+      }
+      expect(browserErrors).toEqual([]);
+      await page.close();
+
       const devServer = spawn("npm", ["run", "dev"], {
         cwd: projectDirectory,
         detached: process.platform !== "win32",
@@ -250,7 +428,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         stdio: ["ignore", "pipe", "pipe"],
       });
       running.add(devServer);
-      await waitForDevServer(devServer);
+      await waitForServer(devServer, "http://localhost:5173/index.html");
       expect(devServer.exitCode).toBeNull();
       await stopProcessTree(devServer);
       running.delete(devServer);
