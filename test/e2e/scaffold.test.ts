@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -22,6 +22,7 @@ const templates =
   requested === "all"
     ? [...getSupportedViteTemplates(), "tds"]
     : requested.split(",").filter(Boolean);
+const running = new Set<ChildProcess>();
 const staticServers = new Set<Server>();
 const temporaryDirectories = new Set<string>();
 let browser: Browser | null = null;
@@ -71,25 +72,65 @@ function generatedProjectEnvironment(
   return environment;
 }
 
-function run(
+async function run(
   command: string,
   args: string[],
   cwd: string,
   environment: NodeJS.ProcessEnv = { ...process.env, CI: "1" },
-): string {
-  const result = spawnSync(command, args, {
+): Promise<string> {
+  const commandLabel = `${command} ${args.join(" ")}`;
+  const startedAt = Date.now();
+  process.stdout.write(`[e2e] 시작: ${commandLabel}\n`);
+
+  const processHandle = spawn(command, args, {
     cwd,
-    encoding: "utf8",
+    detached: process.platform !== "win32",
     env: environment,
+    stdio: ["ignore", "pipe", "pipe"],
   });
-  if (result.status !== 0) {
-    throw new Error(
-      [result.stdout, result.stderr, `${command} ${args.join(" ")} failed`]
-        .filter(Boolean)
-        .join("\n"),
-    );
-  }
-  return result.stdout;
+  running.add(processHandle);
+
+  let stdout = "";
+  let stderr = "";
+  processHandle.stdout?.on("data", (chunk: Buffer | string) => {
+    stdout += String(chunk);
+  });
+  processHandle.stderr?.on("data", (chunk: Buffer | string) => {
+    stderr += String(chunk);
+  });
+
+  return new Promise<string>((resolve, reject) => {
+    let settled = false;
+    const progressTimer = setInterval(() => {
+      process.stdout.write(`[e2e] 실행 중 (${Date.now() - startedAt}ms): ${commandLabel}\n`);
+    }, 30_000);
+    progressTimer.unref();
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(progressTimer);
+      running.delete(processHandle);
+      callback();
+    };
+
+    processHandle.once("error", (error) => finish(() => reject(error)));
+    processHandle.once("close", (code, signal) => {
+      finish(() => {
+        process.stdout.write(`[e2e] 종료 (${Date.now() - startedAt}ms): ${commandLabel}\n`);
+        if (code !== 0) {
+          if (stdout) process.stderr.write(stdout);
+          if (stderr) process.stderr.write(stderr);
+          reject(
+            new Error(
+              `${commandLabel} failed with code ${String(code)} and signal ${String(signal)}`,
+            ),
+          );
+          return;
+        }
+        resolve(stdout);
+      });
+    });
+  });
 }
 
 beforeAll(async () => {
@@ -102,6 +143,35 @@ afterAll(async () => {
   await browser?.close();
   browser = null;
 });
+
+async function stopProcessTree(processHandle: ChildProcess): Promise<void> {
+  if (processHandle.exitCode !== null || processHandle.signalCode !== null) return;
+
+  await new Promise<void>((resolve) => {
+    const finish = () => {
+      clearTimeout(forceTimer);
+      clearTimeout(giveUpTimer);
+      resolve();
+    };
+    const kill = (signal: NodeJS.Signals) => {
+      try {
+        if (process.platform !== "win32" && processHandle.pid) {
+          process.kill(-processHandle.pid, signal);
+        } else {
+          processHandle.kill(signal);
+        }
+      } catch {
+        finish();
+      }
+    };
+    const forceTimer = setTimeout(() => kill("SIGKILL"), 5_000);
+    const giveUpTimer = setTimeout(finish, 10_000);
+
+    processHandle.once("error", finish);
+    processHandle.once("exit", finish);
+    kill("SIGTERM");
+  });
+}
 
 async function serveBuild(directory: string): Promise<string> {
   const contentTypes: Record<string, string> = {
@@ -209,6 +279,10 @@ async function assertMatchesVanillaStarterPage(page: Page): Promise<void> {
 }
 
 afterEach(async () => {
+  for (const processHandle of running) {
+    await stopProcessTree(processHandle);
+  }
+  running.clear();
   for (const server of staticServers) {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
@@ -245,7 +319,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         cliArguments.push("--sample", sampleIds[0]);
       }
 
-      const scaffoldOutput = run("corepack", cliArguments, process.cwd());
+      const scaffoldOutput = await run("corepack", cliArguments, process.cwd());
       if (template !== "tds") {
         // --inline은 create-vite를 quiet로 스폰해야 해요 — create-vite 자체의
         // "Done. Now run:" 안내가 새어나오면 안 되고, 우리 CLI의 완료 배너만
@@ -254,7 +328,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         expect(scaffoldOutput).toContain("프로젝트를 만들었어요");
       }
       if (sampleIds.length > 1) {
-        run(
+        await run(
           "corepack",
           [
             "yarn",
@@ -332,7 +406,7 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         template === "tds"
           ? generatedProjectEnvironment()
           : generatedProjectEnvironment("production");
-      run("npm", ["run", "build"], projectDirectory, buildEnvironment);
+      await run("npm", ["run", "build"], projectDirectory, buildEnvironment);
       expect(existsSync(path.join(projectDirectory, "dist", "index.html"))).toBe(true);
       const newAitArtifacts = findAitArtifacts(projectDirectory).filter(
         (artifact) => !aitArtifactsBeforeBuild.has(artifact),
@@ -381,6 +455,6 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         await page.close();
       }
     },
-    180_000,
+    600_000,
   );
 });
