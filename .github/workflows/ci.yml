@@ -81,6 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         template: ${{ fromJSON(needs.scaffolding-matrix.outputs.templates) }}
     steps:
