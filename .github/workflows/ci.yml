@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - "feat/**"
 
 permissions:
   contents: read
@@ -82,6 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         template: ${{ fromJSON(needs.scaffolding-matrix.outputs.templates) }}
     steps:
@@ -99,8 +99,37 @@ jobs:
       - name: 의존성 설치
         run: yarn install --immutable
 
-      - name: 프로젝트 생성, 빌드, .ait 산출물, 개발 서버 검증
+      - name: Playwright Chromium 설치
+        run: yarn playwright install --with-deps chromium
+
+      - name: 프로젝트 생성, 빌드, 첫 페이지, .ait 산출물 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
-          AIT_E2E_SAMPLES: ${{ (matrix.template == 'react' || matrix.template == 'react-ts' || matrix.template == 'vanilla' || matrix.template == 'vanilla-ts' || matrix.template == 'tds') && 'iap,iaa' || '' }}
+        run: yarn test:e2e
+
+  sample-scaffolding-tests:
+    name: 예제 우선순위 테스트
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Node.js 설정
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: Playwright Chromium 설치
+        run: yarn playwright install --with-deps chromium
+
+      - name: 예제 템플릿 우선 적용, 빌드, 브라우저 검증
+        env:
+          AIT_E2E_TEMPLATES: react,react-ts,vanilla,vanilla-ts,tds
+          AIT_E2E_SAMPLES: iap,iaa
         run: yarn test:e2e

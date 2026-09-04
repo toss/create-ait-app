@@ -9,6 +9,7 @@ import { readPackageJson } from "../project/package-json.js";
 import type { PackageManager } from "../package-manager/package-manager.js";
 import { runCommand } from "../system/command.js";
 import { packageRoot } from "../system/paths.js";
+import { getViteStarterTemplates } from "./starter-page.js";
 
 const require = createRequire(import.meta.url);
 
@@ -103,8 +104,12 @@ export function isUnmodifiedBundledViteSampleEntry({
 
 export function getSupportedViteTemplates(): string[] {
   const createViteRoot = path.dirname(require.resolve("create-vite"));
+  const starterTemplates = new Set(getViteStarterTemplates());
 
   return getBundledViteTemplates().filter((template) => {
+    if (!starterTemplates.has(template)) {
+      return false;
+    }
     const templateDirectory = path.join(createViteRoot, `template-${template}`);
     if (!existsSync(path.join(templateDirectory, "index.html"))) {
       return false;
