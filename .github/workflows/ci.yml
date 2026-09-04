@@ -101,7 +101,7 @@ jobs:
       - name: Playwright Chromium 설치
         run: yarn playwright install --with-deps chromium
 
-      - name: 프로젝트 생성, 빌드, 첫 페이지, .ait 산출물, 개발 서버 검증
+      - name: 프로젝트 생성, 빌드, 첫 페이지, .ait 산출물 검증
         env:
           AIT_E2E_TEMPLATES: ${{ matrix.template }}
         run: yarn test:e2e

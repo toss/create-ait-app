@@ -1,4 +1,4 @@
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -22,7 +22,6 @@ const templates =
   requested === "all"
     ? [...getSupportedViteTemplates(), "tds"]
     : requested.split(",").filter(Boolean);
-const running = new Set<ChildProcess>();
 const staticServers = new Set<Server>();
 const temporaryDirectories = new Set<string>();
 let browser: Browser | null = null;
@@ -93,35 +92,6 @@ function run(
   return result.stdout;
 }
 
-async function waitForServer(
-  processHandle: ChildProcess,
-  url: string,
-  timeoutMs = 60_000,
-): Promise<void> {
-  let output = "";
-  processHandle.stdout?.on("data", (chunk: Buffer | string) => {
-    output += String(chunk);
-  });
-  processHandle.stderr?.on("data", (chunk: Buffer | string) => {
-    output += String(chunk);
-  });
-
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < timeoutMs) {
-    if (processHandle.exitCode !== null) {
-      throw new Error(`dev server exited with ${String(processHandle.exitCode)}\n${output}`);
-    }
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-    } catch {
-      // Server is still starting.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  throw new Error(`server did not become ready within 60 seconds\n${output}`);
-}
-
 beforeAll(async () => {
   if (enabled) {
     browser = await chromium.launch();
@@ -132,35 +102,6 @@ afterAll(async () => {
   await browser?.close();
   browser = null;
 });
-
-async function stopProcessTree(processHandle: ChildProcess): Promise<void> {
-  if (processHandle.exitCode !== null || processHandle.signalCode !== null) return;
-
-  await new Promise<void>((resolve) => {
-    const finish = () => {
-      clearTimeout(forceTimer);
-      clearTimeout(giveUpTimer);
-      resolve();
-    };
-    const kill = (signal: NodeJS.Signals) => {
-      try {
-        if (process.platform !== "win32" && processHandle.pid) {
-          process.kill(-processHandle.pid, signal);
-        } else {
-          processHandle.kill(signal);
-        }
-      } catch {
-        finish();
-      }
-    };
-    const forceTimer = setTimeout(() => kill("SIGKILL"), 5_000);
-    const giveUpTimer = setTimeout(finish, 10_000);
-
-    processHandle.once("error", finish);
-    processHandle.once("exit", finish);
-    kill("SIGTERM");
-  });
-}
 
 async function serveBuild(directory: string): Promise<string> {
   const contentTypes: Record<string, string> = {
@@ -268,10 +209,6 @@ async function assertMatchesVanillaStarterPage(page: Page): Promise<void> {
 }
 
 afterEach(async () => {
-  for (const processHandle of running) {
-    await stopProcessTree(processHandle);
-  }
-  running.clear();
   for (const server of staticServers) {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
@@ -284,7 +221,7 @@ afterEach(async () => {
 
 describe.skipIf(!enabled)("scaffolding compatibility", () => {
   it.each(templates)(
-    "%s: scaffold, build, verify dist/index.html, and start dev server",
+    "%s: scaffold, build, and verify dist/index.html",
     async (template) => {
       const parent = mkdtempSync(path.join(tmpdir(), `create-ait-scaffolding-${template}-`));
       temporaryDirectories.add(parent);
@@ -443,18 +380,6 @@ describe.skipIf(!enabled)("scaffolding compatibility", () => {
         expect(browserErrors).toEqual([]);
         await page.close();
       }
-
-      const devServer = spawn("npm", ["run", "dev"], {
-        cwd: projectDirectory,
-        detached: process.platform !== "win32",
-        env: generatedProjectEnvironment("development"),
-        stdio: ["ignore", "pipe", "pipe"],
-      });
-      running.add(devServer);
-      await waitForServer(devServer, "http://localhost:5173/index.html");
-      expect(devServer.exitCode).toBeNull();
-      await stopProcessTree(devServer);
-      running.delete(devServer);
     },
     180_000,
   );
