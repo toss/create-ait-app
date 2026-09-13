@@ -1533,7 +1533,7 @@ __metadata:
     "@inquirer/prompts": "npm:8.5.2"
     "@types/cross-spawn": "npm:6.0.6"
     "@types/node": "npm:26.1.1"
-    create-vite: "npm:9.2.0"
+    create-vite: "npm:9.2.1"
     cross-spawn: "npm:7.0.6"
     oxfmt: "npm:0.60.0"
     oxlint: "npm:1.75.0"
@@ -1549,13 +1549,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"create-vite@npm:9.2.0":
-  version: 9.2.0
-  resolution: "create-vite@npm:9.2.0"
+"create-vite@npm:9.2.1":
+  version: 9.2.1
+  resolution: "create-vite@npm:9.2.1"
   bin:
     create-vite: index.js
     cva: index.js
-  checksum: 10c0/fb84c92a7bf2330f7f38fe46befbd98b4349726b2f740794444ae7656735fa6fe3a2c407fad76c1ff8fe2276a27e14e65c75d60f517355cb49aa3b4f51c80270
+  checksum: 10c0/c45bb79d7030b12156c2a0f49a9c26d78a69344dd461f1bbe744474c0f9837a6369a8d13742475e8b2b55fd113337341f507a85eaf10ab67e83337426b89214c
   languageName: node
   linkType: hard
 
