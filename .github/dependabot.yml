@@ -14,7 +14,9 @@ updates:
         - create-vite
     open-pull-requests-limit: 1
   - package-ecosystem: npm
-    directory: /.github/version-pins
+    # .github 아래의 npm 버전 핀은 GitHub의 PR 파일 검증에서 거절돼요.
+    # https://github.com/dependabot/dependabot-core/issues/15721
+    directory: /version-pins
     schedule:
       interval: cron
       cronjob: "0 9 * * *"

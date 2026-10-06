@@ -1,4 +1,4 @@
-import versionPinsPackageJson from "../../.github/version-pins/package.json" with { type: "json" };
+import versionPinsPackageJson from "../../version-pins/package.json" with { type: "json" };
 
 export type AppsInTossWebFrameworkReleaseChannel = "beta" | "rc" | "latest";
 
@@ -21,7 +21,7 @@ export function resolveWebFrameworkSpecifier(
     versionPinsPackageJson.dependencies?.[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME];
   if (!pinnedVersion || !/^\d+\.\d+\.\d+$/.test(pinnedVersion)) {
     throw new Error(
-      "@apps-in-toss/web-framework의 latest 채널 버전은 .github/version-pins/package.json에 정확 버전으로 고정되어 있어야 해요.",
+      "@apps-in-toss/web-framework의 latest 채널 버전은 version-pins/package.json에 정확 버전으로 고정되어 있어야 해요.",
     );
   }
   return pinnedVersion;
