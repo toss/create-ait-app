@@ -22,12 +22,12 @@ describe("Apps in Toss web framework version policy", () => {
     expect(isPrereleaseWebFrameworkChannel("latest")).toBe(false);
   });
 
-  it("resolves the latest channel to .github/version-pins/package.json's pinned version", () => {
+  it("resolves the latest channel to version-pins/package.json's pinned version", () => {
     // 구현이 쓰는 것과 같은 JSON import를 재사용하지 않고, 독립적으로 다시 파싱해서
     // 잘못된 키를 참조하거나 버전을 하드코딩하는 등의 구현 회귀를 잡아낼 수 있게 해요.
     const repoRoot = path.resolve(import.meta.dirname, "..");
     const versionPinsPackageJson = JSON.parse(
-      readFileSync(path.join(repoRoot, ".github", "version-pins", "package.json"), "utf8"),
+      readFileSync(path.join(repoRoot, "version-pins", "package.json"), "utf8"),
     );
     const pinnedVersion =
       versionPinsPackageJson.dependencies[APPS_IN_TOSS_WEB_FRAMEWORK_PACKAGE_NAME];
