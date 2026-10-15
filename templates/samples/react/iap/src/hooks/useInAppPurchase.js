@@ -30,7 +30,12 @@ export function useInAppPurchase() {
   }, []);
 
   const grantProduct = useCallback((orderId) => {
-    // TODO: 여기에 상품 지급 로직을 작성해 주세요.
+    // TODO: 상품 지급 로직을 작성해 주세요. 지금은 데모라서 아무것도 지급하지 않아요.
+    // 그대로 출시하면 결제한 사용자가 상품을 받지 못해요.
+    // - 상품을 지급하고, 지급 결과를 서버나 앱 저장소에 기록해 주세요.
+    // - 같은 orderId로 두 번 지급하지 않도록 처리해 주세요.
+    // 참고문서: https://developers-apps-in-toss.toss.im/guide/monetization/in-app-payment
+    // 주문 상태 조회 API(선택): https://developers-apps-in-toss.toss.im/api/iap
     console.info(`상품 지급 처리: ${orderId}`);
   }, []);
 
@@ -45,6 +50,8 @@ export function useInAppPurchase() {
             processProductGrant: ({ orderId }) => {
               grantProduct(orderId);
               console.info(`상품 지급 처리: ${orderId}`);
+              // 지급이 실제로 성공했을 때만 true를 반환해 주세요.
+              // 실패하면 false를 반환해 주세요. 미결 주문으로 남아 restorePendingOrders에서 다시 처리돼요.
               return true;
             },
           },
@@ -77,6 +84,8 @@ export function useInAppPurchase() {
 
       for (const order of orders) {
         grantProduct(order.orderId);
+        // 지급에 성공한 주문만 완료 처리해 주세요.
+        // 지급에 실패한 주문은 완료 처리하지 말고, 다음 복구 때 다시 처리되도록 남겨 두세요.
         await IAP.completeProductGrant({ params: { orderId: order.orderId } });
         console.info("미결 주문 복원 완료:", order.orderId);
       }
