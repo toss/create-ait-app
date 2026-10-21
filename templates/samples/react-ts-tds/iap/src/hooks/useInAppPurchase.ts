@@ -45,11 +45,9 @@ export function useInAppPurchase(): UseInAppPurchaseReturn {
 
   const grantProduct = useCallback((orderId: string) => {
     // TODO: 상품 지급 로직을 작성해 주세요. 지금은 데모라서 아무것도 지급하지 않아요.
-    // 그대로 출시하면 결제한 사용자가 상품을 받지 못해요.
-    // - 상품을 지급하고, 지급 결과를 서버나 앱 저장소에 기록해 주세요.
+    // - 상품을 지급하고, 지급 결과를 가급적 서버에 저장해주세요.
     // - 같은 orderId로 두 번 지급하지 않도록 처리해 주세요.
     // 참고문서: https://developers-apps-in-toss.toss.im/guide/monetization/in-app-payment
-    // 주문 상태 조회 API(선택): https://developers-apps-in-toss.toss.im/api/iap
 
     console.info(`상품 지급 처리: ${orderId}`);
   }, []);
