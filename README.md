@@ -16,7 +16,7 @@ Node.js 24 이상이 필요해요.
 npx create-ait-app my-app
 ```
 
-`git init`을 실행했거나 빈 저장소를 clone한 뒤에는 현재 디렉터리에 프로젝트를 만들 수 있어요. `.git` 외에 다른 파일이 있으면 기존 파일을 보호하기 위해 생성을 중단해요.
+비어 있는 현재 디렉터리에 프로젝트를 만들 수 있어요. `git init`을 실행했거나 빈 저장소를 clone한 경우에도 가능해요. `.git` 외에 다른 파일이 있으면 기존 파일을 보호하기 위해 생성을 중단해요.
 
 ```bash
 npx create-ait-app .
@@ -45,7 +45,7 @@ npx create-ait-app my-app --pm pnpm
 
 선택을 마치면 Apps in Toss 설정을 준비하고 의존성을 설치해요. 이어서 설치된 웹 프레임워크의 `ait init`을 실행해 devtools 설치와 번들러 플러그인 설정을 마쳐요.
 
-Apps in Toss 시작 화면을 만들어요.
+생성된 프로젝트에는 Apps in Toss 시작 화면이 포함돼요.
 
 ## 개발 시작하기
 
@@ -68,7 +68,7 @@ Yarn이나 pnpm을 선택했다면 `npm run` 대신 해당 패키지 매니저�
 
 ## 프레임워크 선택하기
 
-Vite가 제공하는 정적 클라이언트 프리셋을 선택할 수 있어요. React, Vue, Svelte, Solid, Preact, Lit, Qwik, Vanilla와 각 프리셋의 TypeScript 버전을 지원해요.
+Vite가 제공하는 정적 클라이언트 프리셋을 선택할 수 있어요. React, Vue, Svelte, Solid, Preact, Lit, Qwik, Vanilla를 지원하며, 각 프리셋에서 TypeScript 사용 여부를 선택할 수 있어요.
 
 순수 CSR(Client-Side Rendering)을 지원해요. 빌드할 때 HTML을 만든 뒤 클라이언트에서 하이드레이션하는 SSG(Static Site Generation)도 지원해요. 요청마다 서버 런타임이 필요한 SSR(Server-Side Rendering) 전용 프로젝트는 지원하지 않아요.
 
@@ -106,7 +106,7 @@ npx create-ait-app add-sample ./my-app --sample iap,iaa
 
 `add-sample`은 create-ait-app으로 만든 프로젝트 중 예제를 지원하는 프로젝트에서만 사용할 수 있어요. 이미 추가된 예제는 건너뛰고 새 예제만 추가해요.
 
-첫 예제를 추가할 때 Vite의 `App` 또는 `main` 진입 파일이 초기 상태에서 수정되어 있으면 사용자 코드를 보호하기 위해 추가를 중단해요. 예제를 한 번 추가한 뒤에는 관리 주석 바깥의 사용자 코드를 유지하면서 새 예제만 추가해요.
+첫 예제를 추가할 때 Vite의 `App` 또는 `main` 진입 파일에 사용자 수정이 있으면 덮어쓰지 않고 중단해요. 예제를 한 번 추가한 뒤에는 진입 파일의 `create-ait-app:sample-` 표식으로 구분한 영역만 바꾸고, 같은 파일의 나머지 사용자 코드는 유지해요.
 
 ## 질문 없이 프로젝트 만들기
 
