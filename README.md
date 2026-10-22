@@ -4,27 +4,42 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 [![CI](https://github.com/toss/create-ait-app/actions/workflows/ci.yml/badge.svg)](https://github.com/toss/create-ait-app/actions/workflows/ci.yml)
 
-Apps in Toss 웹앱 개발에 필요한 Vite 프로젝트를 만들고 설정을 추가하는 CLI예요.
+Apps in Toss 웹앱을 Vite로 바로 시작하게 해 주는 CLI예요. 명령 한 줄이면 설정을 따로 만지지 않아도 개발 서버를 띄우고, 빌드하고, 배포할 수 있는 프로젝트가 생겨요.
 
-명령 한 줄로 Vite 프로젝트 생성부터 Apps in Toss 설정, 의존성 설치까지 마칠 수 있어요. 번들러 플러그인도 함께 설정해요. 생성된 프로젝트에서 `dev`, `build`, `deploy` 명령을 바로 실행할 수 있어요.
+## 시작하기
 
 Node.js 24 이상이 필요해요.
-
-## 프로젝트 만들기
 
 ```bash
 npx create-ait-app my-app
 ```
 
-비어 있는 현재 디렉터리에 프로젝트를 만들 수 있어요. `git init`을 실행했거나 빈 저장소를 clone한 경우에도 가능해요. `.git` 외에 다른 파일이 있으면 기존 파일을 보호하기 위해 생성을 중단해요.
+패키지 매니저, 프레임워크, 넣을 예제 코드를 차례로 고르면 프로젝트가 만들어져요. 다 만들어지면 개발 서버를 띄워 보세요.
 
 ```bash
-npx create-ait-app .
+cd my-app
+npm run dev
 ```
 
-CLI를 실행할 때 쓴 패키지 매니저를 감지해 생성할 프로젝트에도 사용해요. `npx`로 실행하면 npm을, `yarn create`로 실행하면 Yarn을, `pnpm create`로 실행하면 pnpm을 사용해요.
+## 만든 프로젝트로 할 수 있는 것
 
-패키지 매니저를 감지하면 선택하는 단계를 건너뛰어요. 다른 패키지 매니저를 쓰려면 해당 도구로 실행하거나 `--pm`으로 지정해 주세요.
+Apps in Toss 시작 화면, `apps-in-toss.config.ts`, devtools, 번들러 플러그인이 모두 준비된 상태라 바로 개발을 시작하면 돼요.
+
+```bash
+npm run dev     # 개발 서버 실행
+npm run build   # 배포할 .ait 파일 만들기
+npm run deploy  # 배포
+```
+
+Yarn이나 pnpm을 골랐다면 `npm run` 대신 그 패키지 매니저로 실행하세요. 앱 이름, 브랜드, 권한은 `apps-in-toss.config.ts`에서 바꿔요.
+
+만드는 도중 Apps in Toss 설정 단계가 실패해도 그때까지 만든 파일은 남아 있어요. 화면에 나오는 명령을 직접 실행하면 이어서 설정할 수 있어요.
+
+## 원하는 환경으로 만들기
+
+### 다른 패키지 매니저 쓰기
+
+실행한 패키지 매니저가 그대로 프로젝트에 쓰여요. `npx`로 실행하면 npm, `yarn create`면 Yarn, `pnpm create`면 pnpm이에요. 이때는 패키지 매니저를 따로 묻지 않아요.
 
 ```bash
 # Yarn으로 만들기
@@ -37,80 +52,78 @@ pnpm create ait-app my-app
 npx create-ait-app my-app --pm pnpm
 ```
 
-실행하면 다음 순서로 선택해요.
+### 지금 있는 폴더에 만들기
 
-1. 패키지 매니저를 골라요. 자동으로 감지되면 이 단계를 건너뛰어요.
-2. Vite 프리셋을 골라요.
-3. 추가할 예제 코드를 골라요. 예제를 지원하는 프로젝트에서만 물어봐요.
-
-선택을 마치면 Apps in Toss 설정을 준비하고 의존성을 설치해요. 이어서 설치된 웹 프레임워크의 `ait init`을 실행해 devtools 설치와 번들러 플러그인 설정을 마쳐요.
-
-생성된 프로젝트에는 Apps in Toss 시작 화면이 포함돼요.
-
-## 개발 시작하기
+`git init`만 했거나 빈 저장소를 막 clone했다면 그 폴더에 바로 만들 수 있어요. 프로젝트 이름은 폴더 이름을 따라요.
 
 ```bash
-cd my-app
-npm run dev
+npx create-ait-app .
 ```
 
-생성한 프로젝트에서는 다음 명령을 사용할 수 있어요.
+폴더에 `.git` 말고 다른 파일이 있으면 기존 파일을 지키려고 만들지 않고 멈춰요. 경로를 직접 지정했을 때도 같아요.
+
+### 프레임워크 고르기
+
+아래 프레임워크 중에서 고를 수 있어요. 질문에 답하는 대신 `--template`에 템플릿 이름을 넘겨도 돼요.
+
+| 프레임워크 | JavaScript | TypeScript   |
+| ---------- | ---------- | ------------ |
+| React      | `react`    | `react-ts`   |
+| Vue        | `vue`      | `vue-ts`     |
+| Svelte     | `svelte`   | `svelte-ts`  |
+| Solid      | `solid`    | `solid-ts`   |
+| Preact     | `preact`   | `preact-ts`  |
+| Lit        | `lit`      | `lit-ts`     |
+| Qwik       | `qwik`     | `qwik-ts`    |
+| Vanilla    | `vanilla`  | `vanilla-ts` |
 
 ```bash
-npm run dev
-npm run build
-npm run deploy
+npx create-ait-app my-app --template vue-ts
 ```
 
-Yarn이나 pnpm을 선택했다면 `npm run` 대신 해당 패키지 매니저로 명령을 실행해 주세요.
+TDS를 쓰려면 템플릿 대신 `--tds`를 사용해요([TDS로 만들기](#tds로-만들기) 참고). 지금 설치된 버전에서 쓸 수 있는 목록은 `--list-templates`로도 확인할 수 있어요.
 
-앱 이름, 브랜드, 권한은 `apps-in-toss.config.ts`에서 설정할 수 있어요. `build`가 성공하면 배포에 사용할 `.ait` 파일이 생성돼요.
+브라우저에서 렌더링하는 CSR 방식과 빌드할 때 HTML을 미리 만들어 두는 SSG 방식을 쓸 수 있어요. 요청마다 서버가 HTML을 만드는 SSR 방식은 지원하지 않아요.
 
-## 프레임워크 선택하기
+예전 이름인 `js`와 `ts`를 넘기면 각각 `vanilla`, `vanilla-ts`로 만들어져요.
 
-Vite가 제공하는 정적 클라이언트 프리셋을 선택할 수 있어요. React, Vue, Svelte, Solid, Preact, Lit, Qwik, Vanilla를 지원하며, 각 프리셋에서 TypeScript 사용 여부를 선택할 수 있어요.
+### TDS로 만들기
 
-순수 CSR(Client-Side Rendering)을 지원해요. 빌드할 때 HTML을 만든 뒤 클라이언트에서 하이드레이션하는 SSG(Static Site Generation)도 지원해요. 요청마다 서버 런타임이 필요한 SSR(Server-Side Rendering) 전용 프로젝트는 지원하지 않아요.
-
-이전 이름도 사용할 수 있도록 `js`는 `vanilla`로, `ts`는 `vanilla-ts`로 처리해요.
-
-### TDS 사용하기
-
-TDS(Toss Design System)를 사용하려면 React 18이 필요해요. `--tds`로 전용 프로젝트를 만들어 주세요. 대화형 실행에서는 TDS 사용 여부를 묻지 않아요.
+TDS(Toss Design System)를 쓰려면 `--tds`를 사용하세요. TDS에 맞춰 React 18과 TypeScript로 구성된 프로젝트가 만들어져요. 질문 중에는 TDS를 고르는 단계가 없으니 꼭 이 옵션으로 만들어야 해요.
 
 ```bash
-npx create-ait-app my-app --inline --pm npm --tds
+npx create-ait-app my-app --tds
 ```
 
-TDS를 선택하면 프리셋이 자동으로 정해져요. `--template`은 함께 사용할 수 없어요.
+프레임워크가 정해져 있어서 `--template`과 함께 쓸 수는 없어요.
 
-## 예제 코드 사용하기
+## 인앱 결제·광고 예제로 바로 사용해 보기
 
-인앱 결제(IAP)와 인앱 광고(IAA) 예제를 프로젝트에 추가할 수 있어요. React, React TypeScript, Vanilla, Vanilla TypeScript, TDS 프로젝트에서 사용할 수 있어요.
+인앱 결제(`iap`)나 인앱 광고(`iaa`)를 붙여 보고 싶다면 예제 코드를 넣어 시작할 수 있어요. React, React TypeScript, Vanilla, Vanilla TypeScript, TDS 프로젝트에서 쓸 수 있어요.
 
-프로젝트를 만들 때 바로 추가하려면 `--sample`을 사용해 주세요.
+프로젝트를 만들 때 질문에서 고르거나 `--sample`로 지정하세요.
 
 ```bash
-npx create-ait-app my-app --inline --pm npm --template react-ts --sample iap,iaa
+npx create-ait-app my-app --template react-ts --sample iap,iaa
 ```
 
-프로젝트를 만든 뒤에도 예제를 추가할 수 있어요. 예제를 지정하지 않으면 아직 추가하지 않은 예제 중에서 대화형으로 골라요.
+이미 만든 프로젝트에는 `add-sample`로 나중에 넣어요. 프로젝트 폴더에서 실행하면 아직 넣지 않은 예제 중에서 고를 수 있어요.
 
 ```bash
-# 현재 프로젝트에 대화형으로 추가
+# 지금 있는 프로젝트에 골라서 넣기
 npx create-ait-app add-sample
 
 # 경로와 예제를 직접 지정
 npx create-ait-app add-sample ./my-app --sample iap,iaa
 ```
 
-`add-sample`은 create-ait-app으로 만든 프로젝트 중 예제를 지원하는 프로젝트에서만 사용할 수 있어요. 이미 추가된 예제는 건너뛰고 새 예제만 추가해요.
+이미 넣은 예제는 건너뛰고, 직접 작성한 코드는 덮어쓰지 않아요. 다만 `App`이나 `main` 파일을 처음 만든 상태에서 고친 뒤 첫 예제를 넣으려 하면, 코드를 지키려고 넣지 않고 멈춰요.
 
-첫 예제를 추가할 때 Vite의 `App` 또는 `main` 진입 파일에 사용자 수정이 있으면 덮어쓰지 않고 중단해요. 예제를 한 번 추가한 뒤에는 진입 파일의 `create-ait-app:sample-` 표식으로 구분한 영역만 바꾸고, 같은 파일의 나머지 사용자 코드는 유지해요.
+## 질문 없이 만들기
 
-## 질문 없이 프로젝트 만들기
+만들 구성이 이미 정해져 있다면 `--inline`을 사용하세요. 질문 없이 명령 한 줄로 프로젝트를 만들어요. 같은 구성으로 프로젝트를 여러 번 만드는 스크립트나 CI, 터미널 질문에 답할 수 없는 [코딩 에이전트](#코딩-에이전트에게-맡기기)에게 생성을 맡길 때 쓰기 좋아요.
 
-CI나 스크립트에서 질문 없이 실행하려면 `--inline`과 필수 옵션을 함께 지정해 주세요.
+`--inline`을 쓸 때는 프로젝트 경로, `--pm`, 그리고 `--template`과 `--tds` 중 하나를 꼭 넘겨야 해요. 빠진 값이 있으면 오류를 알리고 멈춰요.
 
 ```bash
 # React + TypeScript
@@ -127,11 +140,9 @@ npx create-ait-app my-app \
   --sample iap,iaa
 ```
 
-`--inline`으로 실행할 때는 프로젝트 경로, `--pm`, 그리고 `--template` 또는 `--tds` 중 하나를 반드시 지정해야 해요. 필수값이 빠지면 도움말을 확인하라는 오류 메시지와 함께 종료해요.
+### 코딩 에이전트에게 맡기기
 
-## 에이전트에게 프로젝트 생성 맡기기
-
-아래 프롬프트를 에이전트에게 전달해 주세요. 에이전트가 필요한 선택 사항을 먼저 물어본 뒤, 답변에 맞춰 프로젝트 생성 명령을 비대화형으로 실행해요.
+아래 프롬프트를 코딩 에이전트에게 주면 에이전트가 프로젝트 경로, 프레임워크와 TDS 사용 여부, 패키지 매니저, 예제 코드를 물어본 뒤 답에 맞춰 프로젝트를 만들어 줘요.
 
 ```text
 `npx --yes create-ait-app --help`를 먼저 실행해 주세요.
@@ -141,28 +152,23 @@ npx create-ait-app my-app \
 제 답을 받으면 프로젝트 경로, `--inline`, `--pm`을 명령에 반드시 포함해 주세요. `--template` 또는 `--tds` 중 하나를 넣고, 예제를 선택했다면 `--sample`도 추가해 명령을 비대화형으로 끝까지 실행해 주세요.
 ```
 
-에이전트는 다음과 같은 내용을 물어봐요.
-
-1. 프로젝트를 만들 경로를 물어봐요.
-2. 기본값인 일반 Vite 프로젝트를 안내하고 `--help`에 나온 프리셋 중 무엇을 사용할지 물어봐요.
-3. 사용자가 TDS를 원하면 도움말의 권장사항을 안내하고 TDS 사용 여부를 확인해요.
-4. npm과 Yarn, pnpm 중 사용할 패키지 매니저를 물어봐요.
-5. 예제를 지원하는 프로젝트라면 인앱 결제와 인앱 광고 예제를 추가할지 물어봐요.
-
 ## CLI 옵션
 
-명령에 지정할 수 있는 옵션은 다음과 같아요.
+```text
+create-ait-app [directory] [options]
+create-ait-app add-sample [directory] [options]
+```
 
-| 옵션                | 설명                                                                                       |
-| ------------------- | ------------------------------------------------------------------------------------------ |
-| `--inline`          | 모든 질문을 생략해요. 프로젝트 경로와 필수 옵션을 함께 지정해야 해요.                      |
-| `--list-templates`  | 지원하는 프로젝트 프리셋을 JSON으로 출력해요.                                              |
-| `--pm <name>`       | 패키지 매니저를 지정해요. `npm`과 `yarn`, `pnpm`을 지원해요.                               |
-| `--template <name>` | Vite 프리셋을 지정해요. `vue-ts`나 `svelte`처럼 써요.                                      |
-| `--tds`             | React 18과 TypeScript, TDS를 쓰는 프로젝트를 만들어요. 사용 여부를 대화형으로 묻지 않아요. |
-| `--sample <name>`   | `iap`와 `iaa` 예제를 추가해요. 여러 개를 지정할 때는 쉼표로 구분해 주세요.                 |
-| `--version`, `-v`   | 설치된 버전을 출력해요.                                                                    |
-| `--help`            | 도움말을 출력해요.                                                                         |
+| 옵션                | 설명                                                              |
+| ------------------- | ----------------------------------------------------------------- |
+| `--inline`          | 질문 없이 만들어요. 프로젝트 경로와 필수 옵션을 함께 넘겨야 해요. |
+| `--list-templates`  | 고를 수 있는 프레임워크 템플릿을 JSON으로 보여 줘요.              |
+| `--pm <name>`       | 패키지 매니저를 정해요. `npm`, `yarn`, `pnpm` 중 하나예요.        |
+| `--template <name>` | 프레임워크 템플릿을 정해요. `vue-ts`, `svelte`처럼 써요.          |
+| `--tds`             | React 18, TypeScript, TDS로 구성된 프로젝트를 만들어요.           |
+| `--sample <name>`   | `iap`, `iaa` 예제를 넣어요. 여러 개는 쉼표로 구분해요.            |
+| `--version`, `-v`   | 설치된 버전을 보여 줘요.                                          |
+| `--help`            | 도움말을 보여 줘요.                                               |
 
 ## 관련 링크
 
